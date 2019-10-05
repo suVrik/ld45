@@ -1,0 +1,56 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Verdana, serif;
+}
+
+body {
+    background: #24252B url("sprites/background.png");
+}
+
+#game_window {
+    background-color: #24252B;
+    position: absolute;
+    padding: 20px;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+}
+
+#loading_bar {
+    background: url("sprites/loading.png") no-repeat center center;
+    position: absolute;
+    width: calc(100% - 40px);
+    height: calc(100% - 40px);
+}
+
+canvas {
+    image-rendering: optimizeSpeed;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -o-crisp-edges;
+    image-rendering: pixelated;
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
+footer {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    z-index: 0;
+}
+
+footer p {
+    display: inline-block;
+    padding: 8px;
+    color: #BABAB6;
+    font-size: 12pt;
+    background-color: #24252B;
+}
+
+footer p a {
+    color: #95A6FF;
+    text-decoration: none;
+    display: inline-block;
+}
