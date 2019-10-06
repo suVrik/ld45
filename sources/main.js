@@ -1,6 +1,8 @@
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
+const Flying = require("./enemies/flying.js");
+const Cloud = require("./enemies/cloud.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -13,7 +15,10 @@ window.game = {
     level: null,
     hazard_vines: [],
     spikes: [],
-    draw_hitboxes: true,
+    flyings: [],
+    flying_projectiles: [],
+    clouds: [],
+    draw_hitboxes: false,
 };
 
 game.render.init();
@@ -76,7 +81,10 @@ let construct_level = function(level_name) {
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
     game.containers.level.addChild(game.containers.tiles_front);
-    game.containers.level.addChild(game.containers.hitboxes);
+
+    if (game.draw_hitboxes) {
+        game.containers.level.addChild(game.containers.hitboxes);
+    }
 
     game.containers.stage.addChild(game.containers.level);
 
@@ -87,6 +95,9 @@ let construct_level = function(level_name) {
     game.player = null;
     game.hazard_vines = [];
     game.spikes = [];
+    game.flyings = [];
+    game.flying_projectiles = [];
+    game.clouds = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -94,19 +105,19 @@ let construct_level = function(level_name) {
             game.player = new Player(entity.x, entity.y);
             game.containers.entities.addChild(game.player);
         } else if (entity.type === "hazard_vines") {
-            const width = entity.width / game.config.tile_size;
-            const height = entity.height / game.config.tile_size;
-            for (let i = 0; i < width; i++) {
-                for (let j = 0; j < height; j++) {
-                    const hazard_vines = new HazardVines(entity.x + i * game.config.tile_size, entity.y + j * game.config.tile_size);
-                    game.hazard_vines.push(hazard_vines);
-                    game.containers.entities.addChild(hazard_vines);
-                }
-            }
+            game.hazard_vines.push(new HazardVines(entity.x, entity.y, entity.width, entity.height));
         } else if (entity.type === "enemy_spiky") {
             const spiky = new Spiky(entity.x, entity.y, entity.nodes);
             game.spikes.push(spiky);
             game.containers.entities.addChild(spiky);
+        } else if (entity.type === "enemy_flying") {
+            const flying = new Flying(entity.x, entity.y, entity.nodes);
+            game.flyings.push(flying);
+            game.containers.entities.addChild(flying);
+        } else if (entity.type === "enemy_cloud") {
+            const cloud = new Cloud(entity.x, entity.y, entity.nodes);
+            game.clouds.push(cloud);
+            game.containers.entities.addChild(cloud);
         }
     }
 
@@ -124,8 +135,10 @@ game.restart = function() {
 let main_loop = function() {
     const elapsed = game.render.application.ticker.elapsedMS / 1000;
 
-    game.containers.hitboxes.clear();
-    game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+    if (game.draw_hitboxes) {
+        game.containers.hitboxes.clear();
+        game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+    }
 
     game.player.update_player(elapsed);
     for (let i = 0; i < game.hazard_vines.length; i++) {
@@ -133,6 +146,23 @@ let main_loop = function() {
     }
     for (let i = 0; i < game.spikes.length; i++) {
         game.spikes[i].update_spiky(elapsed);
+    }
+    for (let i = 0; i < game.flyings.length; ) {
+        let flying = game.flyings[i];
+        game.flyings[i].update_flying(elapsed);
+        if (i < game.flyings.length && game.flyings[i] === flying) {
+            i++;
+        }
+    }
+    for (let i = 0; i < game.flying_projectiles.length; ) {
+        let projectile = game.flying_projectiles[i];
+        projectile.update_flying_projectile(elapsed);
+        if (i < game.flying_projectiles.length && game.flying_projectiles[i] === projectile) {
+            i++;
+        }
+    }
+    for (let i = 0; i < game.clouds.length; i++) {
+        game.clouds[i].update_cloud(elapsed);
     }
     game.camera.update_camera(elapsed);
     game.input.update();

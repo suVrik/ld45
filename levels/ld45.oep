@@ -123,7 +123,7 @@
         <X>0</X>
         <Y>0</Y>
       </Origin>
-      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\hazard_vines.png" Tiled="true">
+      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\alpha_red.png" Tiled="true">
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
       <ValueDefinitions />
@@ -168,7 +168,7 @@
         <X>16</X>
         <Y>32</Y>
       </Origin>
-      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\enemy_spiky.png" Tiled="false">
+      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\animations_32px_enemy_spiky_walk_0.png" Tiled="false">
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
       <ValueDefinitions />
@@ -218,6 +218,21 @@
       </ImageDefinition>
       <ValueDefinitions />
       <NodesDefinition Enabled="true" Limit="-1" DrawMode="Path" Ghost="false" />
+    </EntityDefinition>
+    <EntityDefinition Name="enemy_cloud" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
+      <Size>
+        <Width>32</Width>
+        <Height>32</Height>
+      </Size>
+      <Origin>
+        <X>16</X>
+        <Y>16</Y>
+      </Origin>
+      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\enemy_cloud.png" Tiled="false">
+        <RectColor A="255" R="255" G="0" B="0" />
+      </ImageDefinition>
+      <ValueDefinitions />
+      <NodesDefinition Enabled="true" Limit="-1" DrawMode="Circuit" Ghost="false" />
     </EntityDefinition>
   </EntityDefinitions>
 </project>

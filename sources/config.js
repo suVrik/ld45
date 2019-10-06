@@ -24,8 +24,23 @@ module.exports = {
         post_jump_slowdown_duration: 0.5,
     },
     spiky: {
+        width: 14,
+        height: 13,
+        speed: 60,
+    },
+    flying: {
         width: 16,
         height: 16,
         speed: 60,
-    }
+        projectile_speed: 120,
+        projectile_size: 8,
+        projectile_cooldown: 0.75,
+        attack_area_width: 50,
+        attack_area_height: 1000,
+    },
+    cloud: {
+        width: 25,
+        height: 16,
+        speed: 60,
+    },
 };

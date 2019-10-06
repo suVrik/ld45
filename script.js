@@ -37,30 +37,205 @@ module.exports = {
         post_jump_slowdown_duration: 0.5,
     },
     spiky: {
+        width: 14,
+        height: 13,
+        speed: 60,
+    },
+    flying: {
         width: 16,
         height: 16,
         speed: 60,
-    }
+        projectile_speed: 120,
+        projectile_size: 8,
+        projectile_cooldown: 0.75,
+        attack_area_width: 50,
+        attack_area_height: 1000,
+    },
+    cloud: {
+        width: 25,
+        height: 16,
+        speed: 60,
+    },
 };
 
 },{}],3:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
-const Physics = require("../physics");
+const Physics = require("../physics.js");
+
+class Cloud extends MovieClip {
+    constructor(x, y, nodes) {
+        super({
+            idle: {name: "idle", frames: [game.resources.sprites["enemy_cloud"]], speed: 0.1},
+        }, "idle");
+
+        this.anchor.set(0.5, 0.5);
+        this.x = x;
+        this.y = y;
+
+        this.nodes = nodes ? nodes.slice() : [];
+        this.nodes.unshift({ x: x, y: y });
+        this.current_node = 0;
+
+        this.bounds = {
+            width: game.config.cloud.width,
+            height: game.config.cloud.height
+        };
+    }
+
+    update_cloud(elapsed) {
+        const next_node = (this.current_node + 1) % this.nodes.length;
+        const distance = Math.sqrt((this.x - this.nodes[next_node].x) * (this.x - this.nodes[next_node].x) + (this.y - this.nodes[next_node].y) * (this.y - this.nodes[next_node].y));
+        const displacement = Math.min(game.config.cloud.speed * elapsed, distance);
+        const delta_x = distance > 1e-5 ? (this.nodes[next_node].x - this.x) / distance * displacement : 0;
+        const delta_y = distance > 1e-5 ? (this.nodes[next_node].y - this.y) / distance * displacement : 0;
+
+        if (Physics.aabb(this.x - game.config.cloud.width / 2, this.y - game.config.cloud.height / 2,
+                         game.config.cloud.width, game.config.cloud.height,
+                         game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
+            game.player.vertical_speed = -250;
+            game.player.y = this.y + delta_y - game.config.cloud.height / 2 - game.player.bounds.height;
+        }
+
+        this.x += delta_x;
+        this.y += delta_y;
+
+        const new_distance = Math.sqrt((this.x - this.nodes[next_node].x) * (this.x - this.nodes[next_node].x) + (this.y - this.nodes[next_node].y) * (this.y - this.nodes[next_node].y));
+        if (new_distance < 1e-5) {
+            this.current_node = next_node;
+        }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x - game.config.cloud.width / 2, this.y - game.config.cloud.height / 2, game.config.cloud.width, game.config.cloud.height);
+        }
+    }
+}
+
+module.exports = Cloud;
+
+},{"../movie_clip.js":10,"../physics.js":11}],4:[function(require,module,exports){
+const MovieClip = require("../movie_clip.js");
+const Physics = require("../physics.js");
+const FlyingProjectile = require("./flying_projectile.js");
+
+class Flying extends MovieClip {
+    constructor(x, y, nodes) {
+        super({
+            idle: {name: "idle", frames: [game.resources.sprites["enemy_flying"]], speed: 0.1},
+        }, "idle");
+
+        this.anchor.set(0.5, 0.5);
+        this.x = x;
+        this.y = y;
+
+        this.nodes = nodes ? nodes.slice() : [];
+        this.nodes.unshift({ x: x, y: y });
+        this.current_node = 0;
+        this.attack_cooldown = 0;
+
+        this.bounds = {
+            width: game.config.flying.width,
+            height: game.config.flying.height
+        };
+    }
+
+    update_flying(elapsed) {
+        const next_node = (this.current_node + 1) % this.nodes.length;
+        const distance = Math.sqrt((this.x - this.nodes[next_node].x) * (this.x - this.nodes[next_node].x) + (this.y - this.nodes[next_node].y) * (this.y - this.nodes[next_node].y));
+        const displacement = Math.min(game.config.flying.speed * elapsed, distance);
+        const delta_x = distance > 1e-5 ? (this.nodes[next_node].x - this.x) / distance * displacement : 0;
+        const delta_y = distance > 1e-5 ? (this.nodes[next_node].y - this.y) / distance * displacement : 0;
+
+        this.attack_cooldown -= elapsed;
+
+        if (!game.player.dead) {
+            if (Physics.aabb(this.x - game.config.flying.width / 2, this.y - game.config.flying.height / 2,
+                             game.config.flying.width, game.config.flying.height,
+                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
+                game.player.vertical_speed = -250;
+                game.player.y = this.y + delta_y - game.config.flying.height / 2 - game.player.bounds.height;
+
+                game.flyings.splice(game.flyings.indexOf(this), 1);
+                this.parent.removeChild(this);
+            }
+        }
+
+        this.x += delta_x;
+        this.y += delta_y;
+
+        if (this.attack_cooldown <= 0 && !game.player.dead) {
+            if (Physics.aabb(this.x - game.config.flying.attack_area_width / 2, this.y + game.config.flying.height / 2, game.config.flying.attack_area_width, game.config.flying.attack_area_height,
+                game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
+                const flying_projectile = new FlyingProjectile(this.x, this.y + game.config.flying.height / 2 + game.config.flying.projectile_size / 2 + 1);
+                game.flying_projectiles.push(flying_projectile);
+                game.containers.entities.addChild(flying_projectile);
+                this.attack_cooldown = game.config.flying.projectile_cooldown;
+            }
+        }
+
+        const new_distance = Math.sqrt((this.x - this.nodes[next_node].x) * (this.x - this.nodes[next_node].x) + (this.y - this.nodes[next_node].y) * (this.y - this.nodes[next_node].y));
+        if (new_distance < 1e-5) {
+            this.current_node = next_node;
+        }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x - game.config.flying.width / 2, this.y - game.config.flying.height / 2, game.config.flying.width, game.config.flying.height);
+            game.containers.hitboxes.lineStyle(1, 0xFFFF00, 1);
+            game.containers.hitboxes.drawRect(this.x - game.config.flying.attack_area_width / 2, this.y + game.config.flying.height / 2, game.config.flying.attack_area_width, game.config.flying.attack_area_height);
+            game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+        }
+    }
+}
+
+module.exports = Flying;
+
+},{"../movie_clip.js":10,"../physics.js":11,"./flying_projectile.js":5}],5:[function(require,module,exports){
+const Physics = require("../physics.js");
+
+class FlyingProjectile extends PIXI.Sprite {
+    constructor(x, y) {
+        super(game.resources.sprites["projectile_flying"]);
+
+        this.anchor.set(0.5, 0.5);
+        this.x = x;
+        this.y = y;
+    }
+
+    update_flying_projectile(elapsed) {
+        this.y += game.config.flying.projectile_speed * elapsed;
+        if (Physics.overlap(this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size)) {
+            game.flying_projectiles.splice(game.flying_projectiles.indexOf(this), 1);
+            this.parent.removeChild(this);
+        }
+
+        if (Physics.aabb(this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+            game.player.murder();
+        }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size);
+        }
+    }
+}
+
+module.exports = FlyingProjectile;
+
+},{"../physics.js":11}],6:[function(require,module,exports){
+const MovieClip = require("../movie_clip.js");
+const Physics = require("../physics.js");
 
 class Spiky extends MovieClip {
     constructor(x, y, nodes) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_spiky"]], speed: 0.1},
+            idle: {name: "idle", frames: game.resources.sprites["animations_32px_enemy_spiky_walk"], speed: 0.15},
         }, "idle");
 
         this.anchor.set(0.5, 1);
         this.x = x;
         this.y = y;
-        this.nodes = [
-            { x: x, y: y },
-            { x: nodes[0].x, y: nodes[0].y },
-        ];
+        this.nodes = nodes ? nodes.slice() : [];
+        this.nodes.unshift({ x: x, y: y });
         this.current_node = 0;
+        this.play();
 
         this.bounds = {
             width: game.config.spiky.width,
@@ -69,7 +244,7 @@ class Spiky extends MovieClip {
     }
 
     update_spiky(elapsed) {
-        const next_node = (this.current_node + 1) % 2;
+        const next_node = (this.current_node + 1) % this.nodes.length;
         if (this.x < this.nodes[next_node].x) {
             this.x = Math.min(this.x + game.config.spiky.speed * elapsed, this.nodes[next_node].x);
             this.scale.x = 1;
@@ -80,8 +255,7 @@ class Spiky extends MovieClip {
         if (Math.abs(this.x - this.nodes[next_node].x) < 1e-5) {
             this.current_node = next_node;
         }
-        if (Physics.aabb(this.x - game.config.spiky.width / 2, this.y - game.config.spiky.height, game.config.spiky.width, game.config.spiky.height,
-                         game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+        if (Physics.aabb(this.x - game.config.spiky.width / 2, this.y - game.config.spiky.height, game.config.spiky.width, game.config.spiky.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
             game.player.murder();
         }
         if (game.draw_hitboxes) {
@@ -92,23 +266,23 @@ class Spiky extends MovieClip {
 
 module.exports = Spiky;
 
-},{"../movie_clip.js":7,"../physics":8}],4:[function(require,module,exports){
+},{"../movie_clip.js":10,"../physics.js":11}],7:[function(require,module,exports){
 const Physics = require("./physics");
 
-class HazardVines extends PIXI.AnimatedSprite {
-    constructor(x, y) {
-        super([ game.resources.sprites["hazard_vines"] ]);
-
-        this.x = x;
-        this.y = y;
+class HazardVines {
+    constructor(x, y, width, height) {
+        this.x = x + 7;
+        this.y = y + 7;
+        this.width = width - 14;
+        this.height = height - 14;
     }
 
     update_hazard_vines() {
-        if (Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x, this.y, game.config.tile_size, game.config.tile_size)) {
+        if (Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x, this.y, this.width, this.height)) {
             game.player.murder();
         }
         if (game.draw_hitboxes) {
-            game.containers.hitboxes.drawRect(this.x, this.y, game.config.tile_size, game.config.tile_size);
+            game.containers.hitboxes.drawRect(this.x, this.y, this.width, this.height);
         }
     }
 
@@ -116,7 +290,7 @@ class HazardVines extends PIXI.AnimatedSprite {
 
 module.exports = HazardVines;
 
-},{"./physics":8}],5:[function(require,module,exports){
+},{"./physics":11}],8:[function(require,module,exports){
 const init_input = function() {
     document.body.onkeydown = event => input.keys[event.code] = true;
     document.body.onkeyup = event => input.keys[event.code] = false;
@@ -185,10 +359,12 @@ const input = {
 
 module.exports = input;
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
+const Flying = require("./enemies/flying.js");
+const Cloud = require("./enemies/cloud.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -201,7 +377,10 @@ window.game = {
     level: null,
     hazard_vines: [],
     spikes: [],
-    draw_hitboxes: true,
+    flyings: [],
+    flying_projectiles: [],
+    clouds: [],
+    draw_hitboxes: false,
 };
 
 game.render.init();
@@ -264,7 +443,10 @@ let construct_level = function(level_name) {
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
     game.containers.level.addChild(game.containers.tiles_front);
-    game.containers.level.addChild(game.containers.hitboxes);
+
+    if (game.draw_hitboxes) {
+        game.containers.level.addChild(game.containers.hitboxes);
+    }
 
     game.containers.stage.addChild(game.containers.level);
 
@@ -275,6 +457,9 @@ let construct_level = function(level_name) {
     game.player = null;
     game.hazard_vines = [];
     game.spikes = [];
+    game.flyings = [];
+    game.flying_projectiles = [];
+    game.clouds = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -282,19 +467,19 @@ let construct_level = function(level_name) {
             game.player = new Player(entity.x, entity.y);
             game.containers.entities.addChild(game.player);
         } else if (entity.type === "hazard_vines") {
-            const width = entity.width / game.config.tile_size;
-            const height = entity.height / game.config.tile_size;
-            for (let i = 0; i < width; i++) {
-                for (let j = 0; j < height; j++) {
-                    const hazard_vines = new HazardVines(entity.x + i * game.config.tile_size, entity.y + j * game.config.tile_size);
-                    game.hazard_vines.push(hazard_vines);
-                    game.containers.entities.addChild(hazard_vines);
-                }
-            }
+            game.hazard_vines.push(new HazardVines(entity.x, entity.y, entity.width, entity.height));
         } else if (entity.type === "enemy_spiky") {
             const spiky = new Spiky(entity.x, entity.y, entity.nodes);
             game.spikes.push(spiky);
             game.containers.entities.addChild(spiky);
+        } else if (entity.type === "enemy_flying") {
+            const flying = new Flying(entity.x, entity.y, entity.nodes);
+            game.flyings.push(flying);
+            game.containers.entities.addChild(flying);
+        } else if (entity.type === "enemy_cloud") {
+            const cloud = new Cloud(entity.x, entity.y, entity.nodes);
+            game.clouds.push(cloud);
+            game.containers.entities.addChild(cloud);
         }
     }
 
@@ -312,8 +497,10 @@ game.restart = function() {
 let main_loop = function() {
     const elapsed = game.render.application.ticker.elapsedMS / 1000;
 
-    game.containers.hitboxes.clear();
-    game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+    if (game.draw_hitboxes) {
+        game.containers.hitboxes.clear();
+        game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+    }
 
     game.player.update_player(elapsed);
     for (let i = 0; i < game.hazard_vines.length; i++) {
@@ -322,11 +509,28 @@ let main_loop = function() {
     for (let i = 0; i < game.spikes.length; i++) {
         game.spikes[i].update_spiky(elapsed);
     }
+    for (let i = 0; i < game.flyings.length; ) {
+        let flying = game.flyings[i];
+        game.flyings[i].update_flying(elapsed);
+        if (i < game.flyings.length && game.flyings[i] === flying) {
+            i++;
+        }
+    }
+    for (let i = 0; i < game.flying_projectiles.length; ) {
+        let projectile = game.flying_projectiles[i];
+        projectile.update_flying_projectile(elapsed);
+        if (i < game.flying_projectiles.length && game.flying_projectiles[i] === projectile) {
+            i++;
+        }
+    }
+    for (let i = 0; i < game.clouds.length; i++) {
+        game.clouds[i].update_cloud(elapsed);
+    }
     game.camera.update_camera(elapsed);
     game.input.update();
 };
 
-},{"./camera.js":1,"./config.js":2,"./enemies/spiky.js":3,"./hazard_vines.js":4,"./input.js":5,"./player.js":9,"./render.js":10,"./resources/resources.js":12}],7:[function(require,module,exports){
+},{"./camera.js":1,"./config.js":2,"./enemies/cloud.js":3,"./enemies/flying.js":4,"./enemies/spiky.js":6,"./hazard_vines.js":7,"./input.js":8,"./player.js":12,"./render.js":13,"./resources/resources.js":15}],10:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors, default_animation) {
         super(descriptors[default_animation].frames);
@@ -364,19 +568,48 @@ class MovieClip extends PIXI.AnimatedSprite {
 
 module.exports = MovieClip;
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
 };
 
-const overlap = function(x, y, width, height) {
+const iterate_over_all_hitboxes = function(callback) {
     const hitboxes = game.level["hitboxes"];
     for (let i = 0; i < hitboxes.length; i++) {
-        if (aabb(x, y, width, height, hitboxes[i].x, hitboxes[i].y, hitboxes[i].width, hitboxes[i].height)) {
-            return hitboxes[i];
+        const result = callback(hitboxes[i], hitboxes[i].x, hitboxes[i].y, hitboxes[i].width, hitboxes[i].height);
+        if (result != null) {
+            return result;
+        }
+    }
+    for (let i = 0; i < game.flyings.length; i++) {
+        const result = callback(game.flyings[i],
+                                game.flyings[i].x - game.config.flying.width / 2,
+                                game.flyings[i].y - game.config.flying.height / 2,
+                                game.config.flying.width,
+                                game.config.flying.height);
+        if (result != null) {
+            return result;
+        }
+    }
+    for (let i = 0; i < game.clouds.length; i++) {
+        const result = callback(game.clouds[i],
+                                game.clouds[i].x - game.config.cloud.width / 2,
+                                game.clouds[i].y - game.config.cloud.height / 2,
+                                game.config.cloud.width,
+                                game.config.cloud.height);
+        if (result != null) {
+            return result;
         }
     }
     return null;
+};
+
+const overlap = function(x, y, width, height) {
+    return iterate_over_all_hitboxes(function(object, object_x, object_y, object_width, object_height) {
+        if (aabb(x, y, width, height, object_x, object_y, object_width, object_height)) {
+            return object;
+        }
+    });
 };
 
 const move = function(entity, dx, dy) {
@@ -390,35 +623,33 @@ const move = function(entity, dx, dy) {
         object: null,
     };
 
-    const hitboxes = game.level["hitboxes"];
-    for (let i = 0; i < hitboxes.length; i++) {
-        const hitbox = hitboxes[i];
+    iterate_over_all_hitboxes(function(object, object_x, object_y, object_width, object_height) {
         if (aabb(entity.x - Math.max(-result.dx, 0),
                  entity.y - Math.max(-result.dy, 0),
                  entity.bounds.width + Math.abs(result.dx),
                  entity.bounds.height + Math.abs(result.dy),
-                 hitbox.x, hitbox.y, hitbox.width, hitbox.height)) {
-            result.object = result.object || hitbox;
+                 object_x, object_y, object_width, object_height)) {
+            result.object = result.object || object;
 
             let delta_x = null;
             if (Math.abs(dx) > 1e-8) {
-                if (entity.x < hitbox.x) {
+                if (entity.x < object_x) {
                     result.right = true;
-                    delta_x = (hitbox.x - (entity.x + entity.bounds.width)) - result.dx;
+                    delta_x = (object_x - (entity.x + entity.bounds.width)) - result.dx;
                 } else {
                     result.left = true;
-                    delta_x = ((hitbox.x + hitbox.width) - entity.x) - result.dx;
+                    delta_x = ((object_x + object_width) - entity.x) - result.dx;
                 }
             }
 
             let delta_y = null;
             if (Math.abs(dy) > 1e-8) {
-                if (entity.y < hitbox.y) {
+                if (entity.y < object_y) {
                     result.bottom = true;
-                    delta_y = (hitbox.y - (entity.y + entity.bounds.height)) - result.dy;
+                    delta_y = (object_y - (entity.y + entity.bounds.height)) - result.dy;
                 } else {
                     result.top = true;
-                    delta_y = ((hitbox.y + hitbox.height) - entity.y) - result.dy;
+                    delta_y = ((object_y + object_height) - entity.y) - result.dy;
                 }
             }
 
@@ -430,7 +661,7 @@ const move = function(entity, dx, dy) {
                 result.dx += delta_x;
             }
         }
-    }
+    });
 
     entity.x += result.dx;
     entity.y += result.dy;
@@ -444,7 +675,7 @@ module.exports = {
     move: move,
 };
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics");
 
@@ -456,8 +687,8 @@ class Player extends MovieClip {
         }, "idle");
 
         this.anchor.set(0.25, 0.38);
-        this.x = x;
-        this.y = y;
+        this.x = this.previous_x = x;
+        this.y = this.previous_y = y;
 
         this.bounds = {
             width: game.config.player.width,
@@ -605,6 +836,9 @@ class Player extends MovieClip {
         const was_grounded = this.is_grounded;
         const was_sliding = this.is_sliding;
 
+        this.previous_x = this.x;
+        this.previous_y = this.y;
+
         this.update_movement(elapsed);
         this.update_sliding(elapsed);
         this.update_jumping(elapsed);
@@ -634,13 +868,15 @@ class Player extends MovieClip {
                 this.horizontal_speed = 100;
                 this.vertical_speed = -300;
             }
+
+            //game.speed_factor = 0.5;
         }
     }
 }
 
 module.exports = Player;
 
-},{"./movie_clip.js":7,"./physics":8}],10:[function(require,module,exports){
+},{"./movie_clip.js":10,"./physics":11}],13:[function(require,module,exports){
 const update_physical_size = function() {
     const horizontal_padding = 80, vertical_padding = 180;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
@@ -703,7 +939,7 @@ const render = {
 
 module.exports = render;
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -821,7 +1057,7 @@ const levels = {
 
 module.exports = levels;
 
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -869,7 +1105,7 @@ const resources = {
 
 module.exports = resources;
 
-},{"./levels.js":11,"./sounds.js":13,"./sprites.js":14}],13:[function(require,module,exports){
+},{"./levels.js":14,"./sounds.js":16,"./sprites.js":17}],16:[function(require,module,exports){
 const load_sounds = function() {
     function load_sound(name, volume = 1.0) {
         sounds.total_count++;
@@ -904,7 +1140,7 @@ const sounds = {
 
 module.exports = sounds;
 
-},{}],14:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -945,4 +1181,4 @@ const sprites = {
 
 module.exports = sprites;
 
-},{}]},{},[6]);
+},{}]},{},[9]);

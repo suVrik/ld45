@@ -9,8 +9,8 @@ class Player extends MovieClip {
         }, "idle");
 
         this.anchor.set(0.25, 0.38);
-        this.x = x;
-        this.y = y;
+        this.x = this.previous_x = x;
+        this.y = this.previous_y = y;
 
         this.bounds = {
             width: game.config.player.width,
@@ -158,6 +158,9 @@ class Player extends MovieClip {
         const was_grounded = this.is_grounded;
         const was_sliding = this.is_sliding;
 
+        this.previous_x = this.x;
+        this.previous_y = this.y;
+
         this.update_movement(elapsed);
         this.update_sliding(elapsed);
         this.update_jumping(elapsed);
@@ -187,6 +190,8 @@ class Player extends MovieClip {
                 this.horizontal_speed = 100;
                 this.vertical_speed = -300;
             }
+
+            //game.speed_factor = 0.5;
         }
     }
 }
