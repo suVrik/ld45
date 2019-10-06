@@ -3,6 +3,7 @@ const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
 const Flying = require("./enemies/flying.js");
 const Cloud = require("./enemies/cloud.js");
+const BlockFalling = require("./block_falling.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -18,6 +19,7 @@ window.game = {
     flyings: [],
     flying_projectiles: [],
     clouds: [],
+    block_fallings: [],
     draw_hitboxes: false,
 };
 
@@ -98,6 +100,7 @@ let construct_level = function(level_name) {
     game.flyings = [];
     game.flying_projectiles = [];
     game.clouds = [];
+    game.block_fallings = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -118,6 +121,16 @@ let construct_level = function(level_name) {
             const cloud = new Cloud(entity.x, entity.y, entity.nodes);
             game.clouds.push(cloud);
             game.containers.entities.addChild(cloud);
+        } else if (entity.type === "block_falling") {
+            const width = entity.width / game.config.tile_size;
+            const height = entity.height / game.config.tile_size;
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const block_falling = new BlockFalling(entity.x + i * game.config.tile_size, entity.y + j * game.config.tile_size, entity.nodes);
+                    game.block_fallings.push(block_falling);
+                    game.containers.entities.addChild(block_falling);
+                }
+            }
         }
     }
 
@@ -163,6 +176,9 @@ let main_loop = function() {
     }
     for (let i = 0; i < game.clouds.length; i++) {
         game.clouds[i].update_cloud(elapsed);
+    }
+    for (let i = 0; i < game.block_fallings.length; i++) {
+        game.block_fallings[i].update_block_falling(elapsed);
     }
     game.camera.update_camera(elapsed);
     game.input.update();

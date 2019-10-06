@@ -30,6 +30,14 @@ const iterate_over_all_hitboxes = function(callback) {
             return result;
         }
     }
+    for (let i = 0; i < game.block_fallings.length; i++) {
+        if (game.block_fallings[i].visible) {
+            const result = callback(game.block_fallings[i], game.block_fallings[i].x, game.block_fallings[i].y, game.config.tile_size, game.config.tile_size);
+            if (result != null) {
+                return result;
+            }
+        }
+    }
     return null;
 };
 

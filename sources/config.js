@@ -43,4 +43,8 @@ module.exports = {
         height: 16,
         speed: 60,
     },
+    block_falling: {
+        destroy_timeout: 0.5,
+        respawn_timeout: 2,
+    }
 };

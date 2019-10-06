@@ -1,4 +1,54 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const MovieClip = require("./movie_clip.js");
+const Physics = require("./physics.js");
+
+class BlockFalling extends MovieClip {
+    constructor(x, y) {
+        super({
+            idle: { name: "idle", frames: [game.resources.sprites["block_falling"]], speed: 0.1 },
+        }, "idle");
+
+        this.x = x;
+        this.y = y;
+        this.destroy_timeout = null;
+        this.respawn_timeout = null;
+    }
+
+    update_block_falling(elapsed) {
+        if (this.destroy_timeout == null) {
+            if (!game.player.dead) {
+                if (Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x - 1e-1, this.y - 1e-1, game.config.tile_size + 2e-1, game.config.tile_size + 2e-1)) {
+                    this.destroy_timeout = game.config.block_falling.destroy_timeout;
+                }
+            }
+
+            if (game.draw_hitboxes) {
+                game.containers.hitboxes.drawRect(this.x, this.y, game.config.tile_size, game.config.tile_size);
+            }
+        } else {
+            if (this.respawn_timeout == null) {
+                this.destroy_timeout -= elapsed;
+                if (this.destroy_timeout <= 0) {
+                    this.respawn_timeout = game.config.block_falling.respawn_timeout;
+                    this.visible = false;
+                }
+            } else {
+                this.respawn_timeout -= elapsed;
+                if (this.respawn_timeout < 0) {
+                    this.destroy_timeout = null;
+                    this.respawn_timeout = null;
+                    this.visible = true;
+                }
+            }
+        }
+
+    }
+
+}
+
+module.exports = BlockFalling;
+
+},{"./movie_clip.js":11,"./physics.js":12}],2:[function(require,module,exports){
 class Camera {
     update_camera(elapsed) {
         if (!game.player.dead) {
@@ -10,7 +60,7 @@ class Camera {
 
 module.exports = Camera;
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 module.exports = {
     tile_size: 16,
     level: {
@@ -56,9 +106,13 @@ module.exports = {
         height: 16,
         speed: 60,
     },
+    block_falling: {
+        destroy_timeout: 0.5,
+        respawn_timeout: 2,
+    }
 };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -112,7 +166,7 @@ class Cloud extends MovieClip {
 
 module.exports = Cloud;
 
-},{"../movie_clip.js":10,"../physics.js":11}],4:[function(require,module,exports){
+},{"../movie_clip.js":11,"../physics.js":12}],5:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const FlyingProjectile = require("./flying_projectile.js");
@@ -188,7 +242,7 @@ class Flying extends MovieClip {
 
 module.exports = Flying;
 
-},{"../movie_clip.js":10,"../physics.js":11,"./flying_projectile.js":5}],5:[function(require,module,exports){
+},{"../movie_clip.js":11,"../physics.js":12,"./flying_projectile.js":6}],6:[function(require,module,exports){
 const Physics = require("../physics.js");
 
 class FlyingProjectile extends PIXI.Sprite {
@@ -219,7 +273,7 @@ class FlyingProjectile extends PIXI.Sprite {
 
 module.exports = FlyingProjectile;
 
-},{"../physics.js":11}],6:[function(require,module,exports){
+},{"../physics.js":12}],7:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -266,8 +320,8 @@ class Spiky extends MovieClip {
 
 module.exports = Spiky;
 
-},{"../movie_clip.js":10,"../physics.js":11}],7:[function(require,module,exports){
-const Physics = require("./physics");
+},{"../movie_clip.js":11,"../physics.js":12}],8:[function(require,module,exports){
+const Physics = require("./physics.js");
 
 class HazardVines {
     constructor(x, y, width, height) {
@@ -290,7 +344,7 @@ class HazardVines {
 
 module.exports = HazardVines;
 
-},{"./physics":11}],8:[function(require,module,exports){
+},{"./physics.js":12}],9:[function(require,module,exports){
 const init_input = function() {
     document.body.onkeydown = event => input.keys[event.code] = true;
     document.body.onkeyup = event => input.keys[event.code] = false;
@@ -359,12 +413,13 @@ const input = {
 
 module.exports = input;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
 const Flying = require("./enemies/flying.js");
 const Cloud = require("./enemies/cloud.js");
+const BlockFalling = require("./block_falling.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -380,6 +435,7 @@ window.game = {
     flyings: [],
     flying_projectiles: [],
     clouds: [],
+    block_fallings: [],
     draw_hitboxes: false,
 };
 
@@ -460,6 +516,7 @@ let construct_level = function(level_name) {
     game.flyings = [];
     game.flying_projectiles = [];
     game.clouds = [];
+    game.block_fallings = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -480,6 +537,16 @@ let construct_level = function(level_name) {
             const cloud = new Cloud(entity.x, entity.y, entity.nodes);
             game.clouds.push(cloud);
             game.containers.entities.addChild(cloud);
+        } else if (entity.type === "block_falling") {
+            const width = entity.width / game.config.tile_size;
+            const height = entity.height / game.config.tile_size;
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const block_falling = new BlockFalling(entity.x + i * game.config.tile_size, entity.y + j * game.config.tile_size, entity.nodes);
+                    game.block_fallings.push(block_falling);
+                    game.containers.entities.addChild(block_falling);
+                }
+            }
         }
     }
 
@@ -526,11 +593,14 @@ let main_loop = function() {
     for (let i = 0; i < game.clouds.length; i++) {
         game.clouds[i].update_cloud(elapsed);
     }
+    for (let i = 0; i < game.block_fallings.length; i++) {
+        game.block_fallings[i].update_block_falling(elapsed);
+    }
     game.camera.update_camera(elapsed);
     game.input.update();
 };
 
-},{"./camera.js":1,"./config.js":2,"./enemies/cloud.js":3,"./enemies/flying.js":4,"./enemies/spiky.js":6,"./hazard_vines.js":7,"./input.js":8,"./player.js":12,"./render.js":13,"./resources/resources.js":15}],10:[function(require,module,exports){
+},{"./block_falling.js":1,"./camera.js":2,"./config.js":3,"./enemies/cloud.js":4,"./enemies/flying.js":5,"./enemies/spiky.js":7,"./hazard_vines.js":8,"./input.js":9,"./player.js":13,"./render.js":14,"./resources/resources.js":16}],11:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors, default_animation) {
         super(descriptors[default_animation].frames);
@@ -568,7 +638,7 @@ class MovieClip extends PIXI.AnimatedSprite {
 
 module.exports = MovieClip;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
 };
@@ -599,6 +669,14 @@ const iterate_over_all_hitboxes = function(callback) {
                                 game.config.cloud.height);
         if (result != null) {
             return result;
+        }
+    }
+    for (let i = 0; i < game.block_fallings.length; i++) {
+        if (game.block_fallings[i].visible) {
+            const result = callback(game.block_fallings[i], game.block_fallings[i].x, game.block_fallings[i].y, game.config.tile_size, game.config.tile_size);
+            if (result != null) {
+                return result;
+            }
         }
     }
     return null;
@@ -675,7 +753,7 @@ module.exports = {
     move: move,
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics");
 
@@ -876,7 +954,7 @@ class Player extends MovieClip {
 
 module.exports = Player;
 
-},{"./movie_clip.js":10,"./physics":11}],13:[function(require,module,exports){
+},{"./movie_clip.js":11,"./physics":12}],14:[function(require,module,exports){
 const update_physical_size = function() {
     const horizontal_padding = 80, vertical_padding = 180;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
@@ -939,7 +1017,7 @@ const render = {
 
 module.exports = render;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -1057,7 +1135,7 @@ const levels = {
 
 module.exports = levels;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -1105,7 +1183,7 @@ const resources = {
 
 module.exports = resources;
 
-},{"./levels.js":14,"./sounds.js":16,"./sprites.js":17}],16:[function(require,module,exports){
+},{"./levels.js":15,"./sounds.js":17,"./sprites.js":18}],17:[function(require,module,exports){
 const load_sounds = function() {
     function load_sound(name, volume = 1.0) {
         sounds.total_count++;
@@ -1140,7 +1218,7 @@ const sounds = {
 
 module.exports = sounds;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -1181,4 +1259,4 @@ const sprites = {
 
 module.exports = sprites;
 
-},{}]},{},[9]);
+},{}]},{},[10]);

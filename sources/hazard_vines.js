@@ -1,4 +1,4 @@
-const Physics = require("./physics");
+const Physics = require("./physics.js");
 
 class HazardVines {
     constructor(x, y, width, height) {
