@@ -60,17 +60,20 @@ let construct_level = function(level_name) {
     game.containers = {
         stage: game.render.stage,
         level: new PIXI.Container(),
+        tiles_very_back: new PIXI.Container(),
         tiles_back: new PIXI.Container(),
         entities: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
     };
 
+    game.containers.level.addChild(game.containers.tiles_very_back);
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
     game.containers.level.addChild(game.containers.tiles_front);
 
     game.containers.stage.addChild(game.containers.level);
 
+    draw_tiles_layer("tiles_very_back");
     draw_tiles_layer("tiles_back");
     draw_tiles_layer("tiles_front");
 

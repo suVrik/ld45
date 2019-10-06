@@ -5,8 +5,8 @@ module.exports = {
         height: 0,
     },
     player: {
-        width: 10,
-        height: 8,
+        width: 16,
+        height: 20,
         speed: 120,
         acceleration: 1080,
         gravity_acceleration: 1080,
@@ -19,8 +19,8 @@ module.exports = {
         sliding_factor: 0.75,
         jump_off_walls_duration: 0.12,
         jump_off_walls_speed: 150,
-        post_jump_slowdown_factor: 0.7,
-        post_jump_sliding_factor: 0.7,
+        post_jump_slowdown_factor: 0.9,
+        post_jump_sliding_factor: 0.6,
         post_jump_slowdown_duration: 0.5,
     },
 };

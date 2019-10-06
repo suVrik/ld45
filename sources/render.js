@@ -31,8 +31,8 @@ const update_physical_size = function() {
 
 const init_window = function() {
     PIXI.settings.ROUND_PIXELS = true;
-    
-    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
+
+    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height, backgroundColor: 0x349EAD });
     render.stage = render.application.stage;
 
     const game_window = document.getElementById("game_window");

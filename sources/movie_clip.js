@@ -1,11 +1,11 @@
 class MovieClip extends PIXI.AnimatedSprite {
-    constructor(descriptors) {
-        super(descriptors[0].frames);
-        super.animationSpeed = descriptors[0].speed || 1;
-        super.loop = !(descriptors[0].loop === false);
+    constructor(descriptors, default_animation) {
+        super(descriptors[default_animation].frames);
+        super.animationSpeed = descriptors[default_animation].speed || 1;
+        super.loop = !(descriptors[default_animation].loop === false);
 
         this.descriptors = descriptors;
-        this.animation = descriptors[0].name;
+        this.animation = default_animation;
     }
 
     gotoAndPlay(frameOrAnimation) {
