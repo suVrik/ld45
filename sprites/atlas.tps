@@ -203,6 +203,14 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">sources/animations_32px_effect_smoke_0.png</key>
+            <key type="filename">sources/animations_32px_effect_smoke_1.png</key>
+            <key type="filename">sources/animations_32px_effect_smoke_2.png</key>
+            <key type="filename">sources/animations_32px_effect_smoke_3.png</key>
+            <key type="filename">sources/animations_32px_effect_smoke_4.png</key>
+            <key type="filename">sources/animations_32px_effect_smoke_5.png</key>
+            <key type="filename">sources/animations_32px_effect_smoke_6.png</key>
+            <key type="filename">sources/animations_32px_effect_smoke_7.png</key>
             <key type="filename">sources/animations_32px_enemy_cloud_idle_0.png</key>
             <key type="filename">sources/animations_32px_enemy_cloud_idle_1.png</key>
             <key type="filename">sources/animations_32px_enemy_cloud_idle_2.png</key>
