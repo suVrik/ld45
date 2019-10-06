@@ -1,4 +1,5 @@
 const Player = require("./player.js");
+const HazardVines = require("./hazard_vines.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -9,6 +10,7 @@ window.game = {
     camera: null,
     player: null,
     level: null,
+    hazard_vines: [],
 };
 
 game.render.init();
@@ -77,11 +79,24 @@ let construct_level = function(level_name) {
     draw_tiles_layer("tiles_back");
     draw_tiles_layer("tiles_front");
 
+    game.player = null;
+    game.hazard_vines = [];
+
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
         if (entity.type === "player") {
             game.player = new Player(entity.x, entity.y);
             game.containers.entities.addChild(game.player);
+        } else if (entity.type === "hazard_vines") {
+            const width = entity.width / game.config.tile_size;
+            const height = entity.height / game.config.tile_size;
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < height; j++) {
+                    const hazard_vines = new HazardVines(entity.x + i * game.config.tile_size, entity.y + j * game.config.tile_size);
+                    game.hazard_vines.push(hazard_vines);
+                    game.containers.entities.addChild(hazard_vines);
+                }
+            }
         }
     }
 
@@ -92,9 +107,16 @@ let initialize = function() {
     construct_level("level0");
 };
 
+game.restart = function() {
+    construct_level("level0");
+};
+
 let main_loop = function() {
     const elapsed = game.render.application.ticker.elapsedMS / 1000;
     game.player.update_player(elapsed);
+    for (let i = 0; i < game.hazard_vines.length; i++) {
+        game.hazard_vines[i].update_hazard_vines();
+    }
     game.camera.update_camera(elapsed);
     game.input.update();
 };

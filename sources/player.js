@@ -28,29 +28,34 @@ class Player extends MovieClip {
         this.fall_factor = 1;
         this.post_jump_slowdown_duration = 0;
         this.face = "right";
+        this.dead = false;
     }
 
     update_movement(elapsed) {
-        const left_pressed = game.input.is_key_down("KeyA");
-        const right_pressed = game.input.is_key_down("KeyD");
-        if (left_pressed && !right_pressed) {
-            this.face = "left";
-            this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
-        } else if (right_pressed && !left_pressed) {
-            this.face = "right";
-            this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, Math.max(this.horizontal_speed, game.config.player.speed));
-        } else {
-            if (this.horizontal_speed > 0) {
-                this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, 0);
+        if (!this.dead) {
+            const left_pressed = game.input.is_key_down("KeyA");
+            const right_pressed = game.input.is_key_down("KeyD");
+            if (left_pressed && !right_pressed) {
+                this.face = "left";
+                this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
+            } else if (right_pressed && !left_pressed) {
+                this.face = "right";
+                this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, Math.max(this.horizontal_speed, game.config.player.speed));
             } else {
-                this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, 0);
+                if (this.horizontal_speed > 0) {
+                    this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, 0);
+                } else {
+                    this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, 0);
+                }
             }
-        }
 
-        if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
-            const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
-            const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
-            Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
+            if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
+                    const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
+                    const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+                    Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
+            }
+        } else {
+            this.x += this.horizontal_speed * elapsed;
         }
     }
 
@@ -79,7 +84,7 @@ class Player extends MovieClip {
     }
 
     update_jumping(elapsed) {
-        const jump_pressed = game.input.is_key_pressed("Space");
+        const jump_pressed = !this.dead && game.input.is_key_pressed("Space");
         if (jump_pressed || this.early_jump_duration > 0) {
             this.early_jump_duration -= elapsed;
 
@@ -104,32 +109,37 @@ class Player extends MovieClip {
     }
 
     update_gravity(elapsed) {
-        const hit = Math.abs(this.vertical_speed * elapsed) > 1e-8 ? Physics.move(this, 0, this.vertical_speed * elapsed) : null;
-        this.is_grounded = hit && hit.bottom;
-        if (this.is_grounded) {
-            this.late_jump_duration = game.config.player.late_jump_duration;
-            this.vertical_speed = game.config.player.fall_gravity;
-        } else {
-            this.late_jump_duration -= elapsed;
-            if (hit && hit.top) {
-                this.vertical_speed = 0;
+        if (!this.dead) {
+            const hit = Math.abs(this.vertical_speed * elapsed) > 1e-8 ? Physics.move(this, 0, this.vertical_speed * elapsed) : null;
+            this.is_grounded = hit && hit.bottom;
+            if (this.is_grounded) {
+                this.late_jump_duration = game.config.player.late_jump_duration;
+                this.vertical_speed = game.config.player.fall_gravity;
             } else {
-                if (this.vertical_speed < 0) {
-                    const jump_down = game.input.is_key_down("Space");
-                    if (jump_down) {
-                        this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * game.config.player.high_jump_gravity_factor * elapsed, game.config.player.max_gravity);
-                    } else {
-                        this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * elapsed, game.config.player.max_gravity);
-                    }
+                this.late_jump_duration -= elapsed;
+                if (hit && hit.top) {
+                    this.vertical_speed = 0;
                 } else {
-                    this.vertical_speed = Math.min((this.vertical_speed + game.config.player.gravity_acceleration * elapsed) * this.fall_factor, game.config.player.max_gravity);
+                    if (this.vertical_speed < 0) {
+                        const jump_down = !this.dead && game.input.is_key_down("Space");
+                        if (jump_down) {
+                            this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * game.config.player.high_jump_gravity_factor * elapsed, game.config.player.max_gravity);
+                        } else {
+                            this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * elapsed, game.config.player.max_gravity);
+                        }
+                    } else {
+                        this.vertical_speed = Math.min((this.vertical_speed + game.config.player.gravity_acceleration * elapsed) * this.fall_factor, game.config.player.max_gravity);
+                    }
                 }
             }
+        } else {
+            this.y += this.vertical_speed * elapsed;
+            this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * elapsed, game.config.player.max_gravity);
         }
     }
 
     update_sprite() {
-        if (this.is_grounded) {
+        if (!this.dead && this.is_grounded) {
             this.gotoAndPlay("idle");
         } else {
             this.gotoAndPlay("jump");
@@ -158,6 +168,21 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration = game.config.player.post_jump_slowdown_duration;
         } else {
             this.post_jump_slowdown_duration -= elapsed;
+        }
+    }
+
+    murder() {
+        if (!this.dead) {
+            this.dead = true;
+            setTimeout(game.restart, 1000);
+
+            if (this.face === "left") {
+                this.horizontal_speed = -100;
+                this.vertical_speed = -300;
+            } else {
+                this.horizontal_speed = 100;
+                this.vertical_speed = -300;
+            }
         }
     }
 }
