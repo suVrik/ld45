@@ -3,11 +3,12 @@ const Physics = require("./physics");
 
 class Player extends MovieClip {
     constructor(x, y) {
-        super([
-            { name: "idle", frames: [game.resources.sprites["player_walk_0"]], speed: 0.1 }
-        ]);
+        super({
+            idle: { name: "idle", frames: [game.resources.sprites["player_still"]], speed: 0.1 },
+            jump: { name: "jump", frames: [game.resources.sprites["player_jump"]], speed: 0.1 },
+        }, "idle");
 
-        this.anchor.set(0.25, 0.5);
+        this.anchor.set(0.25, 0.38);
         this.x = x;
         this.y = y;
 
@@ -26,14 +27,17 @@ class Player extends MovieClip {
         this.jump_off_right_wall = false;
         this.fall_factor = 1;
         this.post_jump_slowdown_duration = 0;
+        this.face = "right";
     }
 
     update_movement(elapsed) {
         const left_pressed = game.input.is_key_down("KeyA");
         const right_pressed = game.input.is_key_down("KeyD");
         if (left_pressed && !right_pressed) {
+            this.face = "left";
             this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
         } else if (right_pressed && !left_pressed) {
+            this.face = "right";
             this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, Math.max(this.horizontal_speed, game.config.player.speed));
         } else {
             if (this.horizontal_speed > 0) {
@@ -124,6 +128,22 @@ class Player extends MovieClip {
         }
     }
 
+    update_sprite() {
+        if (this.is_grounded) {
+            this.gotoAndPlay("idle");
+        } else {
+            this.gotoAndPlay("jump");
+        }
+
+        if (this.face === "left") {
+            this.scale.x = -1;
+            this.anchor.set(0.75, 0.38);
+        } else {
+            this.scale.x = 1;
+            this.anchor.set(0.25, 0.38);
+        }
+    }
+
     update_player(elapsed) {
         const was_grounded = this.is_grounded;
         const was_sliding = this.is_sliding;
@@ -132,6 +152,7 @@ class Player extends MovieClip {
         this.update_sliding(elapsed);
         this.update_jumping(elapsed);
         this.update_gravity(elapsed);
+        this.update_sprite();
 
         if ((!was_grounded && this.is_grounded) || (!was_sliding && this.is_sliding)) {
             this.post_jump_slowdown_duration = game.config.player.post_jump_slowdown_duration;

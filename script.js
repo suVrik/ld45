@@ -17,8 +17,8 @@ module.exports = {
         height: 0,
     },
     player: {
-        width: 10,
-        height: 8,
+        width: 16,
+        height: 20,
         speed: 120,
         acceleration: 1080,
         gravity_acceleration: 1080,
@@ -31,8 +31,8 @@ module.exports = {
         sliding_factor: 0.75,
         jump_off_walls_duration: 0.12,
         jump_off_walls_speed: 150,
-        post_jump_slowdown_factor: 0.7,
-        post_jump_sliding_factor: 0.7,
+        post_jump_slowdown_factor: 0.9,
+        post_jump_sliding_factor: 0.6,
         post_jump_slowdown_duration: 0.5,
     },
 };
@@ -169,17 +169,20 @@ let construct_level = function(level_name) {
     game.containers = {
         stage: game.render.stage,
         level: new PIXI.Container(),
+        tiles_very_back: new PIXI.Container(),
         tiles_back: new PIXI.Container(),
         entities: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
     };
 
+    game.containers.level.addChild(game.containers.tiles_very_back);
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
     game.containers.level.addChild(game.containers.tiles_front);
 
     game.containers.stage.addChild(game.containers.level);
 
+    draw_tiles_layer("tiles_very_back");
     draw_tiles_layer("tiles_back");
     draw_tiles_layer("tiles_front");
 
@@ -207,13 +210,13 @@ let main_loop = function() {
 
 },{"./camera.js":1,"./config.js":2,"./input.js":3,"./player.js":7,"./render.js":8,"./resources/resources.js":10}],5:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
-    constructor(descriptors) {
-        super(descriptors[0].frames);
-        super.animationSpeed = descriptors[0].speed || 1;
-        super.loop = !(descriptors[0].loop === false);
+    constructor(descriptors, default_animation) {
+        super(descriptors[default_animation].frames);
+        super.animationSpeed = descriptors[default_animation].speed || 1;
+        super.loop = !(descriptors[default_animation].loop === false);
 
         this.descriptors = descriptors;
-        this.animation = descriptors[0].name;
+        this.animation = default_animation;
     }
 
     gotoAndPlay(frameOrAnimation) {
@@ -329,11 +332,12 @@ const Physics = require("./physics");
 
 class Player extends MovieClip {
     constructor(x, y) {
-        super([
-            { name: "idle", frames: [game.resources.sprites["player_walk_0"]], speed: 0.1 }
-        ]);
+        super({
+            idle: { name: "idle", frames: [game.resources.sprites["player_still"]], speed: 0.1 },
+            jump: { name: "jump", frames: [game.resources.sprites["player_jump"]], speed: 0.1 },
+        }, "idle");
 
-        this.anchor.set(0.25, 0.5);
+        this.anchor.set(0.25, 0.38);
         this.x = x;
         this.y = y;
 
@@ -352,14 +356,17 @@ class Player extends MovieClip {
         this.jump_off_right_wall = false;
         this.fall_factor = 1;
         this.post_jump_slowdown_duration = 0;
+        this.face = "right";
     }
 
     update_movement(elapsed) {
         const left_pressed = game.input.is_key_down("KeyA");
         const right_pressed = game.input.is_key_down("KeyD");
         if (left_pressed && !right_pressed) {
+            this.face = "left";
             this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
         } else if (right_pressed && !left_pressed) {
+            this.face = "right";
             this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, Math.max(this.horizontal_speed, game.config.player.speed));
         } else {
             if (this.horizontal_speed > 0) {
@@ -450,6 +457,22 @@ class Player extends MovieClip {
         }
     }
 
+    update_sprite() {
+        if (this.is_grounded) {
+            this.gotoAndPlay("idle");
+        } else {
+            this.gotoAndPlay("jump");
+        }
+
+        if (this.face === "left") {
+            this.scale.x = -1;
+            this.anchor.set(0.75, 0.38);
+        } else {
+            this.scale.x = 1;
+            this.anchor.set(0.25, 0.38);
+        }
+    }
+
     update_player(elapsed) {
         const was_grounded = this.is_grounded;
         const was_sliding = this.is_sliding;
@@ -458,6 +481,7 @@ class Player extends MovieClip {
         this.update_sliding(elapsed);
         this.update_jumping(elapsed);
         this.update_gravity(elapsed);
+        this.update_sprite();
 
         if ((!was_grounded && this.is_grounded) || (!was_sliding && this.is_sliding)) {
             this.post_jump_slowdown_duration = game.config.player.post_jump_slowdown_duration;
@@ -503,8 +527,8 @@ const update_physical_size = function() {
 
 const init_window = function() {
     PIXI.settings.ROUND_PIXELS = true;
-    
-    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
+
+    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height, backgroundColor: 0x349EAD });
     render.stage = render.application.stage;
 
     const game_window = document.getElementById("game_window");
