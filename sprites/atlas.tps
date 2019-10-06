@@ -219,6 +219,14 @@
             <key type="filename">sources/animations_32px_enemy_spiky_walk_1.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_2.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_3.png</key>
+            <key type="filename">sources/animations_32px_player_climb_0.png</key>
+            <key type="filename">sources/animations_32px_player_crouch_walk_0.png</key>
+            <key type="filename">sources/animations_32px_player_crouch_walk_1.png</key>
+            <key type="filename">sources/animations_32px_player_crouch_walk_2.png</key>
+            <key type="filename">sources/animations_32px_player_crouch_walk_3.png</key>
+            <key type="filename">sources/animations_32px_player_death_0.png</key>
+            <key type="filename">sources/animations_32px_player_death_hat_0.png</key>
+            <key type="filename">sources/animations_32px_player_death_hat_1.png</key>
             <key type="filename">sources/animations_32px_player_idle_0.png</key>
             <key type="filename">sources/animations_32px_player_idle_1.png</key>
             <key type="filename">sources/animations_32px_player_idle_2.png</key>
