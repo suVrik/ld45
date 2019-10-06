@@ -5,12 +5,13 @@ const FlyingProjectile = require("./flying_projectile.js");
 class Flying extends MovieClip {
     constructor(x, y, nodes) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_flying"]], speed: 0.1},
+            idle: {frames: game.resources.sprites["animations_32px_enemy_flying_fly"], speed: 0.15},
         }, "idle");
 
         this.anchor.set(0.5, 0.5);
         this.x = x;
         this.y = y;
+        this.play();
 
         this.nodes = nodes ? nodes.slice() : [];
         this.nodes.unshift({ x: x, y: y });
@@ -41,6 +42,14 @@ class Flying extends MovieClip {
 
                 game.flyings.splice(game.flyings.indexOf(this), 1);
                 this.parent.removeChild(this);
+            }
+        }
+
+        if (Math.abs(delta_x) > 1e-5) {
+            if (delta_x > 0) {
+                this.scale.x = 1;
+            } else {
+                this.scale.x = -1;
             }
         }
 

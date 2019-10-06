@@ -5,7 +5,7 @@ const Physics = require("./physics.js");
 class BlockFalling extends MovieClip {
     constructor(x, y) {
         super({
-            idle: { name: "idle", frames: [game.resources.sprites["block_falling"]], speed: 0.1 },
+            idle: { frames: [game.resources.sprites["block_falling"]], speed: 0.1 },
         }, "idle");
 
         this.x = x;
@@ -35,9 +35,11 @@ class BlockFalling extends MovieClip {
             } else {
                 this.respawn_timeout -= elapsed;
                 if (this.respawn_timeout < 0) {
-                    this.destroy_timeout = null;
-                    this.respawn_timeout = null;
-                    this.visible = true;
+                    if (!Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x - 1e-1, this.y - 1e-1, game.config.tile_size + 2e-1, game.config.tile_size + 2e-1)) {
+                        this.destroy_timeout = null;
+                        this.respawn_timeout = null;
+                        this.visible = true;
+                    }
                 }
             }
         }
@@ -102,8 +104,8 @@ module.exports = {
         attack_area_height: 1000,
     },
     cloud: {
-        width: 25,
-        height: 16,
+        width: 30,
+        height: 10,
         speed: 60,
     },
     block_falling: {
@@ -119,12 +121,14 @@ const Physics = require("../physics.js");
 class Cloud extends MovieClip {
     constructor(x, y, nodes) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_cloud"]], speed: 0.1},
+            idle: {frames: game.resources.sprites["animations_32px_enemy_cloud_idle"], speed: 0.15},
+            jump: {frames: game.resources.sprites["animations_32px_enemy_cloud_jump"], speed: 0.15, loop: false},
         }, "idle");
 
         this.anchor.set(0.5, 0.5);
         this.x = x;
         this.y = y;
+        this.play();
 
         this.nodes = nodes ? nodes.slice() : [];
         this.nodes.unshift({ x: x, y: y });
@@ -133,6 +137,12 @@ class Cloud extends MovieClip {
         this.bounds = {
             width: game.config.cloud.width,
             height: game.config.cloud.height
+        };
+
+        this.onComplete = function() {
+            if (this.animation === "jump") {
+                this.gotoAndPlay("idle");
+            }
         };
     }
 
@@ -148,6 +158,7 @@ class Cloud extends MovieClip {
                          game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
             game.player.vertical_speed = -250;
             game.player.y = this.y + delta_y - game.config.cloud.height / 2 - game.player.bounds.height;
+            this.gotoAndPlay("jump");
         }
 
         this.x += delta_x;
@@ -174,12 +185,13 @@ const FlyingProjectile = require("./flying_projectile.js");
 class Flying extends MovieClip {
     constructor(x, y, nodes) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_flying"]], speed: 0.1},
+            idle: {frames: game.resources.sprites["animations_32px_enemy_flying_fly"], speed: 0.15},
         }, "idle");
 
         this.anchor.set(0.5, 0.5);
         this.x = x;
         this.y = y;
+        this.play();
 
         this.nodes = nodes ? nodes.slice() : [];
         this.nodes.unshift({ x: x, y: y });
@@ -210,6 +222,14 @@ class Flying extends MovieClip {
 
                 game.flyings.splice(game.flyings.indexOf(this), 1);
                 this.parent.removeChild(this);
+            }
+        }
+
+        if (Math.abs(delta_x) > 1e-5) {
+            if (delta_x > 0) {
+                this.scale.x = 1;
+            } else {
+                this.scale.x = -1;
             }
         }
 
@@ -252,6 +272,7 @@ class FlyingProjectile extends PIXI.Sprite {
         this.anchor.set(0.5, 0.5);
         this.x = x;
         this.y = y;
+        this.scale.x = this.scale.y = 0.5;
     }
 
     update_flying_projectile(elapsed) {
@@ -259,6 +280,11 @@ class FlyingProjectile extends PIXI.Sprite {
         if (Physics.overlap(this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size)) {
             game.flying_projectiles.splice(game.flying_projectiles.indexOf(this), 1);
             this.parent.removeChild(this);
+        }
+
+        if (this.scale.x < 1) {
+            this.scale.x = Math.min(this.scale.x + elapsed * 3, 1);
+            this.scale.y = this.scale.x;
         }
 
         if (Physics.aabb(this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {

@@ -4,7 +4,7 @@ const Physics = require("./physics.js");
 class BlockFalling extends MovieClip {
     constructor(x, y) {
         super({
-            idle: { name: "idle", frames: [game.resources.sprites["block_falling"]], speed: 0.1 },
+            idle: { frames: [game.resources.sprites["block_falling"]], speed: 0.1 },
         }, "idle");
 
         this.x = x;
@@ -34,9 +34,11 @@ class BlockFalling extends MovieClip {
             } else {
                 this.respawn_timeout -= elapsed;
                 if (this.respawn_timeout < 0) {
-                    this.destroy_timeout = null;
-                    this.respawn_timeout = null;
-                    this.visible = true;
+                    if (!Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x - 1e-1, this.y - 1e-1, game.config.tile_size + 2e-1, game.config.tile_size + 2e-1)) {
+                        this.destroy_timeout = null;
+                        this.respawn_timeout = null;
+                        this.visible = true;
+                    }
                 }
             }
         }

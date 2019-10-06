@@ -4,12 +4,14 @@ const Physics = require("../physics.js");
 class Cloud extends MovieClip {
     constructor(x, y, nodes) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_cloud"]], speed: 0.1},
+            idle: {frames: game.resources.sprites["animations_32px_enemy_cloud_idle"], speed: 0.15},
+            jump: {frames: game.resources.sprites["animations_32px_enemy_cloud_jump"], speed: 0.15, loop: false},
         }, "idle");
 
         this.anchor.set(0.5, 0.5);
         this.x = x;
         this.y = y;
+        this.play();
 
         this.nodes = nodes ? nodes.slice() : [];
         this.nodes.unshift({ x: x, y: y });
@@ -18,6 +20,12 @@ class Cloud extends MovieClip {
         this.bounds = {
             width: game.config.cloud.width,
             height: game.config.cloud.height
+        };
+
+        this.onComplete = function() {
+            if (this.animation === "jump") {
+                this.gotoAndPlay("idle");
+            }
         };
     }
 
@@ -33,6 +41,7 @@ class Cloud extends MovieClip {
                          game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
             game.player.vertical_speed = -250;
             game.player.y = this.y + delta_y - game.config.cloud.height / 2 - game.player.bounds.height;
+            this.gotoAndPlay("jump");
         }
 
         this.x += delta_x;

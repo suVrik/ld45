@@ -39,8 +39,8 @@ module.exports = {
         attack_area_height: 1000,
     },
     cloud: {
-        width: 25,
-        height: 16,
+        width: 30,
+        height: 10,
         speed: 60,
     },
     block_falling: {
