@@ -1,5 +1,6 @@
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
+const Spiky = require("./enemies/spiky.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -11,6 +12,8 @@ window.game = {
     player: null,
     level: null,
     hazard_vines: [],
+    spikes: [],
+    draw_hitboxes: true,
 };
 
 game.render.init();
@@ -66,12 +69,14 @@ let construct_level = function(level_name) {
         tiles_back: new PIXI.Container(),
         entities: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
+        hitboxes: new PIXI.Graphics(),
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
     game.containers.level.addChild(game.containers.tiles_front);
+    game.containers.level.addChild(game.containers.hitboxes);
 
     game.containers.stage.addChild(game.containers.level);
 
@@ -81,6 +86,7 @@ let construct_level = function(level_name) {
 
     game.player = null;
     game.hazard_vines = [];
+    game.spikes = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -97,6 +103,10 @@ let construct_level = function(level_name) {
                     game.containers.entities.addChild(hazard_vines);
                 }
             }
+        } else if (entity.type === "enemy_spiky") {
+            const spiky = new Spiky(entity.x, entity.y, entity.nodes);
+            game.spikes.push(spiky);
+            game.containers.entities.addChild(spiky);
         }
     }
 
@@ -113,9 +123,16 @@ game.restart = function() {
 
 let main_loop = function() {
     const elapsed = game.render.application.ticker.elapsedMS / 1000;
+
+    game.containers.hitboxes.clear();
+    game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+
     game.player.update_player(elapsed);
     for (let i = 0; i < game.hazard_vines.length; i++) {
         game.hazard_vines[i].update_hazard_vines();
+    }
+    for (let i = 0; i < game.spikes.length; i++) {
+        game.spikes[i].update_spiky(elapsed);
     }
     game.camera.update_camera(elapsed);
     game.input.update();

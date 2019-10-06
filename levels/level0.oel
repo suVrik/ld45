@@ -1246,20 +1246,8 @@
     </enemy_flying>
     <enemy_spitting id="17" x="144" y="208" />
     <enemy_spitting id="18" x="752" y="64" />
-    <enemy_spiky id="19" x="64" y="464">
-      <node x="144" y="464" />
-    </enemy_spiky>
-    <enemy_spiky id="20" x="144" y="464">
-      <node x="240" y="464" />
-    </enemy_spiky>
-    <enemy_spiky id="21" x="240" y="464">
-      <node x="352" y="464" />
-    </enemy_spiky>
     <enemy_spiky id="22" x="352" y="464">
       <node x="480" y="464" />
-    </enemy_spiky>
-    <enemy_spiky id="23" x="480" y="464">
-      <node x="624" y="464" />
     </enemy_spiky>
     <enemy_spitting id="24" x="768" y="176">
       <node x="960" y="176" />
@@ -1293,6 +1281,18 @@
     <enemy_flying id="34" x="704" y="144">
       <node x="704" y="400" />
     </enemy_flying>
+    <enemy_spiky id="19" x="64" y="464">
+      <node x="144" y="464" />
+    </enemy_spiky>
+    <enemy_spiky id="20" x="144" y="464">
+      <node x="240" y="464" />
+    </enemy_spiky>
+    <enemy_spiky id="21" x="240" y="464">
+      <node x="352" y="464" />
+    </enemy_spiky>
+    <enemy_spiky id="23" x="480" y="464">
+      <node x="624" y="464" />
+    </enemy_spiky>
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords" />
   <hitboxes exportMode="Rectangles">

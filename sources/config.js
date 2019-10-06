@@ -23,4 +23,9 @@ module.exports = {
         post_jump_sliding_factor: 0.6,
         post_jump_slowdown_duration: 0.5,
     },
+    spiky: {
+        width: 16,
+        height: 16,
+        speed: 60,
+    }
 };

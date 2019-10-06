@@ -50,9 +50,9 @@ class Player extends MovieClip {
             }
 
             if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
-                    const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
-                    const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
-                    Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
+                const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
+                const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+                Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
             }
         } else {
             this.x += this.horizontal_speed * elapsed;
@@ -168,6 +168,10 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration = game.config.player.post_jump_slowdown_duration;
         } else {
             this.post_jump_slowdown_duration -= elapsed;
+        }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
         }
     }
 

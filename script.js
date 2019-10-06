@@ -36,9 +36,63 @@ module.exports = {
         post_jump_sliding_factor: 0.6,
         post_jump_slowdown_duration: 0.5,
     },
+    spiky: {
+        width: 16,
+        height: 16,
+        speed: 60,
+    }
 };
 
 },{}],3:[function(require,module,exports){
+const MovieClip = require("../movie_clip.js");
+const Physics = require("../physics");
+
+class Spiky extends MovieClip {
+    constructor(x, y, nodes) {
+        super({
+            idle: {name: "idle", frames: [game.resources.sprites["enemy_spiky"]], speed: 0.1},
+        }, "idle");
+
+        this.anchor.set(0.5, 1);
+        this.x = x;
+        this.y = y;
+        this.nodes = [
+            { x: x, y: y },
+            { x: nodes[0].x, y: nodes[0].y },
+        ];
+        this.current_node = 0;
+
+        this.bounds = {
+            width: game.config.spiky.width,
+            height: game.config.spiky.height
+        };
+    }
+
+    update_spiky(elapsed) {
+        const next_node = (this.current_node + 1) % 2;
+        if (this.x < this.nodes[next_node].x) {
+            this.x = Math.min(this.x + game.config.spiky.speed * elapsed, this.nodes[next_node].x);
+            this.scale.x = 1;
+        } else {
+            this.x = Math.max(this.x - game.config.spiky.speed * elapsed, this.nodes[next_node].x);
+            this.scale.x = -1;
+        }
+        if (Math.abs(this.x - this.nodes[next_node].x) < 1e-5) {
+            this.current_node = next_node;
+        }
+        if (Physics.aabb(this.x - game.config.spiky.width / 2, this.y - game.config.spiky.height, game.config.spiky.width, game.config.spiky.height,
+                         game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+            game.player.murder();
+        }
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x - game.config.spiky.width / 2, this.y - game.config.spiky.height, game.config.spiky.width, game.config.spiky.height);
+        }
+    }
+}
+
+module.exports = Spiky;
+
+},{"../movie_clip.js":7,"../physics":8}],4:[function(require,module,exports){
 const Physics = require("./physics");
 
 class HazardVines extends PIXI.AnimatedSprite {
@@ -53,13 +107,16 @@ class HazardVines extends PIXI.AnimatedSprite {
         if (Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x, this.y, game.config.tile_size, game.config.tile_size)) {
             game.player.murder();
         }
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x, this.y, game.config.tile_size, game.config.tile_size);
+        }
     }
 
 }
 
 module.exports = HazardVines;
 
-},{"./physics":7}],4:[function(require,module,exports){
+},{"./physics":8}],5:[function(require,module,exports){
 const init_input = function() {
     document.body.onkeydown = event => input.keys[event.code] = true;
     document.body.onkeyup = event => input.keys[event.code] = false;
@@ -128,9 +185,10 @@ const input = {
 
 module.exports = input;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
+const Spiky = require("./enemies/spiky.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -142,6 +200,8 @@ window.game = {
     player: null,
     level: null,
     hazard_vines: [],
+    spikes: [],
+    draw_hitboxes: true,
 };
 
 game.render.init();
@@ -197,12 +257,14 @@ let construct_level = function(level_name) {
         tiles_back: new PIXI.Container(),
         entities: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
+        hitboxes: new PIXI.Graphics(),
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
     game.containers.level.addChild(game.containers.tiles_front);
+    game.containers.level.addChild(game.containers.hitboxes);
 
     game.containers.stage.addChild(game.containers.level);
 
@@ -212,6 +274,7 @@ let construct_level = function(level_name) {
 
     game.player = null;
     game.hazard_vines = [];
+    game.spikes = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -228,6 +291,10 @@ let construct_level = function(level_name) {
                     game.containers.entities.addChild(hazard_vines);
                 }
             }
+        } else if (entity.type === "enemy_spiky") {
+            const spiky = new Spiky(entity.x, entity.y, entity.nodes);
+            game.spikes.push(spiky);
+            game.containers.entities.addChild(spiky);
         }
     }
 
@@ -244,15 +311,22 @@ game.restart = function() {
 
 let main_loop = function() {
     const elapsed = game.render.application.ticker.elapsedMS / 1000;
+
+    game.containers.hitboxes.clear();
+    game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+
     game.player.update_player(elapsed);
     for (let i = 0; i < game.hazard_vines.length; i++) {
         game.hazard_vines[i].update_hazard_vines();
+    }
+    for (let i = 0; i < game.spikes.length; i++) {
+        game.spikes[i].update_spiky(elapsed);
     }
     game.camera.update_camera(elapsed);
     game.input.update();
 };
 
-},{"./camera.js":1,"./config.js":2,"./hazard_vines.js":3,"./input.js":4,"./player.js":8,"./render.js":9,"./resources/resources.js":11}],6:[function(require,module,exports){
+},{"./camera.js":1,"./config.js":2,"./enemies/spiky.js":3,"./hazard_vines.js":4,"./input.js":5,"./player.js":9,"./render.js":10,"./resources/resources.js":12}],7:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors, default_animation) {
         super(descriptors[default_animation].frames);
@@ -290,7 +364,7 @@ class MovieClip extends PIXI.AnimatedSprite {
 
 module.exports = MovieClip;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
 };
@@ -370,7 +444,7 @@ module.exports = {
     move: move,
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics");
 
@@ -423,9 +497,9 @@ class Player extends MovieClip {
             }
 
             if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
-                    const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
-                    const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
-                    Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
+                const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
+                const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+                Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
             }
         } else {
             this.x += this.horizontal_speed * elapsed;
@@ -542,6 +616,10 @@ class Player extends MovieClip {
         } else {
             this.post_jump_slowdown_duration -= elapsed;
         }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
+        }
     }
 
     murder() {
@@ -562,7 +640,7 @@ class Player extends MovieClip {
 
 module.exports = Player;
 
-},{"./movie_clip.js":6,"./physics":7}],9:[function(require,module,exports){
+},{"./movie_clip.js":7,"./physics":8}],10:[function(require,module,exports){
 const update_physical_size = function() {
     const horizontal_padding = 80, vertical_padding = 180;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
@@ -625,7 +703,7 @@ const render = {
 
 module.exports = render;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -743,7 +821,7 @@ const levels = {
 
 module.exports = levels;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -791,7 +869,7 @@ const resources = {
 
 module.exports = resources;
 
-},{"./levels.js":10,"./sounds.js":12,"./sprites.js":13}],12:[function(require,module,exports){
+},{"./levels.js":11,"./sounds.js":13,"./sprites.js":14}],13:[function(require,module,exports){
 const load_sounds = function() {
     function load_sound(name, volume = 1.0) {
         sounds.total_count++;
@@ -826,7 +904,7 @@ const sounds = {
 
 module.exports = sounds;
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -867,4 +945,4 @@ const sprites = {
 
 module.exports = sprites;
 
-},{}]},{},[5]);
+},{}]},{},[6]);

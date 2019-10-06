@@ -12,6 +12,9 @@ class HazardVines extends PIXI.AnimatedSprite {
         if (Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x, this.y, game.config.tile_size, game.config.tile_size)) {
             game.player.murder();
         }
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x, this.y, game.config.tile_size, game.config.tile_size);
+        }
     }
 
 }
