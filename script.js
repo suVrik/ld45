@@ -1,4 +1,43 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+class Camera {
+    update_camera(elapsed) {
+        const desired_x = game.render.render_width / 2 - game.player.x;
+        game.containers.level.x = Math.max(Math.min(desired_x, 0), game.render.render_width - game.config.level.width);
+        game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y, 0), game.render.render_height - game.config.level.height);
+    }
+}
+
+module.exports = Camera;
+
+},{}],2:[function(require,module,exports){
+module.exports = {
+    tile_size: 16,
+    level: {
+        width: 0,
+        height: 0,
+    },
+    player: {
+        width: 10,
+        height: 8,
+        speed: 120,
+        acceleration: 1080,
+        gravity_acceleration: 1080,
+        fall_gravity: 90,
+        max_gravity: 666,
+        jump_speed: 222,
+        high_jump_gravity_factor: 0.5,
+        late_jump_duration: 0.05,
+        early_jump_duration: 0.07,
+        sliding_factor: 0.75,
+        jump_off_walls_duration: 0.12,
+        jump_off_walls_speed: 150,
+        post_jump_slowdown_factor: 0.7,
+        post_jump_sliding_factor: 0.7,
+        post_jump_slowdown_duration: 0.5,
+    },
+};
+
+},{}],3:[function(require,module,exports){
 const init_input = function() {
     document.body.onkeydown = event => input.keys[event.code] = true;
     document.body.onkeyup = event => input.keys[event.code] = false;
@@ -67,14 +106,19 @@ const input = {
 
 module.exports = input;
 
-},{}],2:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
+const Player = require("./player.js");
+const Camera = require("./camera.js");
+
 window.game = {
     render: require("./render.js"),
     resources: require("./resources/resources.js"),
     input: require("./input.js"),
+    config: require("./config.js"),
+    camera: null,
+    player: null,
+    level: null,
 };
-
-const MovieClip = require("./movie_clip.js");
 
 game.render.init();
 
@@ -87,17 +131,17 @@ game.resources.load();
 
 game.input.init();
 
-game.config = {
-    tile_size: 16,
-};
-
 let construct_level = function(level_name) {
-    const level = game.resources.levels[level_name];
     const tileset = game.resources.sprites["tileset"];
 
+    game.level = game.resources.levels[level_name];
+
+    game.config.level.width = game.level.width;
+    game.config.level.height = game.level.height;
+
     function draw_tiles_layer(layer_name) {
-        for (let i = 0; i < level[layer_name].length; i++) {
-            const tile_descriptor = level[layer_name][i];
+        for (let i = 0; i < game.level[layer_name].length; i++) {
+            const tile_descriptor = game.level[layer_name][i];
 
             const tile_sprite = new PIXI.Texture(tileset, tileset.frame.clone());
             if (tileset.rotate) {
@@ -128,7 +172,6 @@ let construct_level = function(level_name) {
         tiles_back: new PIXI.Container(),
         entities: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
-        player: null,
     };
 
     game.containers.level.addChild(game.containers.tiles_back);
@@ -140,26 +183,29 @@ let construct_level = function(level_name) {
     draw_tiles_layer("tiles_back");
     draw_tiles_layer("tiles_front");
 
-    for (let i = 0; i < level["entities"].length; i++) {
-        const entity = level["entities"][i];
-        if (entity.type === "test") {
-            game.containers.player = new MovieClip([{ frames: game.resources.sprites["player_walk"], speed: 0.1 }]);
-            game.containers.player.x = entity.x;
-            game.containers.player.y = entity.y;
-            game.containers.player.play();
-            game.containers.entities.addChild(game.containers.player);
+    for (let i = 0; i < game.level["entities"].length; i++) {
+        const entity = game.level["entities"][i];
+        if (entity.type === "player") {
+            game.player = new Player(entity.x, entity.y);
+            game.containers.entities.addChild(game.player);
         }
     }
+
+    game.camera = new Camera();
 };
 
 let initialize = function() {
     construct_level("level0");
 };
 
-let main_loop = function(elapsed) {
+let main_loop = function() {
+    const elapsed = game.render.application.ticker.elapsedMS / 1000;
+    game.player.update_player(elapsed);
+    game.camera.update_camera(elapsed);
+    game.input.update();
 };
 
-},{"./input.js":1,"./movie_clip.js":3,"./render.js":4,"./resources/resources.js":6}],3:[function(require,module,exports){
+},{"./camera.js":1,"./config.js":2,"./input.js":3,"./player.js":7,"./render.js":8,"./resources/resources.js":10}],5:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors) {
         super(descriptors[0].frames);
@@ -197,7 +243,233 @@ class MovieClip extends PIXI.AnimatedSprite {
 
 module.exports = MovieClip;
 
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
+const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
+};
+
+const overlap = function(x, y, width, height) {
+    const hitboxes = game.level["hitboxes"];
+    for (let i = 0; i < hitboxes.length; i++) {
+        if (aabb(x, y, width, height, hitboxes[i].x, hitboxes[i].y, hitboxes[i].width, hitboxes[i].height)) {
+            return hitboxes[i];
+        }
+    }
+    return null;
+};
+
+const move = function(entity, dx, dy) {
+    const result = {
+        top: false,
+        bottom: false,
+        left: false,
+        right: false,
+        dx: dx,
+        dy: dy,
+        object: null,
+    };
+
+    const hitboxes = game.level["hitboxes"];
+    for (let i = 0; i < hitboxes.length; i++) {
+        const hitbox = hitboxes[i];
+        if (aabb(entity.x - Math.max(-result.dx, 0),
+                 entity.y - Math.max(-result.dy, 0),
+                 entity.bounds.width + Math.abs(result.dx),
+                 entity.bounds.height + Math.abs(result.dy),
+                 hitbox.x, hitbox.y, hitbox.width, hitbox.height)) {
+            result.object = result.object || hitbox;
+
+            let delta_x = null;
+            if (Math.abs(dx) > 1e-8) {
+                if (entity.x < hitbox.x) {
+                    result.right = true;
+                    delta_x = (hitbox.x - (entity.x + entity.bounds.width)) - result.dx;
+                } else {
+                    result.left = true;
+                    delta_x = ((hitbox.x + hitbox.width) - entity.x) - result.dx;
+                }
+            }
+
+            let delta_y = null;
+            if (Math.abs(dy) > 1e-8) {
+                if (entity.y < hitbox.y) {
+                    result.bottom = true;
+                    delta_y = (hitbox.y - (entity.y + entity.bounds.height)) - result.dy;
+                } else {
+                    result.top = true;
+                    delta_y = ((hitbox.y + hitbox.height) - entity.y) - result.dy;
+                }
+            }
+
+            if (delta_y && (!delta_x || Math.abs(delta_y) < Math.abs(delta_x))) {
+                result.left = result.right = false;
+                result.dy += delta_y;
+            } else if (delta_x) {
+                result.top = result.bottom = false;
+                result.dx += delta_x;
+            }
+        }
+    }
+
+    entity.x += result.dx;
+    entity.y += result.dy;
+
+    return result;
+};
+
+module.exports = {
+    aabb: aabb,
+    overlap: overlap,
+    move: move,
+};
+
+},{}],7:[function(require,module,exports){
+const MovieClip = require("./movie_clip.js");
+const Physics = require("./physics");
+
+class Player extends MovieClip {
+    constructor(x, y) {
+        super([
+            { name: "idle", frames: [game.resources.sprites["player_walk_0"]], speed: 0.1 }
+        ]);
+
+        this.anchor.set(0.25, 0.5);
+        this.x = x;
+        this.y = y;
+
+        this.bounds = {
+            width: game.config.player.width,
+            height: game.config.player.height
+        };
+
+        this.vertical_speed = game.config.player.fall_gravity;
+        this.horizontal_speed = 0;
+        this.is_grounded = false;
+        this.late_jump_duration = 0;
+        this.is_sliding = false;
+        this.jump_off_walls_duration = 0;
+        this.jump_off_left_wall = false;
+        this.jump_off_right_wall = false;
+        this.fall_factor = 1;
+        this.post_jump_slowdown_duration = 0;
+    }
+
+    update_movement(elapsed) {
+        const left_pressed = game.input.is_key_down("KeyA");
+        const right_pressed = game.input.is_key_down("KeyD");
+        if (left_pressed && !right_pressed) {
+            this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
+        } else if (right_pressed && !left_pressed) {
+            this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, Math.max(this.horizontal_speed, game.config.player.speed));
+        } else {
+            if (this.horizontal_speed > 0) {
+                this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, 0);
+            } else {
+                this.horizontal_speed = Math.min(this.horizontal_speed + game.config.player.acceleration * elapsed, 0);
+            }
+        }
+
+        if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
+            const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
+            const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+            Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
+        }
+    }
+
+    update_sliding(elapsed) {
+        this.is_sliding = false;
+        if (Physics.overlap(this.x - 1e-1, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
+            this.is_sliding = true;
+            this.jump_off_left_wall = true;
+            this.jump_off_right_wall = false;
+        }
+        if (Physics.overlap(this.x + 1e-1, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
+            this.is_sliding = true;
+            this.jump_off_left_wall = false;
+            this.jump_off_right_wall = true;
+        }
+
+        if (this.is_sliding) {
+            const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
+            const sliding_factor = game.config.player.post_jump_sliding_factor * time;
+            this.fall_factor = game.config.player.sliding_factor + (1 - game.config.player.sliding_factor) * sliding_factor;
+            this.jump_off_walls_duration = game.config.player.jump_off_walls_duration;
+        } else {
+            this.fall_factor = 1;
+            this.jump_off_walls_duration -= elapsed;
+        }
+    }
+
+    update_jumping(elapsed) {
+        const jump_pressed = game.input.is_key_pressed("Space");
+        if (jump_pressed || this.early_jump_duration > 0) {
+            this.early_jump_duration -= elapsed;
+
+            if (this.late_jump_duration > 0 || this.jump_off_walls_duration > 0) {
+                this.vertical_speed = -game.config.player.jump_speed;
+
+                if (this.jump_off_walls_duration > 0) {
+                    if (this.jump_off_left_wall) {
+                        this.horizontal_speed = game.config.player.jump_off_walls_speed;
+                    } else if (this.jump_off_right_wall) {
+                        this.horizontal_speed = -game.config.player.jump_off_walls_speed;
+                    }
+                }
+
+                this.early_jump_duration = 0;
+            } else if (jump_pressed) {
+                this.early_jump_duration = game.config.player.early_jump_duration;
+            }
+        } else {
+            this.early_jump_duration -= elapsed;
+        }
+    }
+
+    update_gravity(elapsed) {
+        const hit = Math.abs(this.vertical_speed * elapsed) > 1e-8 ? Physics.move(this, 0, this.vertical_speed * elapsed) : null;
+        this.is_grounded = hit && hit.bottom;
+        if (this.is_grounded) {
+            this.late_jump_duration = game.config.player.late_jump_duration;
+            this.vertical_speed = game.config.player.fall_gravity;
+        } else {
+            this.late_jump_duration -= elapsed;
+            if (hit && hit.top) {
+                this.vertical_speed = 0;
+            } else {
+                if (this.vertical_speed < 0) {
+                    const jump_down = game.input.is_key_down("Space");
+                    if (jump_down) {
+                        this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * game.config.player.high_jump_gravity_factor * elapsed, game.config.player.max_gravity);
+                    } else {
+                        this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * elapsed, game.config.player.max_gravity);
+                    }
+                } else {
+                    this.vertical_speed = Math.min((this.vertical_speed + game.config.player.gravity_acceleration * elapsed) * this.fall_factor, game.config.player.max_gravity);
+                }
+            }
+        }
+    }
+
+    update_player(elapsed) {
+        const was_grounded = this.is_grounded;
+        const was_sliding = this.is_sliding;
+
+        this.update_movement(elapsed);
+        this.update_sliding(elapsed);
+        this.update_jumping(elapsed);
+        this.update_gravity(elapsed);
+
+        if ((!was_grounded && this.is_grounded) || (!was_sliding && this.is_sliding)) {
+            this.post_jump_slowdown_duration = game.config.player.post_jump_slowdown_duration;
+        } else {
+            this.post_jump_slowdown_duration -= elapsed;
+        }
+    }
+}
+
+module.exports = Player;
+
+},{"./movie_clip.js":5,"./physics":6}],8:[function(require,module,exports){
 const update_physical_size = function() {
     const horizontal_padding = 80, vertical_padding = 180;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
@@ -230,6 +502,8 @@ const update_physical_size = function() {
 };
 
 const init_window = function() {
+    PIXI.settings.ROUND_PIXELS = true;
+    
     render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
     render.stage = render.application.stage;
 
@@ -258,7 +532,7 @@ const render = {
 
 module.exports = render;
 
-},{}],5:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -284,14 +558,28 @@ const load_levels = function() {
                                             x: parseInt(tile.getAttribute("x")),
                                             y: parseInt(tile.getAttribute("y")),
                                             tx: parseInt(tile.getAttribute("tx")),
-                                            ty: parseInt(tile.getAttribute("ty"))
+                                            ty: parseInt(tile.getAttribute("ty")),
                                         });
                                     }
                                 }
                             }
                             result[container.tagName] = tiles;
                         } else if (container.hasAttribute("exportMode")) {
-                            result[container.tagName] = container.textContent.trim().split("\n").map(string => string.split("").map(char => char === "1"));
+                            const rectangles = [];
+                            for (let j in container.childNodes) {
+                                if (container.childNodes.hasOwnProperty(j)) {
+                                    const rectangle = container.childNodes[j];
+                                    if (rectangle.nodeType === 1) {
+                                        rectangles.push({
+                                            x: parseInt(rectangle.getAttribute("x")),
+                                            y: parseInt(rectangle.getAttribute("y")),
+                                            width: parseInt(rectangle.getAttribute("w")),
+                                            height: parseInt(rectangle.getAttribute("h")),
+                                        });
+                                    }
+                                }
+                            }
+                            result[container.tagName] = rectangles;
                         } else {
                             const entities = [];
                             for (let j in container.childNodes) {
@@ -315,7 +603,7 @@ const load_levels = function() {
                                                     entity.nodes = entity.nodes || [];
                                                     entity.nodes.push({
                                                         x: parseInt(node.getAttribute("x")),
-                                                        y: parseInt(node.getAttribute("y"))
+                                                        y: parseInt(node.getAttribute("y")),
                                                     });
                                                 }
                                             }
@@ -362,7 +650,7 @@ const levels = {
 
 module.exports = levels;
 
-},{}],6:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -410,7 +698,7 @@ const resources = {
 
 module.exports = resources;
 
-},{"./levels.js":5,"./sounds.js":7,"./sprites.js":8}],7:[function(require,module,exports){
+},{"./levels.js":9,"./sounds.js":11,"./sprites.js":12}],11:[function(require,module,exports){
 const load_sounds = function() {
     function load_sound(name, volume = 1.0) {
         sounds.total_count++;
@@ -445,7 +733,7 @@ const sounds = {
 
 module.exports = sounds;
 
-},{}],8:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -486,4 +774,4 @@ const sprites = {
 
 module.exports = sprites;
 
-},{}]},{},[2]);
+},{}]},{},[4]);

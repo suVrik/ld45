@@ -37,7 +37,7 @@
         <Y>1</Y>
       </ScrollFactor>
       <Color A="255" R="0" G="0" B="0" />
-      <ExportMode>Bitstring</ExportMode>
+      <ExportMode>Rectangles</ExportMode>
     </LayerDefinition>
     <LayerDefinition xsi:type="TileLayerDefinition">
       <Name>tiles_back</Name>
@@ -87,14 +87,14 @@
     </Tileset>
   </Tilesets>
   <EntityDefinitions>
-    <EntityDefinition Name="test" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
+    <EntityDefinition Name="player" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
       <Size>
         <Width>16</Width>
         <Height>16</Height>
       </Size>
       <Origin>
-        <X>0</X>
-        <Y>0</Y>
+        <X>8</X>
+        <Y>8</Y>
       </Origin>
       <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\player_walk_0.png" Tiled="false">
         <RectColor A="255" R="255" G="0" B="0" />

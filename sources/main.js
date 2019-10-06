@@ -1,10 +1,15 @@
+const Player = require("./player.js");
+const Camera = require("./camera.js");
+
 window.game = {
     render: require("./render.js"),
     resources: require("./resources/resources.js"),
     input: require("./input.js"),
+    config: require("./config.js"),
+    camera: null,
+    player: null,
+    level: null,
 };
-
-const MovieClip = require("./movie_clip.js");
 
 game.render.init();
 
@@ -17,17 +22,17 @@ game.resources.load();
 
 game.input.init();
 
-game.config = {
-    tile_size: 16,
-};
-
 let construct_level = function(level_name) {
-    const level = game.resources.levels[level_name];
     const tileset = game.resources.sprites["tileset"];
 
+    game.level = game.resources.levels[level_name];
+
+    game.config.level.width = game.level.width;
+    game.config.level.height = game.level.height;
+
     function draw_tiles_layer(layer_name) {
-        for (let i = 0; i < level[layer_name].length; i++) {
-            const tile_descriptor = level[layer_name][i];
+        for (let i = 0; i < game.level[layer_name].length; i++) {
+            const tile_descriptor = game.level[layer_name][i];
 
             const tile_sprite = new PIXI.Texture(tileset, tileset.frame.clone());
             if (tileset.rotate) {
@@ -58,7 +63,6 @@ let construct_level = function(level_name) {
         tiles_back: new PIXI.Container(),
         entities: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
-        player: null,
     };
 
     game.containers.level.addChild(game.containers.tiles_back);
@@ -70,21 +74,24 @@ let construct_level = function(level_name) {
     draw_tiles_layer("tiles_back");
     draw_tiles_layer("tiles_front");
 
-    for (let i = 0; i < level["entities"].length; i++) {
-        const entity = level["entities"][i];
-        if (entity.type === "test") {
-            game.containers.player = new MovieClip([{ frames: game.resources.sprites["player_walk"], speed: 0.1 }]);
-            game.containers.player.x = entity.x;
-            game.containers.player.y = entity.y;
-            game.containers.player.play();
-            game.containers.entities.addChild(game.containers.player);
+    for (let i = 0; i < game.level["entities"].length; i++) {
+        const entity = game.level["entities"][i];
+        if (entity.type === "player") {
+            game.player = new Player(entity.x, entity.y);
+            game.containers.entities.addChild(game.player);
         }
     }
+
+    game.camera = new Camera();
 };
 
 let initialize = function() {
     construct_level("level0");
 };
 
-let main_loop = function(elapsed) {
+let main_loop = function() {
+    const elapsed = game.render.application.ticker.elapsedMS / 1000;
+    game.player.update_player(elapsed);
+    game.camera.update_camera(elapsed);
+    game.input.update();
 };

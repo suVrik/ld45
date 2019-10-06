@@ -23,14 +23,28 @@ const load_levels = function() {
                                             x: parseInt(tile.getAttribute("x")),
                                             y: parseInt(tile.getAttribute("y")),
                                             tx: parseInt(tile.getAttribute("tx")),
-                                            ty: parseInt(tile.getAttribute("ty"))
+                                            ty: parseInt(tile.getAttribute("ty")),
                                         });
                                     }
                                 }
                             }
                             result[container.tagName] = tiles;
                         } else if (container.hasAttribute("exportMode")) {
-                            result[container.tagName] = container.textContent.trim().split("\n").map(string => string.split("").map(char => char === "1"));
+                            const rectangles = [];
+                            for (let j in container.childNodes) {
+                                if (container.childNodes.hasOwnProperty(j)) {
+                                    const rectangle = container.childNodes[j];
+                                    if (rectangle.nodeType === 1) {
+                                        rectangles.push({
+                                            x: parseInt(rectangle.getAttribute("x")),
+                                            y: parseInt(rectangle.getAttribute("y")),
+                                            width: parseInt(rectangle.getAttribute("w")),
+                                            height: parseInt(rectangle.getAttribute("h")),
+                                        });
+                                    }
+                                }
+                            }
+                            result[container.tagName] = rectangles;
                         } else {
                             const entities = [];
                             for (let j in container.childNodes) {
@@ -54,7 +68,7 @@ const load_levels = function() {
                                                     entity.nodes = entity.nodes || [];
                                                     entity.nodes.push({
                                                         x: parseInt(node.getAttribute("x")),
-                                                        y: parseInt(node.getAttribute("y"))
+                                                        y: parseInt(node.getAttribute("y")),
                                                     });
                                                 }
                                             }
