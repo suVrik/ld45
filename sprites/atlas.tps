@@ -219,6 +219,18 @@
             <key type="filename">sources/animations_32px_enemy_spiky_walk_1.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_2.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_3.png</key>
+            <key type="filename">sources/animations_32px_player_idle_0.png</key>
+            <key type="filename">sources/animations_32px_player_idle_1.png</key>
+            <key type="filename">sources/animations_32px_player_idle_2.png</key>
+            <key type="filename">sources/animations_32px_player_idle_3.png</key>
+            <key type="filename">sources/animations_32px_player_jump_0.png</key>
+            <key type="filename">sources/animations_32px_player_jump_1.png</key>
+            <key type="filename">sources/animations_32px_player_run_0.png</key>
+            <key type="filename">sources/animations_32px_player_run_1.png</key>
+            <key type="filename">sources/animations_32px_player_run_2.png</key>
+            <key type="filename">sources/animations_32px_player_run_3.png</key>
+            <key type="filename">sources/animations_32px_player_run_4.png</key>
+            <key type="filename">sources/animations_32px_player_run_5.png</key>
             <key type="filename">sources/enemy_cloud.png</key>
             <key type="filename">sources/enemy_flying.png</key>
             <key type="filename">sources/enemy_jumping.png</key>
@@ -235,6 +247,19 @@
                 <rect>8,8,16,16</rect>
                 <key>scale9Paddings</key>
                 <rect>8,8,16,16</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/background.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>100,60,200,120</rect>
+                <key>scale9Paddings</key>
+                <rect>100,60,200,120</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
