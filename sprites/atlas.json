@@ -1,33 +1,33 @@
 {"frames": {
 
-"block_falling":
+"animations_32px_enemy_spiky_walk_0":
 {
-	"frame": {"x":27,"y":0,"w":16,"h":16},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
-	"sourceSize": {"w":16,"h":16},
-	"anchor": {"x":0,"y":0}
-},
-"coin":
-{
-	"frame": {"x":9,"y":0,"w":8,"h":8},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":8,"h":8},
-	"sourceSize": {"w":8,"h":8},
-	"anchor": {"x":0,"y":0}
-},
-"enemy_cloud":
-{
-	"frame": {"x":160,"y":0,"w":32,"h":32},
+	"frame": {"x":0,"y":0,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
 	"sourceSize": {"w":32,"h":32},
 	"anchor": {"x":0,"y":0}
 },
-"enemy_flying":
+"animations_32px_enemy_spiky_walk_1":
+{
+	"frame": {"x":33,"y":0,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32},
+	"anchor": {"x":0,"y":0}
+},
+"animations_32px_enemy_spiky_walk_2":
+{
+	"frame": {"x":66,"y":0,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32},
+	"anchor": {"x":0,"y":0}
+},
+"animations_32px_enemy_spiky_walk_3":
 {
 	"frame": {"x":0,"y":33,"w":32,"h":32},
 	"rotated": false,
@@ -36,9 +36,45 @@
 	"sourceSize": {"w":32,"h":32},
 	"anchor": {"x":0,"y":0}
 },
+"block_falling":
+{
+	"frame": {"x":33,"y":33,"w":16,"h":16},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
+	"sourceSize": {"w":16,"h":16},
+	"anchor": {"x":0,"y":0}
+},
+"coin":
+{
+	"frame": {"x":50,"y":33,"w":8,"h":8},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":8,"h":8},
+	"sourceSize": {"w":8,"h":8},
+	"anchor": {"x":0,"y":0}
+},
+"enemy_cloud":
+{
+	"frame": {"x":59,"y":33,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32},
+	"anchor": {"x":0,"y":0}
+},
+"enemy_flying":
+{
+	"frame": {"x":92,"y":33,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32},
+	"anchor": {"x":0,"y":0}
+},
 "enemy_jumping":
 {
-	"frame": {"x":193,"y":0,"w":32,"h":32},
+	"frame": {"x":0,"y":66,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
@@ -47,7 +83,7 @@
 },
 "enemy_mouse":
 {
-	"frame": {"x":33,"y":33,"w":32,"h":32},
+	"frame": {"x":33,"y":66,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
@@ -56,7 +92,7 @@
 },
 "enemy_spiky":
 {
-	"frame": {"x":66,"y":33,"w":32,"h":32},
+	"frame": {"x":66,"y":66,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
@@ -65,7 +101,7 @@
 },
 "enemy_spitting":
 {
-	"frame": {"x":127,"y":0,"w":32,"h":32},
+	"frame": {"x":0,"y":99,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
@@ -74,7 +110,7 @@
 },
 "hazard_vines":
 {
-	"frame": {"x":44,"y":0,"w":16,"h":16},
+	"frame": {"x":33,"y":99,"w":16,"h":16},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":16,"h":16},
@@ -83,7 +119,7 @@
 },
 "player_jump":
 {
-	"frame": {"x":61,"y":0,"w":32,"h":32},
+	"frame": {"x":50,"y":99,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
@@ -92,7 +128,7 @@
 },
 "player_still":
 {
-	"frame": {"x":94,"y":0,"w":32,"h":32},
+	"frame": {"x":83,"y":99,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
@@ -101,7 +137,7 @@
 },
 "projectile_flying":
 {
-	"frame": {"x":0,"y":0,"w":8,"h":8},
+	"frame": {"x":116,"y":99,"w":8,"h":8},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":8,"h":8},
@@ -110,7 +146,7 @@
 },
 "projectile_spit":
 {
-	"frame": {"x":18,"y":0,"w":8,"h":8},
+	"frame": {"x":0,"y":132,"w":8,"h":8},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":8,"h":8},
@@ -119,20 +155,23 @@
 },
 "tileset":
 {
-	"frame": {"x":99,"y":33,"w":128,"h":192},
+	"frame": {"x":0,"y":141,"w":128,"h":192},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":128,"h":192},
 	"sourceSize": {"w":128,"h":192},
 	"anchor": {"x":0.5,"y":0.5}
 }},
+"animations": {
+	"animations_32px_enemy_spiky_walk": ["animations_32px_enemy_spiky_walk_0","animations_32px_enemy_spiky_walk_1","animations_32px_enemy_spiky_walk_2","animations_32px_enemy_spiky_walk_3"]
+},
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "atlas.png",
 	"format": "RGBA8888",
-	"size": {"w":256,"h":256},
+	"size": {"w":128,"h":512},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:71c11740492302bf327ff1b000e9fa37:c69a155e805f752ff5ac3907f797cd7f:cbce6b53f0f49e0bf15173c25c41f876$"
+	"smartupdate": "$TexturePacker:SmartUpdate:5afdc2feab36646d22754ecf55f21628:42096cfd42457dbcd319c5981e56a7f1:cbce6b53f0f49e0bf15173c25c41f876$"
 }
 }

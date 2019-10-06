@@ -181,6 +181,30 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">sources/animations_32px_enemy_spiky_walk_0.png</key>
+            <key type="filename">sources/animations_32px_enemy_spiky_walk_1.png</key>
+            <key type="filename">sources/animations_32px_enemy_spiky_walk_2.png</key>
+            <key type="filename">sources/animations_32px_enemy_spiky_walk_3.png</key>
+            <key type="filename">sources/enemy_cloud.png</key>
+            <key type="filename">sources/enemy_flying.png</key>
+            <key type="filename">sources/enemy_jumping.png</key>
+            <key type="filename">sources/enemy_mouse.png</key>
+            <key type="filename">sources/enemy_spiky.png</key>
+            <key type="filename">sources/enemy_spitting.png</key>
+            <key type="filename">sources/player_jump.png</key>
+            <key type="filename">sources/player_still.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>8,8,16,16</rect>
+                <key>scale9Paddings</key>
+                <rect>8,8,16,16</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">sources/block_falling.png</key>
             <key type="filename">sources/hazard_vines.png</key>
             <struct type="IndividualSpriteSettings">
@@ -207,26 +231,6 @@
                 <rect>2,2,4,4</rect>
                 <key>scale9Paddings</key>
                 <rect>2,2,4,4</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">sources/enemy_cloud.png</key>
-            <key type="filename">sources/enemy_flying.png</key>
-            <key type="filename">sources/enemy_jumping.png</key>
-            <key type="filename">sources/enemy_mouse.png</key>
-            <key type="filename">sources/enemy_spiky.png</key>
-            <key type="filename">sources/enemy_spitting.png</key>
-            <key type="filename">sources/player_jump.png</key>
-            <key type="filename">sources/player_still.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0,0</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>8,8,16,16</rect>
-                <key>scale9Paddings</key>
-                <rect>8,8,16,16</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
