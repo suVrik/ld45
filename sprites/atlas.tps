@@ -347,6 +347,40 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">sources/button_a.png</key>
+            <key type="filename">sources/button_d.png</key>
+            <key type="filename">sources/button_down.png</key>
+            <key type="filename">sources/button_left.png</key>
+            <key type="filename">sources/button_right.png</key>
+            <key type="filename">sources/button_s.png</key>
+            <key type="filename">sources/button_up.png</key>
+            <key type="filename">sources/button_w.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,5,8,9</rect>
+                <key>scale9Paddings</key>
+                <rect>4,5,8,9</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/button_space_0.png</key>
+            <key type="filename">sources/button_space_1.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>20,5,40,9</rect>
+                <key>scale9Paddings</key>
+                <rect>20,5,40,9</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">sources/button_start.png</key>
             <key type="filename">sources/button_start_hover.png</key>
             <struct type="IndividualSpriteSettings">
@@ -399,6 +433,32 @@
                 <rect>32,24,64,48</rect>
                 <key>scale9Paddings</key>
                 <rect>32,24,64,48</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/ui_coins.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>2,2,5,5</rect>
+                <key>scale9Paddings</key>
+                <rect>2,2,5,5</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/ui_timer.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>2,3,5,5</rect>
+                <key>scale9Paddings</key>
+                <rect>2,3,5,5</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
