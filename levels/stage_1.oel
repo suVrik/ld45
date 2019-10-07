@@ -1314,7 +1314,7 @@
     <coin id="35" x="576" y="192" />
     <coin id="36" x="576" y="128" />
     <coin id="37" x="608" y="96" />
-    <exit id="38" x="656" y="112" next_level="backstage_2" />
+    <exit id="38" x="656" y="112" next_level="stage_2" />
     <hazard_vines id="2" x="96" y="448" width="64" height="16" />
     <hazard_vines id="39" x="544" y="240" width="16" height="64" />
     <enemy_cloud id="3" x="584" y="390" script="">

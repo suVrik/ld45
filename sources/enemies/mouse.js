@@ -25,6 +25,7 @@ class Mouse extends MovieClip {
         this.to = Math.max(this.nodes[0].x, this.nodes[1].x);
         this.is_attacking = 0;
         this.state_color = 0xFFFFFF;
+        this.is_grounded_counter = 0;
 
         this.bounds = {
             width: game.config.mouse.width,
@@ -157,6 +158,24 @@ class Mouse extends MovieClip {
             }
         } else {
             this.gotoAndPlay("rush");
+        }
+
+        if (this.is_grounded_counter > 13) {
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+            effect.x = this.x;
+            effect.y = this.y - 16;
+            effect.anchor.set(0.5, 0.5);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.effects.removeChild(effect);
+            };
+            game.containers.effects.addChild(effect);
+
+            this.is_grounded_counter = 0;
+        } else {
+            this.is_grounded_counter++;
         }
 
         if (!game.player.dead) {

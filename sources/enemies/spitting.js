@@ -84,10 +84,14 @@ class Spitting extends MovieClip {
                             previous_bezier_y = bezier_y;
                         }
                     } else {
-                        middle_x = (this_x + player_x) / 2;
-                        middle_y = (this_y + player_y) / 2;
-                        total_distance = Math.sqrt((this_x - player_x) * (this_x - player_x) + (this_y - player_y) * (this_y - player_y));
-                        success = !straigh_shoot;
+                        if (angle < 0 && !(Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
+                            success = false;
+                        } else {
+                            middle_x = (this_x + player_x) / 2;
+                            middle_y = (this_y + player_y) / 2;
+                            total_distance = Math.sqrt((this_x - player_x) * (this_x - player_x) + (this_y - player_y) * (this_y - player_y));
+                            success = !straigh_shoot;
+                        }
                     }
 
                     if (success) {
@@ -106,6 +110,8 @@ class Spitting extends MovieClip {
 
                             this.attack_cooldown = game.config.spitting.projectile_cooldown;
                             this.prepare_timeout = 0;
+
+                            game.resources.sounds["Laser_Shoot8"].play();
                         } else {
                             this.prepare_timeout += elapsed;
                         }

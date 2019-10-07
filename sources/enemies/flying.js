@@ -91,6 +91,8 @@ class Flying extends MovieClip {
                     game.flying_projectiles.push(flying_projectile);
                     game.containers.entities.addChild(flying_projectile);
                     this.attack_cooldown = game.config.flying.projectile_cooldown;
+
+                    game.resources.sounds["Laser_Shoot8"].play();
                 }
             }
         }

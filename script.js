@@ -408,6 +408,8 @@ class Flying extends MovieClip {
                     game.flying_projectiles.push(flying_projectile);
                     game.containers.entities.addChild(flying_projectile);
                     this.attack_cooldown = game.config.flying.projectile_cooldown;
+
+                    game.resources.sounds["Laser_Shoot8"].play();
                 }
             }
         }
@@ -456,6 +458,18 @@ class FlyingProjectile extends PIXI.Sprite {
         if (Physics.overlap(game.player, this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size)) {
             game.flying_projectiles.splice(game.flying_projectiles.indexOf(this), 1);
             this.parent.removeChild(this);
+
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_flying_drop"]);
+            effect.x = this.x;
+            effect.y = this.y;
+            effect.anchor.set(0.5, 0.5);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.front_effects.removeChild(effect);
+            };
+            game.containers.front_effects.addChild(effect);
         }
 
         if (game.draw_hitboxes) {
@@ -494,6 +508,7 @@ class Mouse extends MovieClip {
         this.to = Math.max(this.nodes[0].x, this.nodes[1].x);
         this.is_attacking = 0;
         this.state_color = 0xFFFFFF;
+        this.is_grounded_counter = 0;
 
         this.bounds = {
             width: game.config.mouse.width,
@@ -626,6 +641,24 @@ class Mouse extends MovieClip {
             }
         } else {
             this.gotoAndPlay("rush");
+        }
+
+        if (this.is_grounded_counter > 13) {
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+            effect.x = this.x;
+            effect.y = this.y - 16;
+            effect.anchor.set(0.5, 0.5);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.effects.removeChild(effect);
+            };
+            game.containers.effects.addChild(effect);
+
+            this.is_grounded_counter = 0;
+        } else {
+            this.is_grounded_counter++;
         }
 
         if (!game.player.dead) {
@@ -833,10 +866,14 @@ class Spitting extends MovieClip {
                             previous_bezier_y = bezier_y;
                         }
                     } else {
-                        middle_x = (this_x + player_x) / 2;
-                        middle_y = (this_y + player_y) / 2;
-                        total_distance = Math.sqrt((this_x - player_x) * (this_x - player_x) + (this_y - player_y) * (this_y - player_y));
-                        success = !straigh_shoot;
+                        if (angle < 0 && !(Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
+                            success = false;
+                        } else {
+                            middle_x = (this_x + player_x) / 2;
+                            middle_y = (this_y + player_y) / 2;
+                            total_distance = Math.sqrt((this_x - player_x) * (this_x - player_x) + (this_y - player_y) * (this_y - player_y));
+                            success = !straigh_shoot;
+                        }
                     }
 
                     if (success) {
@@ -855,6 +892,8 @@ class Spitting extends MovieClip {
 
                             this.attack_cooldown = game.config.spitting.projectile_cooldown;
                             this.prepare_timeout = 0;
+
+                            game.resources.sounds["Laser_Shoot8"].play();
                         } else {
                             this.prepare_timeout += elapsed;
                         }
@@ -1051,6 +1090,18 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
         if (Physics.overlap(game.player, this.x - game.config.spitting.projectile_size / 2, this.y - game.config.spitting.projectile_size / 2, game.config.spitting.projectile_size, game.config.spitting.projectile_size)) {
             game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
             this.parent.removeChild(this);
+
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_spit"]);
+            effect.x = this.x;
+            effect.y = this.y;
+            effect.anchor.set(0.5, 0.5);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.front_effects.removeChild(effect);
+            };
+            game.containers.front_effects.addChild(effect);
         }
 
         if (game.draw_hitboxes) {
@@ -1071,6 +1122,10 @@ class Exit {
 
     update_exit() {
         if (!game.player.dead) {
+            const force_next_level = game.input.is_key_pressed("Digit9");
+            if (force_next_level) {
+                return this.next_level;
+            }
             if (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2) {
                 if (game.input.is_key_pressed("KeyW") || game.input.is_key_pressed("Up")) {
                     return this.next_level;
@@ -1244,7 +1299,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "level0",
+    current_level: "main_menu_0",
     next_level: null,
     exit: null,
     start_button: null,
@@ -1904,6 +1959,8 @@ class Player extends MovieClip {
         this.face = "right";
         this.dead = false;
         this.hat = null;
+        this.is_grounded_counter = 0;
+        this.is_sliding_counter = 0;
     }
 
     update_movement(elapsed) {
@@ -2078,6 +2135,78 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration -= elapsed;
         }
 
+        if (!was_grounded && this.is_grounded) {
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+            effect.x = this.x + this.bounds.width / 2;
+            effect.y = this.y + this.bounds.height - 32;
+            effect.anchor.set(0.5, 0);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.effects.removeChild(effect);
+            };
+            game.containers.effects.addChild(effect);
+
+            game.resources.sounds["step"].play();
+        } else {
+            if (this.is_grounded) {
+                if (this.is_grounded_counter > 13) {
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+                    effect.x = this.x + this.bounds.width / 2;
+                    effect.y = this.y + this.bounds.height - 32;
+                    effect.anchor.set(0.5, 0);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function () {
+                        game.containers.effects.removeChild(effect);
+                    };
+                    game.containers.effects.addChild(effect);
+
+                    game.resources.sounds["step"].play();
+
+                    this.is_grounded_counter = 0;
+                } else {
+                    const left_pressed = game.input.is_key_down("KeyA");
+                    const right_pressed = game.input.is_key_down("KeyD");
+                    if (left_pressed || right_pressed) {
+                        this.is_grounded_counter++;
+                    } else {
+                        this.is_grounded_counter = 0;
+                    }
+                }
+            } else {
+                if (this.is_sliding) {
+                    this.is_sliding_counter++;
+                    if (this.is_sliding_counter === 5) {
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_dust_wall"]);
+                        effect.x = this.x + this.bounds.width / 2 + Math.random() * 8 - 4;
+                        if (this.jump_off_left_wall) {
+                            effect.x -= 8;
+                        } else {
+                            effect.x += 8;
+                        }
+                        effect.y = this.y + this.bounds.height / 2 + Math.random() * 8 - 4;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function () {
+                            game.containers.front_effects.removeChild(effect);
+                        };
+                        game.containers.front_effects.addChild(effect);
+
+                        game.resources.sounds["wall_grab"].play();
+
+                        this.is_sliding_counter = 0;
+                    }
+                } else {
+                    this.is_sliding_counter = 0;
+                }
+            }
+        }
+
         if (this.hat) {
             this.hat.update_hat(elapsed);
         }
@@ -2122,7 +2251,7 @@ module.exports = Player;
 
 },{"./hat.js":13,"./movie_clip.js":17,"./physics.js":18}],20:[function(require,module,exports){
 const update_physical_size = function() {
-    const horizontal_padding = 80, vertical_padding = 180;
+    const horizontal_padding = 0, vertical_padding = 0;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
     const height = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - vertical_padding;
 
@@ -2391,8 +2520,8 @@ const load_sounds = function() {
     load_sound("Jump8", 1);
     load_sound("Laser_Shoot8", 1);
     load_sound("Pickup_Coin9", 1);
-    load_sound("step", 1);
-    load_sound("wall_grab", 1);
+    load_sound("step", 8);
+    load_sound("wall_grab", 3);
 };
 
 const sounds = {

@@ -25,6 +25,18 @@ class FlyingProjectile extends PIXI.Sprite {
         if (Physics.overlap(game.player, this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size)) {
             game.flying_projectiles.splice(game.flying_projectiles.indexOf(this), 1);
             this.parent.removeChild(this);
+
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_flying_drop"]);
+            effect.x = this.x;
+            effect.y = this.y;
+            effect.anchor.set(0.5, 0.5);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.front_effects.removeChild(effect);
+            };
+            game.containers.front_effects.addChild(effect);
         }
 
         if (game.draw_hitboxes) {

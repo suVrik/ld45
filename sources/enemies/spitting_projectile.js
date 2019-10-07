@@ -51,6 +51,18 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
         if (Physics.overlap(game.player, this.x - game.config.spitting.projectile_size / 2, this.y - game.config.spitting.projectile_size / 2, game.config.spitting.projectile_size, game.config.spitting.projectile_size)) {
             game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
             this.parent.removeChild(this);
+
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_spit"]);
+            effect.x = this.x;
+            effect.y = this.y;
+            effect.anchor.set(0.5, 0.5);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.front_effects.removeChild(effect);
+            };
+            game.containers.front_effects.addChild(effect);
         }
 
         if (game.draw_hitboxes) {

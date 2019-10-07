@@ -31,7 +31,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "level0",
+    current_level: "main_menu_0",
     next_level: null,
     exit: null,
     start_button: null,

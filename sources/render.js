@@ -1,5 +1,5 @@
 const update_physical_size = function() {
-    const horizontal_padding = 80, vertical_padding = 180;
+    const horizontal_padding = 0, vertical_padding = 0;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
     const height = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - vertical_padding;
 

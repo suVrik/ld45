@@ -1333,7 +1333,7 @@
     <enemy_spitting id="3" x="336" y="224" friendly="False" script="">
       <node x="128" y="224" />
     </enemy_spitting>
-    <exit id="7" x="400" y="192" next_level="backstage_3" />
+    <exit id="7" x="400" y="192" next_level="level0" />
     <player id="8" x="80" y="448" />
     <hazard_vines id="9" x="640" y="144" width="16" height="64" />
     <hazard_vines id="10" x="720" y="256" width="16" height="80" />

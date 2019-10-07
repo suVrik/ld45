@@ -28,8 +28,8 @@ const load_sounds = function() {
     load_sound("Jump8", 1);
     load_sound("Laser_Shoot8", 1);
     load_sound("Pickup_Coin9", 1);
-    load_sound("step", 1);
-    load_sound("wall_grab", 1);
+    load_sound("step", 8);
+    load_sound("wall_grab", 3);
 };
 
 const sounds = {

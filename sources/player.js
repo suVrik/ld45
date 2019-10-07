@@ -38,6 +38,8 @@ class Player extends MovieClip {
         this.face = "right";
         this.dead = false;
         this.hat = null;
+        this.is_grounded_counter = 0;
+        this.is_sliding_counter = 0;
     }
 
     update_movement(elapsed) {
@@ -210,6 +212,78 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration = game.config.player.post_jump_slowdown_duration;
         } else {
             this.post_jump_slowdown_duration -= elapsed;
+        }
+
+        if (!was_grounded && this.is_grounded) {
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+            effect.x = this.x + this.bounds.width / 2;
+            effect.y = this.y + this.bounds.height - 32;
+            effect.anchor.set(0.5, 0);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                game.containers.effects.removeChild(effect);
+            };
+            game.containers.effects.addChild(effect);
+
+            game.resources.sounds["step"].play();
+        } else {
+            if (this.is_grounded) {
+                if (this.is_grounded_counter > 13) {
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+                    effect.x = this.x + this.bounds.width / 2;
+                    effect.y = this.y + this.bounds.height - 32;
+                    effect.anchor.set(0.5, 0);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function () {
+                        game.containers.effects.removeChild(effect);
+                    };
+                    game.containers.effects.addChild(effect);
+
+                    game.resources.sounds["step"].play();
+
+                    this.is_grounded_counter = 0;
+                } else {
+                    const left_pressed = game.input.is_key_down("KeyA");
+                    const right_pressed = game.input.is_key_down("KeyD");
+                    if (left_pressed || right_pressed) {
+                        this.is_grounded_counter++;
+                    } else {
+                        this.is_grounded_counter = 0;
+                    }
+                }
+            } else {
+                if (this.is_sliding) {
+                    this.is_sliding_counter++;
+                    if (this.is_sliding_counter === 5) {
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_dust_wall"]);
+                        effect.x = this.x + this.bounds.width / 2 + Math.random() * 8 - 4;
+                        if (this.jump_off_left_wall) {
+                            effect.x -= 8;
+                        } else {
+                            effect.x += 8;
+                        }
+                        effect.y = this.y + this.bounds.height / 2 + Math.random() * 8 - 4;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function () {
+                            game.containers.front_effects.removeChild(effect);
+                        };
+                        game.containers.front_effects.addChild(effect);
+
+                        game.resources.sounds["wall_grab"].play();
+
+                        this.is_sliding_counter = 0;
+                    }
+                } else {
+                    this.is_sliding_counter = 0;
+                }
+            }
         }
 
         if (this.hat) {
