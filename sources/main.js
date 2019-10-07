@@ -33,7 +33,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "stage_4",
+    current_level: "main_menu_1",
     next_level: null,
     exit: null,
     altar: null,
@@ -46,6 +46,7 @@ window.game = {
     dialog_text_duration: 0,
     dialog_text_timeout: 0,
     dialog_callback: null,
+    firework_timeout: 0,
     stats: {
         score: 0,
         level_start: null,
@@ -257,6 +258,9 @@ let construct_level = function(level_name) {
         background_2: null,
         clouds: [],
         clouds_container: null,
+        firework_effects: new PIXI.Container(),
+        fireworks: new PIXI.Graphics(),
+        fireworks_items: [],
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
@@ -290,6 +294,8 @@ let construct_level = function(level_name) {
     game.containers.stage.addChild(game.containers.background_1);
     game.containers.stage.addChild(game.containers.clouds_container);
     game.containers.stage.addChild(game.containers.background_2);
+    game.containers.stage.addChild(game.containers.firework_effects);
+    game.containers.stage.addChild(game.containers.fireworks);
     game.containers.stage.addChild(game.containers.level);
     game.containers.stage.addChild(game.containers.ui);
     game.containers.stage.addChild(game.containers.dialog_background);
@@ -424,6 +430,16 @@ let construct_level = function(level_name) {
                 credits.x = initial_x + game.render.render_width / 2;
                 credits.y = initial_y + game.render.render_height / 2;
                 game.containers.level.addChild(credits);
+
+                game.containers.fireworks_items.push({ x: game.render.render_width / 3, y: game.render.render_height * 2 / 3, velocity_y: -180, velocity_x: -90, lifetime: 1,
+                    color: PIXI.utils.rgb2hex([ 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5 ]),
+                    generations: 2 });
+                game.containers.fireworks_items.push({ x: game.render.render_width / 2, y: game.render.render_height * 2 / 3, velocity_y: -180, velocity_x: 0, lifetime: 0.5,
+                    color: PIXI.utils.rgb2hex([ 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5 ]),
+                    generations: 2 });
+                game.containers.fireworks_items.push({ x: game.render.render_width * 2 / 3, y: game.render.render_height * 2 / 3, velocity_y: -180, velocity_x: 90, lifetime: 1.3,
+                    color: PIXI.utils.rgb2hex([ 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5 ]),
+                    generations: 2 });
             }
             game.resources.sounds["Laser_Shoot8"].play();
         });
@@ -571,6 +587,60 @@ let main_loop = function() {
         game.containers.clouds[i].x += game.containers.clouds[i].speed;
         if (game.containers.clouds[i].x > game.render.render_width) {
             game.containers.clouds[i].x -= game.render.render_width + game.containers.clouds[i].width;
+        }
+    }
+    game.containers.fireworks.clear();
+    if (game.containers.fireworks_items.length > 0) {
+        game.firework_timeout -= elapsed;
+        for (let i = 0; i < game.containers.fireworks_items.length; ) {
+            game.containers.fireworks_items[i].x += game.containers.fireworks_items[i].velocity_x * elapsed;
+            game.containers.fireworks_items[i].y += game.containers.fireworks_items[i].velocity_y * elapsed;
+
+            game.containers.fireworks_items[i].velocity_y += 200 * elapsed;
+
+            game.containers.fireworks.beginFill(game.containers.fireworks_items[i].color);
+            game.containers.fireworks.drawCircle(game.containers.fireworks_items[i].x, game.containers.fireworks_items[i].y, 1.5);
+            game.containers.fireworks.endFill();
+
+            game.containers.fireworks_items[i].lifetime -= elapsed;
+            if (game.containers.fireworks_items[i].lifetime <= 0) {
+                if (game.containers.fireworks_items[i].generations > 0) {
+                    if (game.firework_timeout <= 0) {
+                        game.resources.sounds["Explosion4"].play();
+                        game.firework_timeout = 0.15;
+                    }
+                }
+
+                if (game.containers.fireworks_items[i].generations > 0) {
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                    effect.x = game.containers.fireworks_items[i].x;
+                    effect.y = game.containers.fireworks_items[i].y;
+                    effect.anchor.set(0.5, 0.5);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function () {
+                        game.containers.firework_effects.removeChild(effect);
+                    };
+                    game.containers.firework_effects.addChild(effect);
+
+                    for (let j = 0; j < Math.PI * 2; j += 0.5) {
+                        game.containers.fireworks_items.push({
+                            x: game.containers.fireworks_items[i].x,
+                            y: game.containers.fireworks_items[i].y,
+                            velocity_y: -25 + Math.sin(j) * 150 / (3 - game.containers.fireworks_items[i].generations),
+                            velocity_x: Math.cos(j) * 150 / (3 - game.containers.fireworks_items[i].generations),
+                            lifetime: 0.3 + Math.random() * 0.8,
+                            color: PIXI.utils.rgb2hex([ 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5 ]),
+                            generations: game.containers.fireworks_items[i].generations - 1
+                        });
+                    }
+                }
+
+                game.containers.fireworks_items.splice(i, 1);
+            } else {
+                i++;
+            }
         }
     }
     if (game.next_level == null && game.exit) {
