@@ -291,6 +291,8 @@ class Cloud extends MovieClip {
             game.player.y = this.y + delta_y - game.config.cloud.height / 2 - game.player.bounds.height;
             this.gotoAndPlay("jump");
             this.gotoAndPlay(0);
+
+            game.resources.sounds["Jump8"].play();
         }
 
         const hit = Physics.move(this, delta_x, delta_y, -game.config.cloud.width / 2, -game.config.cloud.height / 2);
@@ -471,8 +473,9 @@ const Physics = require("../physics.js");
 class Mouse extends MovieClip {
     constructor(x, y, nodes, friendly, script) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_mouse"]], speed: 0.15},
-        }, "idle");
+            run: { frames: game.resources.sprites["animations_32px_enemy_mouse_run"], speed: 0.15},
+            rush: { frames: game.resources.sprites["animations_32px_enemy_mouse_run"], speed: 0.4},
+        }, "run");
 
         this.anchor.set(0.5, 1);
         this.x = x;
@@ -585,6 +588,8 @@ class Mouse extends MovieClip {
 
         if (calm_walk) {
             if (this.is_attacking === 1) {
+                this.gotoAndPlay("rush");
+
                 this.state_color = 0x0000FF;
                 this.x = Math.min(this.x + game.config.mouse.attack_speed * elapsed, this.to);
                 this.scale.x = 1;
@@ -594,6 +599,8 @@ class Mouse extends MovieClip {
                     this.is_attacking = 0;
                 }
             } else if (this.is_attacking === -1) {
+                this.gotoAndPlay("rush");
+
                 this.state_color = 0x0000FF;
                 this.x = Math.max(this.x - game.config.mouse.attack_speed * elapsed, this.from);
                 this.scale.x = -1;
@@ -603,6 +610,8 @@ class Mouse extends MovieClip {
                     this.is_attacking = 0;
                 }
             } else {
+                this.gotoAndPlay("run");
+
                 const next_node = (this.current_node + 1) % this.nodes.length;
                 if (this.x < this.nodes[next_node].x) {
                     this.x = Math.min(this.x + game.config.mouse.speed * elapsed, this.nodes[next_node].x);
@@ -615,6 +624,8 @@ class Mouse extends MovieClip {
                     this.current_node = next_node;
                 }
             }
+        } else {
+            this.gotoAndPlay("rush");
         }
 
         if (!game.player.dead) {
@@ -1958,6 +1969,8 @@ class Player extends MovieClip {
             if (this.late_jump_duration > 0 || this.jump_off_walls_duration > 0) {
                 this.vertical_speed = -game.config.player.jump_speed;
 
+                game.resources.sounds["Jump8"].play();
+
                 if (this.jump_off_walls_duration > 0) {
                     if (this.jump_off_left_wall) {
                         this.horizontal_speed = game.config.player.jump_off_walls_speed;
@@ -2372,7 +2385,7 @@ const load_sounds = function() {
     }
 
     load_sound("music", 0.75, "mp3", true);
-    load_sound("block_unstable", 1);
+    load_sound("block_unstable", 20);
     load_sound("death", 1);
     load_sound("Explosion4", 1);
     load_sound("Jump8", 1);

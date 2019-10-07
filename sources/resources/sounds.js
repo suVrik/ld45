@@ -22,7 +22,7 @@ const load_sounds = function() {
     }
 
     load_sound("music", 0.75, "mp3", true);
-    load_sound("block_unstable", 1);
+    load_sound("block_unstable", 20);
     load_sound("death", 1);
     load_sound("Explosion4", 1);
     load_sound("Jump8", 1);

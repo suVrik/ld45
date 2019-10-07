@@ -53,6 +53,8 @@ class Cloud extends MovieClip {
             game.player.y = this.y + delta_y - game.config.cloud.height / 2 - game.player.bounds.height;
             this.gotoAndPlay("jump");
             this.gotoAndPlay(0);
+
+            game.resources.sounds["Jump8"].play();
         }
 
         const hit = Physics.move(this, delta_x, delta_y, -game.config.cloud.width / 2, -game.config.cloud.height / 2);

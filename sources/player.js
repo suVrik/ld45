@@ -103,6 +103,8 @@ class Player extends MovieClip {
             if (this.late_jump_duration > 0 || this.jump_off_walls_duration > 0) {
                 this.vertical_speed = -game.config.player.jump_speed;
 
+                game.resources.sounds["Jump8"].play();
+
                 if (this.jump_off_walls_duration > 0) {
                     if (this.jump_off_left_wall) {
                         this.horizontal_speed = game.config.player.jump_off_walls_speed;
