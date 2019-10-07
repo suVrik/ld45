@@ -224,6 +224,7 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">sources/altar.png</key>
             <key type="filename">sources/animations_32px_effect_0.png</key>
             <key type="filename">sources/animations_32px_effect_1.png</key>
             <key type="filename">sources/animations_32px_effect_2.png</key>
@@ -293,6 +294,7 @@
             <key type="filename">sources/animations_32px_player_run_5.png</key>
             <key type="filename">sources/enemy_mouse.png</key>
             <key type="filename">sources/enemy_spitting.png</key>
+            <key type="filename">sources/inventory_slot.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0,0</point_f>
@@ -342,6 +344,20 @@
                 <rect>200,26,400,53</rect>
                 <key>scale9Paddings</key>
                 <rect>200,26,400,53</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/button_start.png</key>
+            <key type="filename">sources/button_start_hover.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>23,8,45,15</rect>
+                <key>scale9Paddings</key>
+                <rect>23,8,45,15</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
