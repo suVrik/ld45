@@ -65,14 +65,14 @@ module.exports = {
     spitting: {
         width: 14,
         height: 13,
-        speed: 25,
+        speed: 50,
         bezier_height: 80,
         max_shooting_distance: 250,
-        projectile_speed: 333,
+        projectile_speed: 250,
         projectile_size: 3,
-        projectile_cooldown: 1,
+        projectile_cooldown: 1.2,
         bezier_angle: 50 / 180 * Math.PI,
-        prepare_timeout: 0.8,
+        prepare_timeout: 0.5,
         prediction_seconds: 0.1,
     },
 };

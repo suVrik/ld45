@@ -2,7 +2,7 @@ const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
 class Spiky extends MovieClip {
-    constructor(x, y, nodes) {
+    constructor(x, y, nodes, script) {
         super({
             idle: {name: "idle", frames: game.resources.sprites["animations_32px_enemy_spiky_walk"], speed: 0.15},
         }, "idle");
@@ -15,6 +15,8 @@ class Spiky extends MovieClip {
         this.current_node = 0;
         this.play();
 
+        this.script = script;
+
         this.bounds = {
             width: game.config.spiky.width,
             height: game.config.spiky.height
@@ -22,6 +24,14 @@ class Spiky extends MovieClip {
     }
 
     update_spiky(elapsed) {
+        if (this.script.length > 0) {
+            if (game.scripts.hasOwnProperty(this.script)) {
+                game.scripts[this.script](this, elapsed);
+            } else {
+                console.error(`Invalid script "${this.script}"!`);
+            }
+        }
+
         const next_node = (this.current_node + 1) % this.nodes.length;
         if (this.x < this.nodes[next_node].x) {
             this.x = Math.min(this.x + game.config.spiky.speed * elapsed, this.nodes[next_node].x);

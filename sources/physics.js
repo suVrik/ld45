@@ -66,7 +66,7 @@ const iterate_over_all_hitboxes = function(callback) {
     }
     for (let i = 0; i < game.block_fallings.length; i++) {
         if (game.block_fallings[i].visible) {
-            const result = callback(game.block_fallings[i], game.block_fallings[i].x, game.block_fallings[i].y, game.config.tile_size, game.config.tile_size);
+            const result = callback(game.block_fallings[i], game.block_fallings[i].original_x, game.block_fallings[i].original_y, game.config.tile_size, game.config.tile_size);
             if (result != null) {
                 return result;
             }
@@ -120,23 +120,23 @@ const move = function(entity, dx, dy, ox = 0, oy = 0) {
 
                 let delta_x = null;
                 if (Math.abs(dx) > 1e-8) {
-                    if (entity.x + ox < object_x) {
+                    if ((entity.x + ox) < object_x) {
                         result.right = true;
-                        delta_x = (object_x - (entity.x + ox + entity.bounds.width)) - result.dx;
+                        delta_x = (object_x - ((entity.x + ox) + entity.bounds.width)) - result.dx;
                     } else {
                         result.left = true;
-                        delta_x = ((object_x + object_width) - entity.x + ox) - result.dx;
+                        delta_x = ((object_x + object_width) - (entity.x + ox)) - result.dx;
                     }
                 }
 
                 let delta_y = null;
                 if (Math.abs(dy) > 1e-8) {
-                    if (entity.y + oy < object_y) {
+                    if ((entity.y + oy) < object_y) {
                         result.bottom = true;
-                        delta_y = (object_y - (entity.y + oy + entity.bounds.height)) - result.dy;
+                        delta_y = (object_y - ((entity.y + oy) + entity.bounds.height)) - result.dy;
                     } else {
                         result.top = true;
-                        delta_y = ((object_y + object_height) - entity.y + oy) - result.dy;
+                        delta_y = ((object_y + object_height) - (entity.y + oy)) - result.dy;
                     }
                 }
 

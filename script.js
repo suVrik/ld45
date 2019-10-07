@@ -2,14 +2,14 @@
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 
-class BlockFalling extends MovieClip {
+class BlockFalling extends PIXI.Sprite {
     constructor(x, y) {
-        super({
-            idle: { frames: [game.resources.sprites["block_falling"]], speed: 0.1 },
-        }, "idle");
+        super(game.resources.sprites["block_falling"]);
 
         this.x = x;
         this.y = y;
+        this.original_x = x;
+        this.original_y = y;
         this.destroy_timeout = null;
         this.respawn_timeout = null;
     }
@@ -19,6 +19,8 @@ class BlockFalling extends MovieClip {
             if (!game.player.dead) {
                 if (Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x - 1e-1, this.y - 1e-1, game.config.tile_size + 2e-1, game.config.tile_size + 2e-1)) {
                     this.destroy_timeout = game.config.block_falling.destroy_timeout;
+
+                    game.resources.sounds["block_unstable"].play();
                 }
             }
 
@@ -43,8 +45,15 @@ class BlockFalling extends MovieClip {
                         game.containers.effects.removeChild(effect);
                     };
                     game.containers.effects.addChild(effect);
+
+                    game.resources.sounds["Explosion4"].play();
+                } else {
+                    this.x = this.original_x + Math.round(Math.random() * 2 - 1);
+                    this.y = this.original_y + Math.round(Math.random() * 2 - 1);
                 }
             } else {
+                this.x = this.original_x;
+                this.y = this.original_y;
                 this.respawn_timeout -= elapsed;
                 if (this.respawn_timeout < 0) {
                     if (!Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x - 1e-1, this.y - 1e-1, game.config.tile_size + 2e-1, game.config.tile_size + 2e-1)) {
@@ -74,7 +83,7 @@ class BlockFalling extends MovieClip {
 
 module.exports = BlockFalling;
 
-},{"./movie_clip.js":15,"./physics.js":16}],2:[function(require,module,exports){
+},{"./movie_clip.js":17,"./physics.js":18}],2:[function(require,module,exports){
 class Camera {
     constructor() {
         this.offset = 0;
@@ -91,7 +100,12 @@ class Camera {
                 this.offset = Math.max(this.offset - elapsed * 4 * target_offset, 0);
             }
 
-            game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y - this.offset, 0), game.render.render_height - game.config.level.height);
+            let top_edge = 0;
+            let bottom_edge = game.render.render_height - game.config.level.height;
+            top_edge += game.dialog_time;
+            bottom_edge -= game.dialog_time;
+
+            game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y - this.offset, top_edge), bottom_edge);
         }
     }
 }
@@ -119,6 +133,19 @@ class Coin extends PIXI.AnimatedSprite {
         if (Physics.aabb(this.x, this.y, game.config.coin.size, game.config.coin.size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
             game.coins.splice(game.coins.indexOf(this), 1);
             this.parent.removeChild(this);
+
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_coin_flash"]);
+            effect.x = this.x;
+            effect.y = this.y;
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function() {
+                game.containers.effects.removeChild(effect);
+            };
+            game.containers.effects.addChild(effect);
+
+            game.resources.sounds["Pickup_Coin9"].play();
         }
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(this.x, this.y, game.config.coin.size, game.config.coin.size);
@@ -128,7 +155,7 @@ class Coin extends PIXI.AnimatedSprite {
 
 module.exports = Coin;
 
-},{"./physics.js":16}],4:[function(require,module,exports){
+},{"./physics.js":18}],4:[function(require,module,exports){
 module.exports = {
     tile_size: 16,
     level: {
@@ -196,14 +223,14 @@ module.exports = {
     spitting: {
         width: 14,
         height: 13,
-        speed: 25,
+        speed: 50,
         bezier_height: 80,
         max_shooting_distance: 250,
-        projectile_speed: 333,
+        projectile_speed: 250,
         projectile_size: 3,
-        projectile_cooldown: 1,
+        projectile_cooldown: 1.2,
         bezier_angle: 50 / 180 * Math.PI,
-        prepare_timeout: 0.8,
+        prepare_timeout: 0.5,
         prediction_seconds: 0.1,
     },
 };
@@ -213,7 +240,7 @@ const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
 class Cloud extends MovieClip {
-    constructor(x, y, nodes) {
+    constructor(x, y, nodes, script) {
         super({
             idle: {frames: game.resources.sprites["animations_32px_enemy_cloud_idle"], speed: 0.15},
             jump: {frames: game.resources.sprites["animations_32px_enemy_cloud_jump"], speed: 0.15, loop: false},
@@ -223,6 +250,8 @@ class Cloud extends MovieClip {
         this.x = x;
         this.y = y;
         this.play();
+
+        this.script = script;
 
         this.nodes = nodes ? nodes.slice() : [];
         this.nodes.unshift({ x: x, y: y });
@@ -241,6 +270,14 @@ class Cloud extends MovieClip {
     }
 
     update_cloud(elapsed) {
+        if (this.script.length > 0) {
+            if (game.scripts.hasOwnProperty(this.script)) {
+                game.scripts[this.script](this, elapsed);
+            } else {
+                console.error(`Invalid script "${this.script}"!`);
+            }
+        }
+
         const next_node = (this.current_node + 1) % this.nodes.length;
         const distance = Math.sqrt((this.x - this.nodes[next_node].x) * (this.x - this.nodes[next_node].x) + (this.y - this.nodes[next_node].y) * (this.y - this.nodes[next_node].y));
         const displacement = Math.min(game.config.cloud.speed * elapsed, distance);
@@ -256,8 +293,11 @@ class Cloud extends MovieClip {
             this.gotoAndPlay(0);
         }
 
-        this.x += delta_x;
-        this.y += delta_y;
+        const hit = Physics.move(this, delta_x, delta_y, -game.config.cloud.width / 2, -game.config.cloud.height / 2);
+        if (Math.abs(hit.dx) + Math.abs(hit.dy) < 1e-5) {
+            this.current_node = next_node;
+            return;
+        }
 
         const new_distance = Math.sqrt((this.x - this.nodes[next_node].x) * (this.x - this.nodes[next_node].x) + (this.y - this.nodes[next_node].y) * (this.y - this.nodes[next_node].y));
         if (new_distance < 1e-5) {
@@ -272,13 +312,13 @@ class Cloud extends MovieClip {
 
 module.exports = Cloud;
 
-},{"../movie_clip.js":15,"../physics.js":16}],6:[function(require,module,exports){
+},{"../movie_clip.js":17,"../physics.js":18}],6:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const FlyingProjectile = require("./flying_projectile.js");
 
 class Flying extends MovieClip {
-    constructor(x, y, nodes) {
+    constructor(x, y, nodes, friendly, script) {
         super({
             idle: {frames: game.resources.sprites["animations_32px_enemy_flying_fly"], speed: 0.15},
         }, "idle");
@@ -287,6 +327,9 @@ class Flying extends MovieClip {
         this.x = x;
         this.y = y;
         this.play();
+
+        this.friendly = friendly;
+        this.script = script;
 
         this.nodes = nodes ? nodes.slice() : [];
         this.nodes.unshift({ x: x, y: y });
@@ -300,6 +343,14 @@ class Flying extends MovieClip {
     }
 
     update_flying(elapsed) {
+        if (this.script.length > 0) {
+            if (game.scripts.hasOwnProperty(this.script)) {
+                game.scripts[this.script](this, elapsed);
+            } else {
+                console.error(`Invalid script "${this.script}"!`);
+            }
+        }
+
         const next_node = (this.current_node + 1) % this.nodes.length;
         const distance = Math.sqrt((this.x - this.nodes[next_node].x) * (this.x - this.nodes[next_node].x) + (this.y - this.nodes[next_node].y) * (this.y - this.nodes[next_node].y));
         const displacement = Math.min(game.config.flying.speed * elapsed, distance);
@@ -313,20 +364,27 @@ class Flying extends MovieClip {
                              game.config.flying.width, game.config.flying.height,
                              game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1)) {
                 game.player.vertical_speed = -250;
-                game.flyings.splice(game.flyings.indexOf(this), 1);
-                this.parent.removeChild(this);
 
-                const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
-                effect.x = this.x;
-                effect.y = this.y;
-                effect.anchor.set(0.5, 0.5);
-                effect.animationSpeed = 0.3;
-                effect.loop = false;
-                effect.play();
-                effect.onComplete = function() {
-                    game.containers.effects.removeChild(effect);
-                };
-                game.containers.effects.addChild(effect);
+                if (!this.friendly) {
+                    game.flyings.splice(game.flyings.indexOf(this), 1);
+                    this.parent.removeChild(this);
+
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                    effect.x = this.x;
+                    effect.y = this.y;
+                    effect.anchor.set(0.5, 0.5);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function () {
+                        game.containers.effects.removeChild(effect);
+                    };
+                    game.containers.effects.addChild(effect);
+
+                    game.resources.sounds["Explosion4"].play();
+                } else {
+                    // TODO: Ouch!
+                }
             }
         }
 
@@ -340,13 +398,15 @@ class Flying extends MovieClip {
 
         Physics.move(this, delta_x, delta_y, -game.config.flying.width / 2, -game.config.flying.height / 2);
 
-        if (this.attack_cooldown <= 0 && !game.player.dead) {
-            if (Physics.aabb(this.x - game.config.flying.attack_area_width / 2, this.y + game.config.flying.height / 2, game.config.flying.attack_area_width, game.config.flying.attack_area_height,
-                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
-                const flying_projectile = new FlyingProjectile(this.x, this.y + game.config.flying.height / 2 + game.config.flying.projectile_size / 2 + 1);
-                game.flying_projectiles.push(flying_projectile);
-                game.containers.entities.addChild(flying_projectile);
-                this.attack_cooldown = game.config.flying.projectile_cooldown;
+        if (!this.friendly) {
+            if (this.attack_cooldown <= 0 && !game.player.dead) {
+                if (Physics.aabb(this.x - game.config.flying.attack_area_width / 2, this.y + game.config.flying.height / 2, game.config.flying.attack_area_width, game.config.flying.attack_area_height,
+                    game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                    const flying_projectile = new FlyingProjectile(this.x, this.y + game.config.flying.height / 2 + game.config.flying.projectile_size / 2 + 1);
+                    game.flying_projectiles.push(flying_projectile);
+                    game.containers.entities.addChild(flying_projectile);
+                    this.attack_cooldown = game.config.flying.projectile_cooldown;
+                }
             }
         }
 
@@ -366,7 +426,7 @@ class Flying extends MovieClip {
 
 module.exports = Flying;
 
-},{"../movie_clip.js":15,"../physics.js":16,"./flying_projectile.js":7}],7:[function(require,module,exports){
+},{"../movie_clip.js":17,"../physics.js":18,"./flying_projectile.js":7}],7:[function(require,module,exports){
 const Physics = require("../physics.js");
 
 class FlyingProjectile extends PIXI.Sprite {
@@ -404,12 +464,12 @@ class FlyingProjectile extends PIXI.Sprite {
 
 module.exports = FlyingProjectile;
 
-},{"../physics.js":16}],8:[function(require,module,exports){
+},{"../physics.js":18}],8:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
 class Mouse extends MovieClip {
-    constructor(x, y, nodes) {
+    constructor(x, y, nodes, friendly, script) {
         super({
             idle: {name: "idle", frames: [game.resources.sprites["enemy_mouse"]], speed: 0.15},
         }, "idle");
@@ -424,6 +484,9 @@ class Mouse extends MovieClip {
         this.current_node = 0;
         this.play();
 
+        this.friendly = friendly;
+        this.script = script;
+
         this.from = Math.min(this.nodes[0].x, this.nodes[1].x);
         this.to = Math.max(this.nodes[0].x, this.nodes[1].x);
         this.is_attacking = 0;
@@ -436,11 +499,19 @@ class Mouse extends MovieClip {
     }
 
     update_mouse(elapsed) {
+        if (this.script.length > 0) {
+            if (game.scripts.hasOwnProperty(this.script)) {
+                game.scripts[this.script](this, elapsed);
+            } else {
+                console.error(`Invalid script "${this.script}"!`);
+            }
+        }
+
         let calm_walk = true;
 
         this.state_color = 0xFFFFFF;
 
-        if (!game.player.dead) {
+        if (!this.friendly && !game.player.dead) {
             const player_y = game.player.y + game.player.bounds.height / 2;
             if (player_y < this.y - game.config.mouse.height / 2) {
                 const this_y = this.y - game.config.mouse.height / 2;
@@ -550,22 +621,31 @@ class Mouse extends MovieClip {
             if (Physics.aabb(this.x - game.config.mouse.width / 2, this.y - game.config.mouse.height, game.config.mouse.width, game.config.mouse.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 if (game.player.previous_y + game.player.bounds.height < this.y - game.config.mouse.height && game.player.y + game.player.bounds.height >= this.y - game.config.mouse.height) {
                     game.player.vertical_speed = -250;
-                    game.mice.splice(game.mice.indexOf(this), 1);
-                    this.parent.removeChild(this);
 
-                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
-                    effect.x = this.x;
-                    effect.y = this.y - game.config.mouse.height / 2;
-                    effect.anchor.set(0.5, 0.5);
-                    effect.animationSpeed = 0.3;
-                    effect.loop = false;
-                    effect.play();
-                    effect.onComplete = function() {
-                        game.containers.effects.removeChild(effect);
-                    };
-                    game.containers.effects.addChild(effect);
+                    if (!this.friendly) {
+                        game.mice.splice(game.mice.indexOf(this), 1);
+                        this.parent.removeChild(this);
+
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                        effect.x = this.x;
+                        effect.y = this.y - game.config.mouse.height / 2;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function() {
+                            game.containers.effects.removeChild(effect);
+                        };
+                        game.containers.effects.addChild(effect);
+
+                        game.resources.sounds["Explosion4"].play();
+                    } else {
+                        // TODO: Ouch!
+                    }
                 } else {
-                    game.player.murder();
+                    if (!this.friendly) {
+                        game.player.murder();
+                    }
                 }
             }
         }
@@ -574,7 +654,7 @@ class Mouse extends MovieClip {
             game.containers.hitboxes.lineStyle(1, this.state_color, 1);
             game.containers.hitboxes.drawRect(this.x - game.config.mouse.width / 2, this.y - game.config.mouse.height, game.config.mouse.width, game.config.mouse.height);
 
-            if (!game.player.dead) {
+            if (!this.friendly && !game.player.dead) {
                 const player_x = game.player.x + game.player.bounds.width / 2;
                 const player_y = game.player.y + game.player.bounds.height / 2;
                 const this_y = this.y - game.config.mouse.height / 2;
@@ -598,12 +678,12 @@ class Mouse extends MovieClip {
 
 module.exports = Mouse;
 
-},{"../movie_clip.js":15,"../physics.js":16}],9:[function(require,module,exports){
+},{"../movie_clip.js":17,"../physics.js":18}],9:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
 class Spiky extends MovieClip {
-    constructor(x, y, nodes) {
+    constructor(x, y, nodes, script) {
         super({
             idle: {name: "idle", frames: game.resources.sprites["animations_32px_enemy_spiky_walk"], speed: 0.15},
         }, "idle");
@@ -616,6 +696,8 @@ class Spiky extends MovieClip {
         this.current_node = 0;
         this.play();
 
+        this.script = script;
+
         this.bounds = {
             width: game.config.spiky.width,
             height: game.config.spiky.height
@@ -623,6 +705,14 @@ class Spiky extends MovieClip {
     }
 
     update_spiky(elapsed) {
+        if (this.script.length > 0) {
+            if (game.scripts.hasOwnProperty(this.script)) {
+                game.scripts[this.script](this, elapsed);
+            } else {
+                console.error(`Invalid script "${this.script}"!`);
+            }
+        }
+
         const next_node = (this.current_node + 1) % this.nodes.length;
         if (this.x < this.nodes[next_node].x) {
             this.x = Math.min(this.x + game.config.spiky.speed * elapsed, this.nodes[next_node].x);
@@ -645,15 +735,17 @@ class Spiky extends MovieClip {
 
 module.exports = Spiky;
 
-},{"../movie_clip.js":15,"../physics.js":16}],10:[function(require,module,exports){
+},{"../movie_clip.js":17,"../physics.js":18}],10:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const SpittingProjectile = require("./spitting_projectile.js");
 
 class Spitting extends MovieClip {
-    constructor(x, y, nodes) {
+    constructor(x, y, nodes, friendly, script) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_spitting"]], speed: 0.15},
+            idle: { frames: game.resources.sprites["animations_32px_enemy_spitting_run"], speed: 0.15 },
+            charge: { frames: game.resources.sprites["animations_32px_enemy_spitting_charging"], speed: 0.15 },
+            attack: { frames: [game.resources.sprites["animations_32px_enemy_spitting_attack_0"]], speed: 0.15, loop: false },
         }, "idle");
 
         this.anchor.set(0.5, 1);
@@ -666,6 +758,9 @@ class Spitting extends MovieClip {
         this.attack_cooldown = 0;
         this.prepare_timeout = 0;
 
+        this.friendly = friendly;
+        this.script = script;
+
         this.bounds = {
             width: game.config.spitting.width,
             height: game.config.spitting.height,
@@ -673,10 +768,21 @@ class Spitting extends MovieClip {
     }
 
     update_spitting(elapsed) {
-        this.attack_cooldown -= elapsed;
         let is_walking = this.attack_cooldown <= 0;
+
+        if (this.script.length > 0) {
+            if (game.scripts.hasOwnProperty(this.script)) {
+                if (game.scripts[this.script](this, elapsed)) {
+                    is_walking = false;
+                }
+            } else {
+                console.error(`Invalid script "${this.script}"!`);
+            }
+        }
+
+        this.attack_cooldown -= elapsed;
         if (!game.player.dead) {
-            if (this.attack_cooldown <= 0) {
+            if (!this.friendly && this.attack_cooldown <= 0) {
                 const this_x = this.x;
                 const this_y = this.y - game.config.spitting.height / 2;
                 const player_x = game.player.x + game.player.bounds.width / 2 + game.player.horizontal_speed * game.config.spitting.prediction_seconds;
@@ -748,27 +854,38 @@ class Spitting extends MovieClip {
             if (Physics.aabb(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 if (game.player.previous_y + game.player.bounds.height < this.y - game.config.spitting.height && game.player.y + game.player.bounds.height >= this.y - game.config.spitting.height) {
                     game.player.vertical_speed = -250;
-                    game.spittings.splice(game.spittings.indexOf(this), 1);
-                    this.parent.removeChild(this);
 
-                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
-                    effect.x = this.x;
-                    effect.y = this.y - game.config.spitting.height / 2;
-                    effect.anchor.set(0.5, 0.5);
-                    effect.animationSpeed = 0.3;
-                    effect.loop = false;
-                    effect.play();
-                    effect.onComplete = function() {
-                        game.containers.effects.removeChild(effect);
-                    };
-                    game.containers.effects.addChild(effect);
+                    if (!this.friendly) {
+                        game.spittings.splice(game.spittings.indexOf(this), 1);
+                        this.parent.removeChild(this);
+
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                        effect.x = this.x;
+                        effect.y = this.y - game.config.spitting.height / 2;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function () {
+                            game.containers.effects.removeChild(effect);
+                        };
+                        game.containers.effects.addChild(effect);
+
+                        game.resources.sounds["Explosion4"].play();
+                    } else {
+                        // TODO: Ouch!
+                    }
                 } else {
-                    game.player.murder();
+                    if (!this.friendly) {
+                        game.player.murder();
+                    }
                 }
             }
         }
 
         if (is_walking) {
+            this.gotoAndPlay("idle");
+
             const next_node = (this.current_node + 1) % this.nodes.length;
             if (this.x < this.nodes[next_node].x) {
                 this.x = Math.min(this.x + game.config.spitting.speed * elapsed, this.nodes[next_node].x);
@@ -780,9 +897,22 @@ class Spitting extends MovieClip {
             if (Math.abs(this.x - this.nodes[next_node].x) < 1e-5) {
                 this.current_node = next_node;
             }
+            this.prepare_timeout = 0;
+        } else {
+            if (this.attack_cooldown <= 0 && this.prepare_timeout < game.config.spitting.prepare_timeout) {
+                if (this.animation !== "charge") {
+                    this.gotoAndPlay("charge");
+                }
+            } else {
+                if (this.attack_cooldown < game.config.spitting.projectile_cooldown - 0.2) {
+                    this.gotoAndPlay("idle");
+                } else {
+                    this.gotoAndPlay("attack");
+                }
+            }
         }
 
-        if (game.draw_hitboxes) {
+        if (!this.friendly && game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height);
 
             const this_x = this.x;
@@ -856,7 +986,7 @@ class Spitting extends MovieClip {
 
 module.exports = Spitting;
 
-},{"../movie_clip.js":15,"../physics.js":16,"./spitting_projectile.js":11}],11:[function(require,module,exports){
+},{"../movie_clip.js":17,"../physics.js":18,"./spitting_projectile.js":11}],11:[function(require,module,exports){
 const Physics = require("../physics.js");
 
 class SpittingProjectile extends PIXI.AnimatedSprite {
@@ -920,7 +1050,63 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
 
 module.exports = SpittingProjectile;
 
-},{"../physics.js":16}],12:[function(require,module,exports){
+},{"../physics.js":18}],12:[function(require,module,exports){
+class Exit {
+    constructor(x, y, next_level) {
+        this.x = x;
+        this.y = y;
+        this.next_level = next_level;
+    }
+
+    update_exit() {
+        if (!game.player.dead) {
+            if (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2) {
+                if (game.input.is_key_pressed("KeyW") || game.input.is_key_pressed("Up")) {
+                    return this.next_level;
+                }
+            }
+        }
+        return null;
+    }
+}
+
+module.exports = Exit;
+
+},{}],13:[function(require,module,exports){
+class Hat extends PIXI.AnimatedSprite {
+    constructor(x, y, velocity_x, velocity_y) {
+        super(game.resources.sprites["animations_32px_player_death_hat"]);
+
+        this.anchor.set(0.5, 0.5);
+        this.x = x;
+        this.y = y;
+        this.velocity_x = velocity_x;
+        this.velocity_y = velocity_y;
+        this.play();
+
+        if (velocity_x > 0) {
+            this.rotation = Math.PI / 6;
+        } else {
+            this.rotation = -Math.PI / 6;
+        }
+    }
+
+    update_hat(elapsed) {
+        this.x += this.velocity_x * elapsed;
+        this.y += this.velocity_y * elapsed;
+        this.velocity_y += game.config.player.gravity_acceleration * elapsed;
+
+        if (this.rotation < 0) {
+            this.rotation -= elapsed;
+        } else {
+            this.rotation += elapsed;
+        }
+    }
+}
+
+module.exports = Hat;
+
+},{}],14:[function(require,module,exports){
 const Physics = require("./physics.js");
 
 class HazardVines {
@@ -944,7 +1130,7 @@ class HazardVines {
 
 module.exports = HazardVines;
 
-},{"./physics.js":16}],13:[function(require,module,exports){
+},{"./physics.js":18}],15:[function(require,module,exports){
 const init_input = function() {
     document.body.onkeydown = event => input.keys[event.code] = true;
     document.body.onkeyup = event => input.keys[event.code] = false;
@@ -1013,7 +1199,7 @@ const input = {
 
 module.exports = input;
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
@@ -1024,6 +1210,8 @@ const Mouse = require("./enemies/mouse.js");
 const Coin = require("./coin.js");
 const Spitting = require("./enemies/spitting.js");
 const Camera = require("./camera.js");
+const Exit = require("./exit.js");
+const Physics = require("./physics.js");
 
 window.game = {
     render: require("./render.js"),
@@ -1045,6 +1233,76 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
+    current_level: "level0",
+    next_level: null,
+    exit: null,
+    start_button: null,
+    num_clicks: 0,
+    dialog: false,
+    dialog_time: 0,
+    dialog_text: "",
+    dialog_text_duration: 0,
+    dialog_text_timeout: 0,
+    dialog_callback: null,
+    scripts: {
+        sc_game_menu_0: function(entity, elapsed) {
+            if (!entity.activated && (game.num_clicks > 1 || game.player.x > 300)) {
+                entity.activated = true;
+                entity.state = 1;
+            }
+            if (entity.activated) {
+                if (entity.state === 1) {
+                    entity.scale.x = -1;
+                    if (entity.x > 350) {
+                        entity.x -= elapsed * game.config.spitting.speed;
+                    } else {
+                        entity.state = 2;
+                    }
+                } else if (entity.state === 2) {
+                    game.dialog = true;
+                    game.dialog_time = 0;
+
+                    game.dialog_text = "Not again!";
+                    game.dialog_text_duration = 2;
+                    game.dialog_text_timeout = 0;
+                    game.dialog_callback = function() {
+                        game.dialog_text = "Looks like Start button is broken.";
+                        game.dialog_text_duration = 3;
+                        game.dialog_text_timeout = 0;
+                        game.dialog_callback = function() {
+                            game.dialog_text = "Follow me, I gotta check something...";
+                            game.dialog_text_duration = 3;
+                            game.dialog_text_timeout = 0;
+                            game.dialog_callback = function() {
+                                game.dialog = false;
+                                entity.state = 4;
+                            };
+                        };
+                    };
+
+                    entity.state = 3;
+                } else if (entity.state === 3) {
+                    if (entity.x > game.player.x + game.player.bounds.width / 2) {
+                        entity.scale.x = -1;
+                    } else {
+                        entity.scale.x = 1;
+                    }
+                } else if (entity.state === 4) {
+                    entity.scale.x = 1;
+                    if (entity.x < 510) {
+                        entity.x += elapsed * game.config.spitting.speed;
+                    } else {
+                        entity.state = 5;
+                    }
+                } else if (entity.state === 5) {
+                    entity.parent.removeChild(entity);
+                    entity.state = 6;
+                }
+                return true;
+            }
+            return false;
+        }
+    }
 };
 
 game.render.init();
@@ -1103,6 +1361,8 @@ let construct_level = function(level_name) {
         front_effects: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
+        dialog_background: new PIXI.Graphics(),
+        dialog_text: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         spawn_transition: new PIXI.Graphics(),
     };
 
@@ -1117,8 +1377,10 @@ let construct_level = function(level_name) {
         game.containers.level.addChild(game.containers.hitboxes);
     }
 
-    game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background"]));
+    game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background_0"]));
     game.containers.stage.addChild(game.containers.level);
+    game.containers.stage.addChild(game.containers.dialog_background);
+    game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
 
     draw_tiles_layer("tiles_very_back");
@@ -1136,6 +1398,8 @@ let construct_level = function(level_name) {
     game.coins = [];
     game.spittings = [];
     game.spitting_projectiles = [];
+    game.exit = null;
+    game.next_level = null;
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -1145,15 +1409,15 @@ let construct_level = function(level_name) {
         } else if (entity.type === "hazard_vines") {
             game.hazard_vines.push(new HazardVines(entity.x, entity.y, entity.width, entity.height));
         } else if (entity.type === "enemy_spiky") {
-            const spiky = new Spiky(entity.x, entity.y, entity.nodes);
+            const spiky = new Spiky(entity.x, entity.y, entity.nodes, entity.script);
             game.spikes.push(spiky);
             game.containers.entities.addChild(spiky);
         } else if (entity.type === "enemy_flying") {
-            const flying = new Flying(entity.x, entity.y, entity.nodes);
+            const flying = new Flying(entity.x, entity.y, entity.nodes, entity.friendly, entity.script);
             game.flyings.push(flying);
             game.containers.entities.addChild(flying);
         } else if (entity.type === "enemy_cloud") {
-            const cloud = new Cloud(entity.x, entity.y, entity.nodes);
+            const cloud = new Cloud(entity.x, entity.y, entity.nodes, entity.script);
             game.clouds.push(cloud);
             game.containers.entities.addChild(cloud);
         } else if (entity.type === "block_falling") {
@@ -1167,7 +1431,7 @@ let construct_level = function(level_name) {
                 }
             }
         } else if (entity.type === "enemy_mouse") {
-            const mouse = new Mouse(entity.x, entity.y, entity.nodes);
+            const mouse = new Mouse(entity.x, entity.y, entity.nodes, entity.friendly, entity.script);
             game.mice.push(mouse);
             game.containers.entities.addChild(mouse);
         } else if (entity.type === "coin") {
@@ -1175,9 +1439,11 @@ let construct_level = function(level_name) {
             game.coins.push(coin);
             game.containers.entities.addChild(coin);
         } else if (entity.type === "enemy_spitting") {
-            const spitting = new Spitting(entity.x, entity.y, entity.nodes);
+            const spitting = new Spitting(entity.x, entity.y, entity.nodes, entity.friendly, entity.script);
             game.spittings.push(spitting);
             game.containers.entities.addChild(spitting);
+        } else if (entity.type === "exit") {
+            game.exit = new Exit(entity.x, entity.y, entity.next_level);
         }
     }
 
@@ -1194,10 +1460,38 @@ let construct_level = function(level_name) {
     game.containers.spawn_transition.beginFill(0x000000);
     game.containers.spawn_transition.drawRect(0, 0, game.render.render_width, game.render.render_height);
     game.containers.spawn_transition.endFill();
+
+    game.dialog = false;
+    game.dialog_time = 0;
+
+    game.start_button = null;
+    game.num_clicks = 0;
+    if (level_name === "main_menu_0") {
+        game.start_button = new PIXI.Sprite(game.resources.sprites["alpha_red"]);
+        game.start_button.anchor.set(0.5);
+        game.start_button.width = 100;
+        game.start_button.height = 30;
+        const initial_x = -game.containers.level.x;
+        const initial_y = -game.containers.level.y;
+        game.start_button.x = initial_x + game.render.render_width / 2;
+        game.start_button.y = initial_y + game.render.render_height / 2;
+        game.start_button.interactive = true;
+        game.start_button.buttonMode = true;
+        game.containers.level.addChild(game.start_button);
+        game.start_button.on("pointerdown", function(evt) {
+            const world_x = -game.containers.level.x + evt.data.global.x;
+            const world_y = -game.containers.level.y + evt.data.global.y;
+            do {
+                game.start_button.x = initial_x + game.start_button.width / 2 + Math.random() * (game.render.render_width - game.start_button.width);
+                game.start_button.y = initial_y + game.start_button.height / 2 + Math.random() * (game.render.render_height - game.start_button.height - 150);
+            } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
+            game.num_clicks++;
+        });
+    }
 };
 
 let initialize = function() {
-    construct_level("level0");
+    construct_level(game.current_level);
 };
 
 let main_loop = function() {
@@ -1268,14 +1562,27 @@ let main_loop = function() {
             i++;
         }
     }
+    if (game.exit) {
+        const next_level = game.exit.update_exit();
+        if (next_level) {
+            game.next_level = next_level;
+
+            const player_x = game.player.x + game.containers.level.x + game.player.bounds.width / 2;
+            const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
+            const max_x = Math.max(player_x, game.render.render_width - player_x);
+            const max_y = Math.max(player_y, game.render.render_height - player_y);
+            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+        }
+    }
     game.camera.update_camera(elapsed);
     game.input.update();
 
     const max_radius = Math.sqrt(game.render.render_width * game.render.render_width + game.render.render_height * game.render.render_height);
     const max_side = Math.max(game.render.render_width, game.render.render_height) + max_radius * 2 + 10;
 
-    if (game.player.dead) {
-        game.containers.spawn_transition.clear();
+    game.containers.spawn_transition.clear();
+
+    if (game.player.dead || game.next_level) {
         game.containers.spawn_transition.beginFill(0x000000);
         game.containers.spawn_transition.drawRect((game.render.render_width - max_side) / 2, (game.render.render_height - max_side) / 2, max_side, max_side);
         game.containers.spawn_transition.endFill();
@@ -1287,19 +1594,54 @@ let main_loop = function() {
             game.containers.spawn_transition.endHole();
 
             if (Math.abs(game.spawn_effect_radius) < 1e-5) {
-                construct_level("level0");
+                if (game.next_level) {
+                    game.current_level = game.next_level;
+                }
+                construct_level(game.current_level);
             }
         }
     } else {
-        game.containers.spawn_transition.clear();
-        game.containers.spawn_transition.beginFill(0x000000);
-        game.containers.spawn_transition.drawCircle(game.player.x + game.player.bounds.width / 2 + game.containers.level.x, game.player.y + game.player.bounds.height / 2 + game.containers.level.y, game.spawn_effect_radius);
-        game.spawn_effect_radius = Math.max(game.spawn_effect_radius - elapsed * 1.5 * max_radius, 0);
-        game.containers.spawn_transition.endFill();
+        if (Math.abs(game.spawn_effect_radius) > 1e-5) {
+            game.containers.spawn_transition.beginFill(0x000000);
+            game.containers.spawn_transition.drawCircle(game.player.x + game.player.bounds.width / 2 + game.containers.level.x, game.player.y + game.player.bounds.height / 2 + game.containers.level.y, game.spawn_effect_radius);
+            game.spawn_effect_radius = Math.max(game.spawn_effect_radius - elapsed * 1.5 * max_radius, 0);
+            game.containers.spawn_transition.endFill();
+        }
+    }
+    if (game.dialog) {
+        game.dialog_time = Math.min(game.dialog_time + elapsed * 125, 40);
+    } else {
+        game.dialog_time = Math.max(game.dialog_time - elapsed * 125, 0);
+    }
+    if (Math.abs(game.dialog_time) > 1e-5) {
+        game.containers.dialog_background.clear();
+        game.containers.dialog_background.beginFill(0x000000);
+        game.containers.dialog_background.drawRect(0, 0, game.render.render_width, game.dialog_time);
+        game.containers.dialog_background.drawRect(0, game.render.render_height - game.dialog_time, game.render.render_width, game.dialog_time);
+        game.containers.dialog_background.endFill();
+
+        game.containers.dialog_text.text = game.dialog_text;
+        game.containers.dialog_text.x = game.render.render_width / 2 - game.containers.dialog_text.textWidth / 2;
+        game.containers.dialog_text.y = game.render.render_height - game.dialog_time + 40 / 2 - game.containers.dialog_text.textHeight / 2;
+
+        if (game.dialog) {
+            game.dialog_text_timeout += elapsed;
+            if (game.dialog_text_timeout > game.dialog_text_duration) {
+                game.dialog_callback();
+            }
+        }
     }
 };
 
-},{"./block_falling.js":1,"./camera.js":2,"./coin.js":3,"./config.js":4,"./enemies/cloud.js":5,"./enemies/flying.js":6,"./enemies/mouse.js":8,"./enemies/spiky.js":9,"./enemies/spitting.js":10,"./hazard_vines.js":12,"./input.js":13,"./player.js":17,"./render.js":18,"./resources/resources.js":20}],15:[function(require,module,exports){
+window.onfocus = function() {
+    Howler.volume(1);
+};
+
+window.onblur = function() {
+    Howler.volume(0);
+};
+
+},{"./block_falling.js":1,"./camera.js":2,"./coin.js":3,"./config.js":4,"./enemies/cloud.js":5,"./enemies/flying.js":6,"./enemies/mouse.js":8,"./enemies/spiky.js":9,"./enemies/spitting.js":10,"./exit.js":12,"./hazard_vines.js":14,"./input.js":15,"./physics.js":18,"./player.js":19,"./render.js":20,"./resources/resources.js":22}],17:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors, default_animation) {
         super(descriptors[default_animation].frames);
@@ -1341,7 +1683,7 @@ class MovieClip extends PIXI.AnimatedSprite {
 
 module.exports = MovieClip;
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
 };
@@ -1410,7 +1752,7 @@ const iterate_over_all_hitboxes = function(callback) {
     }
     for (let i = 0; i < game.block_fallings.length; i++) {
         if (game.block_fallings[i].visible) {
-            const result = callback(game.block_fallings[i], game.block_fallings[i].x, game.block_fallings[i].y, game.config.tile_size, game.config.tile_size);
+            const result = callback(game.block_fallings[i], game.block_fallings[i].original_x, game.block_fallings[i].original_y, game.config.tile_size, game.config.tile_size);
             if (result != null) {
                 return result;
             }
@@ -1464,23 +1806,23 @@ const move = function(entity, dx, dy, ox = 0, oy = 0) {
 
                 let delta_x = null;
                 if (Math.abs(dx) > 1e-8) {
-                    if (entity.x + ox < object_x) {
+                    if ((entity.x + ox) < object_x) {
                         result.right = true;
-                        delta_x = (object_x - (entity.x + ox + entity.bounds.width)) - result.dx;
+                        delta_x = (object_x - ((entity.x + ox) + entity.bounds.width)) - result.dx;
                     } else {
                         result.left = true;
-                        delta_x = ((object_x + object_width) - entity.x + ox) - result.dx;
+                        delta_x = ((object_x + object_width) - (entity.x + ox)) - result.dx;
                     }
                 }
 
                 let delta_y = null;
                 if (Math.abs(dy) > 1e-8) {
-                    if (entity.y + oy < object_y) {
+                    if ((entity.y + oy) < object_y) {
                         result.bottom = true;
-                        delta_y = (object_y - (entity.y + oy + entity.bounds.height)) - result.dy;
+                        delta_y = (object_y - ((entity.y + oy) + entity.bounds.height)) - result.dy;
                     } else {
                         result.top = true;
-                        delta_y = ((object_y + object_height) - entity.y + oy) - result.dy;
+                        delta_y = ((object_y + object_height) - (entity.y + oy)) - result.dy;
                     }
                 }
 
@@ -1510,9 +1852,10 @@ module.exports = {
     move: move,
 };
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 const MovieClip = require("./movie_clip.js");
-const Physics = require("./physics");
+const Physics = require("./physics.js");
+const Hat = require("./hat.js");
 
 class Player extends MovieClip {
     constructor(x, y) {
@@ -1549,6 +1892,7 @@ class Player extends MovieClip {
         this.post_jump_slowdown_duration = 0;
         this.face = "right";
         this.dead = false;
+        this.hat = null;
     }
 
     update_movement(elapsed) {
@@ -1721,6 +2065,9 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration -= elapsed;
         }
 
+        if (this.hat) {
+            this.hat.update_hat(elapsed);
+        }
 
         const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("Down");
         this.crouching = !!(this.is_grounded && down_pressed);
@@ -1749,13 +2096,18 @@ class Player extends MovieClip {
             const max_x = Math.max(player_x, game.render.render_width - player_x);
             const max_y = Math.max(player_y, game.render.render_height - player_y);
             game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+
+            this.hat = new Hat(this.x + this.bounds.width / 2, this.y + this.bounds.height / 6, this.horizontal_speed * 1.5, this.vertical_speed * 1.15);
+            game.containers.level.addChild(this.hat);
+
+            game.resources.sounds["death"].play();
         }
     }
 }
 
 module.exports = Player;
 
-},{"./movie_clip.js":15,"./physics":16}],18:[function(require,module,exports){
+},{"./hat.js":13,"./movie_clip.js":17,"./physics.js":18}],20:[function(require,module,exports){
 const update_physical_size = function() {
     const horizontal_padding = 80, vertical_padding = 180;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
@@ -1818,7 +2170,7 @@ const render = {
 
 module.exports = render;
 
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -1879,6 +2231,11 @@ const load_levels = function() {
                                                 if (!isNaN(value)) {
                                                     value = +value;
                                                 }
+                                                if (value === "True") {
+                                                    value = true;
+                                                } else if (value === "False") {
+                                                    value = false;
+                                                }
                                                 entity[xml_entity.attributes[k].name] = value;
                                             }
                                         }
@@ -1924,6 +2281,12 @@ const load_levels = function() {
         client.send();
     }
 
+    load_level("main_menu_0");
+    load_level("backstage_1");
+    load_level("stage_1");
+    load_level("backstage_2");
+    load_level("stage_2");
+    load_level("backstage_3");
     load_level("level0");
 };
 
@@ -1936,7 +2299,7 @@ const levels = {
 
 module.exports = levels;
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -1984,12 +2347,14 @@ const resources = {
 
 module.exports = resources;
 
-},{"./levels.js":19,"./sounds.js":21,"./sprites.js":22}],21:[function(require,module,exports){
+},{"./levels.js":21,"./sounds.js":23,"./sprites.js":24}],23:[function(require,module,exports){
 const load_sounds = function() {
-    function load_sound(name, volume = 1.0) {
+    function load_sound(name, volume = 1.0, extension = "wav", loop = false) {
         sounds.total_count++;
         sounds[name] = new Howl({
-            src: [ `sounds/${name}.wav` ],
+            src: [ `sounds/${name}.${extension}` ],
+            autoplay: loop,
+            loop: loop,
             volume: volume,
             onload: function() {
                 if (++sounds.loaded_count === sounds.total_count) {
@@ -2006,8 +2371,15 @@ const load_sounds = function() {
         });
     }
 
-    // TODO: WHEN AT LEAST ONE SOUND IS PRESET CALL LOAD_SOUNDS AND REMOVE THIS.
-    sounds.on_load();
+    load_sound("music", 0.75, "mp3", true);
+    load_sound("block_unstable", 1);
+    load_sound("death", 1);
+    load_sound("Explosion4", 1);
+    load_sound("Jump8", 1);
+    load_sound("Laser_Shoot8", 1);
+    load_sound("Pickup_Coin9", 1);
+    load_sound("step", 1);
+    load_sound("wall_grab", 1);
 };
 
 const sounds = {
@@ -2019,7 +2391,7 @@ const sounds = {
 
 module.exports = sounds;
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -2060,4 +2432,4 @@ const sprites = {
 
 module.exports = sprites;
 
-},{}]},{},[14]);
+},{}]},{},[16]);

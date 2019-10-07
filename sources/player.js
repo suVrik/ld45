@@ -1,5 +1,6 @@
 const MovieClip = require("./movie_clip.js");
-const Physics = require("./physics");
+const Physics = require("./physics.js");
+const Hat = require("./hat.js");
 
 class Player extends MovieClip {
     constructor(x, y) {
@@ -36,6 +37,7 @@ class Player extends MovieClip {
         this.post_jump_slowdown_duration = 0;
         this.face = "right";
         this.dead = false;
+        this.hat = null;
     }
 
     update_movement(elapsed) {
@@ -208,6 +210,9 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration -= elapsed;
         }
 
+        if (this.hat) {
+            this.hat.update_hat(elapsed);
+        }
 
         const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("Down");
         this.crouching = !!(this.is_grounded && down_pressed);
@@ -236,6 +241,11 @@ class Player extends MovieClip {
             const max_x = Math.max(player_x, game.render.render_width - player_x);
             const max_y = Math.max(player_y, game.render.render_height - player_y);
             game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+
+            this.hat = new Hat(this.x + this.bounds.width / 2, this.y + this.bounds.height / 6, this.horizontal_speed * 1.5, this.vertical_speed * 1.15);
+            game.containers.level.addChild(this.hat);
+
+            game.resources.sounds["death"].play();
         }
     }
 }

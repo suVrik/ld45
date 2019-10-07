@@ -1,8 +1,10 @@
 const load_sounds = function() {
-    function load_sound(name, volume = 1.0) {
+    function load_sound(name, volume = 1.0, extension = "wav", loop = false) {
         sounds.total_count++;
         sounds[name] = new Howl({
-            src: [ `sounds/${name}.wav` ],
+            src: [ `sounds/${name}.${extension}` ],
+            autoplay: loop,
+            loop: loop,
             volume: volume,
             onload: function() {
                 if (++sounds.loaded_count === sounds.total_count) {
@@ -19,8 +21,15 @@ const load_sounds = function() {
         });
     }
 
-    // TODO: WHEN AT LEAST ONE SOUND IS PRESET CALL LOAD_SOUNDS AND REMOVE THIS.
-    sounds.on_load();
+    load_sound("music", 0.75, "mp3", true);
+    load_sound("block_unstable", 1);
+    load_sound("death", 1);
+    load_sound("Explosion4", 1);
+    load_sound("Jump8", 1);
+    load_sound("Laser_Shoot8", 1);
+    load_sound("Pickup_Coin9", 1);
+    load_sound("step", 1);
+    load_sound("wall_grab", 1);
 };
 
 const sounds = {

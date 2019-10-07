@@ -8,6 +8,8 @@ const Mouse = require("./enemies/mouse.js");
 const Coin = require("./coin.js");
 const Spitting = require("./enemies/spitting.js");
 const Camera = require("./camera.js");
+const Exit = require("./exit.js");
+const Physics = require("./physics.js");
 
 window.game = {
     render: require("./render.js"),
@@ -29,6 +31,76 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
+    current_level: "level0",
+    next_level: null,
+    exit: null,
+    start_button: null,
+    num_clicks: 0,
+    dialog: false,
+    dialog_time: 0,
+    dialog_text: "",
+    dialog_text_duration: 0,
+    dialog_text_timeout: 0,
+    dialog_callback: null,
+    scripts: {
+        sc_game_menu_0: function(entity, elapsed) {
+            if (!entity.activated && (game.num_clicks > 1 || game.player.x > 300)) {
+                entity.activated = true;
+                entity.state = 1;
+            }
+            if (entity.activated) {
+                if (entity.state === 1) {
+                    entity.scale.x = -1;
+                    if (entity.x > 350) {
+                        entity.x -= elapsed * game.config.spitting.speed;
+                    } else {
+                        entity.state = 2;
+                    }
+                } else if (entity.state === 2) {
+                    game.dialog = true;
+                    game.dialog_time = 0;
+
+                    game.dialog_text = "Not again!";
+                    game.dialog_text_duration = 2;
+                    game.dialog_text_timeout = 0;
+                    game.dialog_callback = function() {
+                        game.dialog_text = "Looks like Start button is broken.";
+                        game.dialog_text_duration = 3;
+                        game.dialog_text_timeout = 0;
+                        game.dialog_callback = function() {
+                            game.dialog_text = "Follow me, I gotta check something...";
+                            game.dialog_text_duration = 3;
+                            game.dialog_text_timeout = 0;
+                            game.dialog_callback = function() {
+                                game.dialog = false;
+                                entity.state = 4;
+                            };
+                        };
+                    };
+
+                    entity.state = 3;
+                } else if (entity.state === 3) {
+                    if (entity.x > game.player.x + game.player.bounds.width / 2) {
+                        entity.scale.x = -1;
+                    } else {
+                        entity.scale.x = 1;
+                    }
+                } else if (entity.state === 4) {
+                    entity.scale.x = 1;
+                    if (entity.x < 510) {
+                        entity.x += elapsed * game.config.spitting.speed;
+                    } else {
+                        entity.state = 5;
+                    }
+                } else if (entity.state === 5) {
+                    entity.parent.removeChild(entity);
+                    entity.state = 6;
+                }
+                return true;
+            }
+            return false;
+        }
+    }
 };
 
 game.render.init();
@@ -87,6 +159,8 @@ let construct_level = function(level_name) {
         front_effects: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
+        dialog_background: new PIXI.Graphics(),
+        dialog_text: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         spawn_transition: new PIXI.Graphics(),
     };
 
@@ -101,8 +175,10 @@ let construct_level = function(level_name) {
         game.containers.level.addChild(game.containers.hitboxes);
     }
 
-    game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background"]));
+    game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background_0"]));
     game.containers.stage.addChild(game.containers.level);
+    game.containers.stage.addChild(game.containers.dialog_background);
+    game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
 
     draw_tiles_layer("tiles_very_back");
@@ -120,6 +196,8 @@ let construct_level = function(level_name) {
     game.coins = [];
     game.spittings = [];
     game.spitting_projectiles = [];
+    game.exit = null;
+    game.next_level = null;
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -129,15 +207,15 @@ let construct_level = function(level_name) {
         } else if (entity.type === "hazard_vines") {
             game.hazard_vines.push(new HazardVines(entity.x, entity.y, entity.width, entity.height));
         } else if (entity.type === "enemy_spiky") {
-            const spiky = new Spiky(entity.x, entity.y, entity.nodes);
+            const spiky = new Spiky(entity.x, entity.y, entity.nodes, entity.script);
             game.spikes.push(spiky);
             game.containers.entities.addChild(spiky);
         } else if (entity.type === "enemy_flying") {
-            const flying = new Flying(entity.x, entity.y, entity.nodes);
+            const flying = new Flying(entity.x, entity.y, entity.nodes, entity.friendly, entity.script);
             game.flyings.push(flying);
             game.containers.entities.addChild(flying);
         } else if (entity.type === "enemy_cloud") {
-            const cloud = new Cloud(entity.x, entity.y, entity.nodes);
+            const cloud = new Cloud(entity.x, entity.y, entity.nodes, entity.script);
             game.clouds.push(cloud);
             game.containers.entities.addChild(cloud);
         } else if (entity.type === "block_falling") {
@@ -151,7 +229,7 @@ let construct_level = function(level_name) {
                 }
             }
         } else if (entity.type === "enemy_mouse") {
-            const mouse = new Mouse(entity.x, entity.y, entity.nodes);
+            const mouse = new Mouse(entity.x, entity.y, entity.nodes, entity.friendly, entity.script);
             game.mice.push(mouse);
             game.containers.entities.addChild(mouse);
         } else if (entity.type === "coin") {
@@ -159,9 +237,11 @@ let construct_level = function(level_name) {
             game.coins.push(coin);
             game.containers.entities.addChild(coin);
         } else if (entity.type === "enemy_spitting") {
-            const spitting = new Spitting(entity.x, entity.y, entity.nodes);
+            const spitting = new Spitting(entity.x, entity.y, entity.nodes, entity.friendly, entity.script);
             game.spittings.push(spitting);
             game.containers.entities.addChild(spitting);
+        } else if (entity.type === "exit") {
+            game.exit = new Exit(entity.x, entity.y, entity.next_level);
         }
     }
 
@@ -178,10 +258,38 @@ let construct_level = function(level_name) {
     game.containers.spawn_transition.beginFill(0x000000);
     game.containers.spawn_transition.drawRect(0, 0, game.render.render_width, game.render.render_height);
     game.containers.spawn_transition.endFill();
+
+    game.dialog = false;
+    game.dialog_time = 0;
+
+    game.start_button = null;
+    game.num_clicks = 0;
+    if (level_name === "main_menu_0") {
+        game.start_button = new PIXI.Sprite(game.resources.sprites["alpha_red"]);
+        game.start_button.anchor.set(0.5);
+        game.start_button.width = 100;
+        game.start_button.height = 30;
+        const initial_x = -game.containers.level.x;
+        const initial_y = -game.containers.level.y;
+        game.start_button.x = initial_x + game.render.render_width / 2;
+        game.start_button.y = initial_y + game.render.render_height / 2;
+        game.start_button.interactive = true;
+        game.start_button.buttonMode = true;
+        game.containers.level.addChild(game.start_button);
+        game.start_button.on("pointerdown", function(evt) {
+            const world_x = -game.containers.level.x + evt.data.global.x;
+            const world_y = -game.containers.level.y + evt.data.global.y;
+            do {
+                game.start_button.x = initial_x + game.start_button.width / 2 + Math.random() * (game.render.render_width - game.start_button.width);
+                game.start_button.y = initial_y + game.start_button.height / 2 + Math.random() * (game.render.render_height - game.start_button.height - 150);
+            } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
+            game.num_clicks++;
+        });
+    }
 };
 
 let initialize = function() {
-    construct_level("level0");
+    construct_level(game.current_level);
 };
 
 let main_loop = function() {
@@ -252,14 +360,27 @@ let main_loop = function() {
             i++;
         }
     }
+    if (game.exit) {
+        const next_level = game.exit.update_exit();
+        if (next_level) {
+            game.next_level = next_level;
+
+            const player_x = game.player.x + game.containers.level.x + game.player.bounds.width / 2;
+            const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
+            const max_x = Math.max(player_x, game.render.render_width - player_x);
+            const max_y = Math.max(player_y, game.render.render_height - player_y);
+            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+        }
+    }
     game.camera.update_camera(elapsed);
     game.input.update();
 
     const max_radius = Math.sqrt(game.render.render_width * game.render.render_width + game.render.render_height * game.render.render_height);
     const max_side = Math.max(game.render.render_width, game.render.render_height) + max_radius * 2 + 10;
 
-    if (game.player.dead) {
-        game.containers.spawn_transition.clear();
+    game.containers.spawn_transition.clear();
+
+    if (game.player.dead || game.next_level) {
         game.containers.spawn_transition.beginFill(0x000000);
         game.containers.spawn_transition.drawRect((game.render.render_width - max_side) / 2, (game.render.render_height - max_side) / 2, max_side, max_side);
         game.containers.spawn_transition.endFill();
@@ -271,14 +392,49 @@ let main_loop = function() {
             game.containers.spawn_transition.endHole();
 
             if (Math.abs(game.spawn_effect_radius) < 1e-5) {
-                construct_level("level0");
+                if (game.next_level) {
+                    game.current_level = game.next_level;
+                }
+                construct_level(game.current_level);
             }
         }
     } else {
-        game.containers.spawn_transition.clear();
-        game.containers.spawn_transition.beginFill(0x000000);
-        game.containers.spawn_transition.drawCircle(game.player.x + game.player.bounds.width / 2 + game.containers.level.x, game.player.y + game.player.bounds.height / 2 + game.containers.level.y, game.spawn_effect_radius);
-        game.spawn_effect_radius = Math.max(game.spawn_effect_radius - elapsed * 1.5 * max_radius, 0);
-        game.containers.spawn_transition.endFill();
+        if (Math.abs(game.spawn_effect_radius) > 1e-5) {
+            game.containers.spawn_transition.beginFill(0x000000);
+            game.containers.spawn_transition.drawCircle(game.player.x + game.player.bounds.width / 2 + game.containers.level.x, game.player.y + game.player.bounds.height / 2 + game.containers.level.y, game.spawn_effect_radius);
+            game.spawn_effect_radius = Math.max(game.spawn_effect_radius - elapsed * 1.5 * max_radius, 0);
+            game.containers.spawn_transition.endFill();
+        }
     }
+    if (game.dialog) {
+        game.dialog_time = Math.min(game.dialog_time + elapsed * 125, 40);
+    } else {
+        game.dialog_time = Math.max(game.dialog_time - elapsed * 125, 0);
+    }
+    if (Math.abs(game.dialog_time) > 1e-5) {
+        game.containers.dialog_background.clear();
+        game.containers.dialog_background.beginFill(0x000000);
+        game.containers.dialog_background.drawRect(0, 0, game.render.render_width, game.dialog_time);
+        game.containers.dialog_background.drawRect(0, game.render.render_height - game.dialog_time, game.render.render_width, game.dialog_time);
+        game.containers.dialog_background.endFill();
+
+        game.containers.dialog_text.text = game.dialog_text;
+        game.containers.dialog_text.x = game.render.render_width / 2 - game.containers.dialog_text.textWidth / 2;
+        game.containers.dialog_text.y = game.render.render_height - game.dialog_time + 40 / 2 - game.containers.dialog_text.textHeight / 2;
+
+        if (game.dialog) {
+            game.dialog_text_timeout += elapsed;
+            if (game.dialog_text_timeout > game.dialog_text_duration) {
+                game.dialog_callback();
+            }
+        }
+    }
+};
+
+window.onfocus = function() {
+    Howler.volume(1);
+};
+
+window.onblur = function() {
+    Howler.volume(0);
 };

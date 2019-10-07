@@ -5,12 +5,12 @@
   <BackgroundColor A="255" R="52" G="158" B="173" />
   <GridColor A="255" R="255" G="240" B="90" />
   <LevelDefaultSize>
-    <Width>160</Width>
-    <Height>160</Height>
+    <Width>400</Width>
+    <Height>240</Height>
   </LevelDefaultSize>
   <LevelMinimumSize>
-    <Width>16</Width>
-    <Height>16</Height>
+    <Width>400</Width>
+    <Height>240</Height>
   </LevelMinimumSize>
   <LevelMaximumSize>
     <Width>16000</Width>
@@ -156,7 +156,10 @@
       <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\enemy_mouse.png" Tiled="false">
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
-      <ValueDefinitions />
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="BoolValueDefinition" Name="friendly" Default="false" />
+        <ValueDefinition xsi:type="StringValueDefinition" Name="script" Default="" MaxChars="-1" MultiLine="false" />
+      </ValueDefinitions>
       <NodesDefinition Enabled="true" Limit="1" DrawMode="Path" Ghost="false" />
     </EntityDefinition>
     <EntityDefinition Name="enemy_spiky" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
@@ -171,7 +174,9 @@
       <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\animations_32px_enemy_spiky_walk_0.png" Tiled="false">
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
-      <ValueDefinitions />
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="StringValueDefinition" Name="script" Default="" MaxChars="-1" MultiLine="false" />
+      </ValueDefinitions>
       <NodesDefinition Enabled="true" Limit="1" DrawMode="Path" Ghost="false" />
     </EntityDefinition>
     <EntityDefinition Name="enemy_flying" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
@@ -186,7 +191,10 @@
       <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\animations_32px_enemy_flying_fly_0.png" Tiled="false">
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
-      <ValueDefinitions />
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="BoolValueDefinition" Name="friendly" Default="false" />
+        <ValueDefinition xsi:type="StringValueDefinition" Name="script" Default="" MaxChars="-1" MultiLine="false" />
+      </ValueDefinitions>
       <NodesDefinition Enabled="true" Limit="-1" DrawMode="Circuit" Ghost="false" />
     </EntityDefinition>
     <EntityDefinition Name="enemy_spitting" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
@@ -198,10 +206,13 @@
         <X>16</X>
         <Y>32</Y>
       </Origin>
-      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\enemy_spitting.png" Tiled="false">
+      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\animations_32px_enemy_spitting_run_0.png" Tiled="false">
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
-      <ValueDefinitions />
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="BoolValueDefinition" Name="friendly" Default="false" />
+        <ValueDefinition xsi:type="StringValueDefinition" Name="script" Default="" MaxChars="-1" MultiLine="false" />
+      </ValueDefinitions>
       <NodesDefinition Enabled="true" Limit="1" DrawMode="Path" Ghost="false" />
     </EntityDefinition>
     <EntityDefinition Name="enemy_cloud" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
@@ -216,7 +227,9 @@
       <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\animations_32px_enemy_cloud_idle_0.png" Tiled="false">
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
-      <ValueDefinitions />
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="StringValueDefinition" Name="script" Default="" MaxChars="-1" MultiLine="false" />
+      </ValueDefinitions>
       <NodesDefinition Enabled="true" Limit="-1" DrawMode="Circuit" Ghost="false" />
     </EntityDefinition>
     <EntityDefinition Name="coin" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
@@ -232,6 +245,23 @@
         <RectColor A="255" R="255" G="0" B="0" />
       </ImageDefinition>
       <ValueDefinitions />
+      <NodesDefinition Enabled="false" Limit="-1" DrawMode="None" Ghost="false" />
+    </EntityDefinition>
+    <EntityDefinition Name="exit" Limit="1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
+      <Size>
+        <Width>32</Width>
+        <Height>32</Height>
+      </Size>
+      <Origin>
+        <X>0</X>
+        <Y>0</Y>
+      </Origin>
+      <ImageDefinition DrawMode="Rectangle" ImagePath="" Tiled="false">
+        <RectColor A="255" R="255" G="0" B="0" />
+      </ImageDefinition>
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="StringValueDefinition" Name="next_level" Default="" MaxChars="-1" MultiLine="false" />
+      </ValueDefinitions>
       <NodesDefinition Enabled="false" Limit="-1" DrawMode="None" Ghost="false" />
     </EntityDefinition>
   </EntityDefinitions>

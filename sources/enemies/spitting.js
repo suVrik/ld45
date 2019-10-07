@@ -3,9 +3,11 @@ const Physics = require("../physics.js");
 const SpittingProjectile = require("./spitting_projectile.js");
 
 class Spitting extends MovieClip {
-    constructor(x, y, nodes) {
+    constructor(x, y, nodes, friendly, script) {
         super({
-            idle: {name: "idle", frames: [game.resources.sprites["enemy_spitting"]], speed: 0.15},
+            idle: { frames: game.resources.sprites["animations_32px_enemy_spitting_run"], speed: 0.15 },
+            charge: { frames: game.resources.sprites["animations_32px_enemy_spitting_charging"], speed: 0.15 },
+            attack: { frames: [game.resources.sprites["animations_32px_enemy_spitting_attack_0"]], speed: 0.15, loop: false },
         }, "idle");
 
         this.anchor.set(0.5, 1);
@@ -18,6 +20,9 @@ class Spitting extends MovieClip {
         this.attack_cooldown = 0;
         this.prepare_timeout = 0;
 
+        this.friendly = friendly;
+        this.script = script;
+
         this.bounds = {
             width: game.config.spitting.width,
             height: game.config.spitting.height,
@@ -25,10 +30,21 @@ class Spitting extends MovieClip {
     }
 
     update_spitting(elapsed) {
-        this.attack_cooldown -= elapsed;
         let is_walking = this.attack_cooldown <= 0;
+
+        if (this.script.length > 0) {
+            if (game.scripts.hasOwnProperty(this.script)) {
+                if (game.scripts[this.script](this, elapsed)) {
+                    is_walking = false;
+                }
+            } else {
+                console.error(`Invalid script "${this.script}"!`);
+            }
+        }
+
+        this.attack_cooldown -= elapsed;
         if (!game.player.dead) {
-            if (this.attack_cooldown <= 0) {
+            if (!this.friendly && this.attack_cooldown <= 0) {
                 const this_x = this.x;
                 const this_y = this.y - game.config.spitting.height / 2;
                 const player_x = game.player.x + game.player.bounds.width / 2 + game.player.horizontal_speed * game.config.spitting.prediction_seconds;
@@ -100,27 +116,38 @@ class Spitting extends MovieClip {
             if (Physics.aabb(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 if (game.player.previous_y + game.player.bounds.height < this.y - game.config.spitting.height && game.player.y + game.player.bounds.height >= this.y - game.config.spitting.height) {
                     game.player.vertical_speed = -250;
-                    game.spittings.splice(game.spittings.indexOf(this), 1);
-                    this.parent.removeChild(this);
 
-                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
-                    effect.x = this.x;
-                    effect.y = this.y - game.config.spitting.height / 2;
-                    effect.anchor.set(0.5, 0.5);
-                    effect.animationSpeed = 0.3;
-                    effect.loop = false;
-                    effect.play();
-                    effect.onComplete = function() {
-                        game.containers.effects.removeChild(effect);
-                    };
-                    game.containers.effects.addChild(effect);
+                    if (!this.friendly) {
+                        game.spittings.splice(game.spittings.indexOf(this), 1);
+                        this.parent.removeChild(this);
+
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                        effect.x = this.x;
+                        effect.y = this.y - game.config.spitting.height / 2;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function () {
+                            game.containers.effects.removeChild(effect);
+                        };
+                        game.containers.effects.addChild(effect);
+
+                        game.resources.sounds["Explosion4"].play();
+                    } else {
+                        // TODO: Ouch!
+                    }
                 } else {
-                    game.player.murder();
+                    if (!this.friendly) {
+                        game.player.murder();
+                    }
                 }
             }
         }
 
         if (is_walking) {
+            this.gotoAndPlay("idle");
+
             const next_node = (this.current_node + 1) % this.nodes.length;
             if (this.x < this.nodes[next_node].x) {
                 this.x = Math.min(this.x + game.config.spitting.speed * elapsed, this.nodes[next_node].x);
@@ -132,9 +159,22 @@ class Spitting extends MovieClip {
             if (Math.abs(this.x - this.nodes[next_node].x) < 1e-5) {
                 this.current_node = next_node;
             }
+            this.prepare_timeout = 0;
+        } else {
+            if (this.attack_cooldown <= 0 && this.prepare_timeout < game.config.spitting.prepare_timeout) {
+                if (this.animation !== "charge") {
+                    this.gotoAndPlay("charge");
+                }
+            } else {
+                if (this.attack_cooldown < game.config.spitting.projectile_cooldown - 0.2) {
+                    this.gotoAndPlay("idle");
+                } else {
+                    this.gotoAndPlay("attack");
+                }
+            }
         }
 
-        if (game.draw_hitboxes) {
+        if (!this.friendly && game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height);
 
             const this_x = this.x;

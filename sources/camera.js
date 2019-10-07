@@ -14,7 +14,12 @@ class Camera {
                 this.offset = Math.max(this.offset - elapsed * 4 * target_offset, 0);
             }
 
-            game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y - this.offset, 0), game.render.render_height - game.config.level.height);
+            let top_edge = 0;
+            let bottom_edge = game.render.render_height - game.config.level.height;
+            top_edge += game.dialog_time;
+            bottom_edge -= game.dialog_time;
+
+            game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y - this.offset, top_edge), bottom_edge);
         }
     }
 }

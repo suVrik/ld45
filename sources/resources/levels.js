@@ -58,6 +58,11 @@ const load_levels = function() {
                                                 if (!isNaN(value)) {
                                                     value = +value;
                                                 }
+                                                if (value === "True") {
+                                                    value = true;
+                                                } else if (value === "False") {
+                                                    value = false;
+                                                }
                                                 entity[xml_entity.attributes[k].name] = value;
                                             }
                                         }
@@ -103,6 +108,12 @@ const load_levels = function() {
         client.send();
     }
 
+    load_level("main_menu_0");
+    load_level("backstage_1");
+    load_level("stage_1");
+    load_level("backstage_2");
+    load_level("stage_2");
+    load_level("backstage_3");
     load_level("level0");
 };
 

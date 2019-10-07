@@ -1,14 +1,14 @@
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 
-class BlockFalling extends MovieClip {
+class BlockFalling extends PIXI.Sprite {
     constructor(x, y) {
-        super({
-            idle: { frames: [game.resources.sprites["block_falling"]], speed: 0.1 },
-        }, "idle");
+        super(game.resources.sprites["block_falling"]);
 
         this.x = x;
         this.y = y;
+        this.original_x = x;
+        this.original_y = y;
         this.destroy_timeout = null;
         this.respawn_timeout = null;
     }
@@ -18,6 +18,8 @@ class BlockFalling extends MovieClip {
             if (!game.player.dead) {
                 if (Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x - 1e-1, this.y - 1e-1, game.config.tile_size + 2e-1, game.config.tile_size + 2e-1)) {
                     this.destroy_timeout = game.config.block_falling.destroy_timeout;
+
+                    game.resources.sounds["block_unstable"].play();
                 }
             }
 
@@ -42,8 +44,15 @@ class BlockFalling extends MovieClip {
                         game.containers.effects.removeChild(effect);
                     };
                     game.containers.effects.addChild(effect);
+
+                    game.resources.sounds["Explosion4"].play();
+                } else {
+                    this.x = this.original_x + Math.round(Math.random() * 2 - 1);
+                    this.y = this.original_y + Math.round(Math.random() * 2 - 1);
                 }
             } else {
+                this.x = this.original_x;
+                this.y = this.original_y;
                 this.respawn_timeout -= elapsed;
                 if (this.respawn_timeout < 0) {
                     if (!Physics.aabb(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height, this.x - 1e-1, this.y - 1e-1, game.config.tile_size + 2e-1, game.config.tile_size + 2e-1)) {
