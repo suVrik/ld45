@@ -291,13 +291,8 @@
             <key type="filename">sources/animations_32px_player_run_3.png</key>
             <key type="filename">sources/animations_32px_player_run_4.png</key>
             <key type="filename">sources/animations_32px_player_run_5.png</key>
-            <key type="filename">sources/enemy_cloud.png</key>
-            <key type="filename">sources/enemy_flying.png</key>
-            <key type="filename">sources/enemy_jumping.png</key>
             <key type="filename">sources/enemy_mouse.png</key>
             <key type="filename">sources/enemy_spitting.png</key>
-            <key type="filename">sources/player_jump.png</key>
-            <key type="filename">sources/player_still.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0,0</point_f>
@@ -365,7 +360,6 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">sources/coin.png</key>
             <key type="filename">sources/projectile_flying.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
