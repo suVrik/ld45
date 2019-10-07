@@ -105,7 +105,7 @@ class Mouse extends MovieClip {
                                 }
                             }
                         } else {
-                            if (this.is_attacking === 0 && player_x >= this.from && player_x <= this.to && player_y > this.y - game.config.mouse.attack_height) {
+                            if (this.is_attacking === 0 && player_x >= this.from - game.config.tile_size && player_x <= this.to + game.config.tile_size && player_y > this.y - game.config.mouse.attack_height) {
                                 if (player_x > this.x) {
                                     this.is_attacking = 1;
                                 } else {

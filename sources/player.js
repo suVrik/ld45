@@ -44,8 +44,8 @@ class Player extends MovieClip {
 
     update_movement(elapsed) {
         if (!this.dead) {
-            const left_pressed = game.input.is_key_down("KeyA");
-            const right_pressed = game.input.is_key_down("KeyD");
+            const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
+            const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
             if (left_pressed && !right_pressed) {
                 this.face = "left";
                 this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
@@ -214,10 +214,17 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration -= elapsed;
         }
 
-        if (!was_grounded && this.is_grounded) {
+        if (was_grounded !== this.is_grounded) {
             const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
             effect.x = this.x + this.bounds.width / 2;
-            effect.y = this.y + this.bounds.height - 32;
+
+            if (!was_grounded && this.is_grounded) {
+                effect.y = this.y + this.bounds.height - 32;
+                game.resources.sounds["step"].play();
+            } else {
+                effect.y = this.previous_y + this.bounds.height - 32;
+            }
+
             effect.anchor.set(0.5, 0);
             effect.animationSpeed = 0.3;
             effect.loop = false;
@@ -227,7 +234,6 @@ class Player extends MovieClip {
             };
             game.containers.effects.addChild(effect);
 
-            game.resources.sounds["step"].play();
         } else {
             if (this.is_grounded) {
                 if (this.is_grounded_counter > 13) {
@@ -247,8 +253,8 @@ class Player extends MovieClip {
 
                     this.is_grounded_counter = 0;
                 } else {
-                    const left_pressed = game.input.is_key_down("KeyA");
-                    const right_pressed = game.input.is_key_down("KeyD");
+                    const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
+                    const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
                     if (left_pressed || right_pressed) {
                         this.is_grounded_counter++;
                     } else {

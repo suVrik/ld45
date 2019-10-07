@@ -9,6 +9,8 @@ const Coin = require("./coin.js");
 const Spitting = require("./enemies/spitting.js");
 const Camera = require("./camera.js");
 const Exit = require("./exit.js");
+const Altar = require("./altar.js");
+const Tutorial = require("./tutorial.js");
 const Physics = require("./physics.js");
 
 window.game = {
@@ -34,6 +36,7 @@ window.game = {
     current_level: "main_menu_0",
     next_level: null,
     exit: null,
+    altar: null,
     start_button: null,
     num_clicks: 0,
     dialog: false,
@@ -42,6 +45,16 @@ window.game = {
     dialog_text_duration: 0,
     dialog_text_timeout: 0,
     dialog_callback: null,
+    stats: {
+        score: 0,
+        level_start: null,
+        total_score: 0,
+        total_time: 0,
+        item1: true,
+        item2: true,
+        item3: true,
+        item4: true,
+    },
     scripts: {
         sc_game_menu_0: function(entity, elapsed) {
             if (!entity.activated && (game.num_clicks > 1 || game.player.x > 300)) {
@@ -64,11 +77,11 @@ window.game = {
                     game.dialog_text_duration = 2;
                     game.dialog_text_timeout = 0;
                     game.dialog_callback = function() {
-                        game.dialog_text = "Looks like Start button is broken.";
+                        game.dialog_text = "Looks like Start button is broken";
                         game.dialog_text_duration = 3;
                         game.dialog_text_timeout = 0;
                         game.dialog_callback = function() {
-                            game.dialog_text = "Follow me, I gotta check something...";
+                            game.dialog_text = "Follow me, I gotta check something . . .";
                             game.dialog_text_duration = 3;
                             game.dialog_text_timeout = 0;
                             game.dialog_callback = function() {
@@ -99,7 +112,65 @@ window.game = {
                 return true;
             }
             return false;
-        }
+        },
+        sc_backstage_1: function(entity, elapsed) {
+            if (!entity.state) {
+                entity.state = 1;
+            }
+            if (entity.state === 1) {
+                entity.scale.x = 1;
+                if (entity.x < 180) {
+                    entity.x += elapsed * game.config.spitting.speed;
+                } else {
+                    entity.state = 2;
+                }
+            } else if (entity.state === 2) {
+                game.dialog = true;
+                game.dialog_time = 0;
+
+                game.dialog_text = "Alright . . . Okay . . .  I see . . .";
+                game.dialog_text_duration = 2.5;
+                game.dialog_text_timeout = 0;
+                game.dialog_callback = function() {
+                    game.dialog_text = "You have 4 items you were supposed to collect during the game";
+                    game.dialog_text_duration = 4.5;
+                    game.dialog_text_timeout = 0;
+                    game.dialog_callback = function() {
+                        game.dialog_text = "For some reason you have these items before the start";
+                        game.dialog_text_duration = 4;
+                        game.dialog_text_timeout = 0;
+                        game.dialog_callback = function() {
+                            game.dialog_text = "You must place these items back where they belong";
+                            game.dialog_text_duration = 3.5;
+                            game.dialog_text_timeout = 0;
+                            game.dialog_callback = function() {
+                                game.dialog_text = "Then you can start the game normally";
+                                game.dialog_text_duration = 3;
+                                game.dialog_text_timeout = 0;
+                                game.dialog_callback = function() {
+                                    game.dialog_text = "Now go! The first level is upstairs.\nYou need to climb the wall to get there.";
+                                    game.dialog_text_duration = 6;
+                                    game.dialog_text_timeout = 0;
+                                    game.dialog_callback = function() {
+                                        game.dialog = false;
+                                        entity.state = 4;
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+
+                entity.state = 3;
+            } else if (entity.state === 3) {
+                if (entity.x > game.player.x + game.player.bounds.width / 2) {
+                    entity.scale.x = -1;
+                } else {
+                    entity.scale.x = 1;
+                }
+            }
+            return true;
+        },
     }
 };
 
@@ -121,6 +192,11 @@ let construct_level = function(level_name) {
 
     game.config.level.width = game.level.width;
     game.config.level.height = game.level.height;
+
+    game.stats.time = 0;
+    game.stats.score = 0;
+
+    game.stats.level_start = new Date();
 
     function draw_tiles_layer(layer_name) {
         for (let i = 0; i < game.level[layer_name].length; i++) {
@@ -159,9 +235,23 @@ let construct_level = function(level_name) {
         front_effects: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
+        ui: new PIXI.Container(),
+        coin: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
+        coin_shadow: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
+        timer: new PIXI.Sprite(game.resources.sprites["ui_timer"]),
+        timer_shadow: new PIXI.Sprite(game.resources.sprites["ui_timer"]),
+        score: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
+        score_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
+        time: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
+        time_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
+        items: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         dialog_background: new PIXI.Graphics(),
         dialog_text: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         spawn_transition: new PIXI.Graphics(),
+        item1: new PIXI.Sprite(game.resources.sprites["artifact_1"]),
+        item2: new PIXI.Sprite(game.resources.sprites["artifact_2"]),
+        item3: new PIXI.Sprite(game.resources.sprites["artifact_3"]),
+        item4: new PIXI.Sprite(game.resources.sprites["artifact_4"]),
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
@@ -177,6 +267,7 @@ let construct_level = function(level_name) {
 
     game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background_0"]));
     game.containers.stage.addChild(game.containers.level);
+    game.containers.stage.addChild(game.containers.ui);
     game.containers.stage.addChild(game.containers.dialog_background);
     game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
@@ -197,6 +288,7 @@ let construct_level = function(level_name) {
     game.spittings = [];
     game.spitting_projectiles = [];
     game.exit = null;
+    game.altar = null;
     game.next_level = null;
 
     for (let i = 0; i < game.level["entities"].length; i++) {
@@ -242,6 +334,12 @@ let construct_level = function(level_name) {
             game.containers.entities.addChild(spitting);
         } else if (entity.type === "exit") {
             game.exit = new Exit(entity.x, entity.y, entity.next_level);
+        } else if (entity.type === "altar") {
+            game.altar = new Altar(entity.x, entity.y, entity.next_level, entity.item2);
+            game.containers.entities.addChild(game.altar);
+        } else if (entity.type === "tutorial") {
+            const tutorial = new Tutorial(entity.x, entity.y, entity.a, entity.b);
+            game.containers.entities.addChild(tutorial);
         }
     }
 
@@ -264,11 +362,9 @@ let construct_level = function(level_name) {
 
     game.start_button = null;
     game.num_clicks = 0;
-    if (level_name === "main_menu_0") {
-        game.start_button = new PIXI.Sprite(game.resources.sprites["alpha_red"]);
+    if (level_name === "main_menu_0" || level_name === "main_menu_1") {
+        game.start_button = new PIXI.Sprite(game.resources.sprites["button_start"]);
         game.start_button.anchor.set(0.5);
-        game.start_button.width = 100;
-        game.start_button.height = 30;
         const initial_x = -game.containers.level.x;
         const initial_y = -game.containers.level.y;
         game.start_button.x = initial_x + game.render.render_width / 2;
@@ -276,16 +372,87 @@ let construct_level = function(level_name) {
         game.start_button.interactive = true;
         game.start_button.buttonMode = true;
         game.containers.level.addChild(game.start_button);
+        game.start_button.on("pointerover", function() {
+            game.start_button.texture = game.resources.sprites["button_start_hover"];
+        });
+        game.start_button.on("pointerout", function() {
+            game.start_button.texture = game.resources.sprites["button_start"];
+        });
         game.start_button.on("pointerdown", function(evt) {
-            const world_x = -game.containers.level.x + evt.data.global.x;
-            const world_y = -game.containers.level.y + evt.data.global.y;
-            do {
-                game.start_button.x = initial_x + game.start_button.width / 2 + Math.random() * (game.render.render_width - game.start_button.width);
-                game.start_button.y = initial_y + game.start_button.height / 2 + Math.random() * (game.render.render_height - game.start_button.height - 150);
-            } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
-            game.num_clicks++;
+            if (level_name === "main_menu_0") {
+                const world_x = -game.containers.level.x + evt.data.global.x;
+                const world_y = -game.containers.level.y + evt.data.global.y;
+                do {
+                    game.start_button.x = initial_x + game.start_button.width / 2 + Math.random() * (game.render.render_width - game.start_button.width);
+                    game.start_button.y = initial_y + game.start_button.height / 2 + Math.random() * (game.render.render_height - game.start_button.height - 150);
+                } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
+                game.num_clicks++;
+            } else {
+                // TODO
+            }
+            game.resources.sounds["Laser_Shoot8"].play();
         });
     }
+
+    game.containers.score.text = "0";
+    game.containers.score.x = 24;
+    game.containers.score.y = 7;
+
+    game.containers.score_shadow.text = game.containers.score.text;
+    game.containers.score_shadow.x = game.containers.score.x;
+    game.containers.score_shadow.y = game.containers.score.y + 1;
+
+    game.containers.time.text = "00 : 00";
+    game.containers.time.x = 24;
+    game.containers.time.y = 15 + game.containers.score.height;
+
+    game.containers.coin.x = 7;
+    game.containers.coin.y = 7;
+
+    game.containers.coin_shadow.x = game.containers.coin.x;
+    game.containers.coin_shadow.y = game.containers.coin.y + 1;
+    game.containers.coin_shadow.tint = 0x000000;
+
+    game.containers.timer.x = 7;
+    game.containers.timer.y = 13 + game.containers.score.height;
+
+    game.containers.timer_shadow.x = game.containers.timer.x;
+    game.containers.timer_shadow.y = game.containers.timer.y + 1;
+    game.containers.timer_shadow.tint = 0x000000;
+
+    game.containers.time_shadow.text = game.containers.time.text;
+    game.containers.time_shadow.x = game.containers.time.x;
+    game.containers.time_shadow.y = game.containers.time.y + 1;
+
+    game.containers.item1.x = game.render.render_width - 23;
+    game.containers.item1.y = 7;
+    game.containers.item1.visible = game.stats.item1;
+
+    game.containers.item2.x = game.render.render_width - 23 - 20;
+    game.containers.item2.y = 7;
+    game.containers.item2.visible = game.stats.item2;
+
+    game.containers.item3.x = game.render.render_width - 23 - 20 * 2;
+    game.containers.item3.y = 7;
+    game.containers.item3.visible = game.stats.item3;
+
+    game.containers.item4.x = game.render.render_width - 23 - 20 * 3;
+    game.containers.item4.y = 7;
+    game.containers.item4.visible = game.stats.item4;
+
+    game.containers.ui.addChild(game.containers.coin_shadow);
+    game.containers.ui.addChild(game.containers.coin);
+    game.containers.ui.addChild(game.containers.timer_shadow);
+    game.containers.ui.addChild(game.containers.timer);
+    game.containers.ui.addChild(game.containers.score_shadow);
+    game.containers.ui.addChild(game.containers.score);
+    game.containers.ui.addChild(game.containers.time_shadow);
+    game.containers.ui.addChild(game.containers.time);
+    game.containers.ui.addChild(game.containers.items);
+    game.containers.ui.addChild(game.containers.item1);
+    game.containers.ui.addChild(game.containers.item2);
+    game.containers.ui.addChild(game.containers.item3);
+    game.containers.ui.addChild(game.containers.item4);
 };
 
 let initialize = function() {
@@ -294,6 +461,9 @@ let initialize = function() {
 
 let main_loop = function() {
     const elapsed = game.render.application.ticker.elapsedMS / 1000;
+
+    const current_time = new Date();
+    const total_elapsed = (current_time.getTime() - game.stats.level_start.getTime()) / 1000;
 
     if (game.draw_hitboxes) {
         game.containers.hitboxes.clear();
@@ -360,8 +530,19 @@ let main_loop = function() {
             i++;
         }
     }
-    if (game.exit) {
+    if (game.next_level == null && game.exit) {
         const next_level = game.exit.update_exit();
+        if (next_level) {
+            game.next_level = next_level;
+
+            const player_x = game.player.x + game.containers.level.x + game.player.bounds.width / 2;
+            const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
+            const max_x = Math.max(player_x, game.render.render_width - player_x);
+            const max_y = Math.max(player_y, game.render.render_height - player_y);
+            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+        }
+    } else if (game.next_level == null && game.altar) {
+        const next_level = game.altar.update_altar(elapsed);
         if (next_level) {
             game.next_level = next_level;
 
@@ -393,6 +574,12 @@ let main_loop = function() {
 
             if (Math.abs(game.spawn_effect_radius) < 1e-5) {
                 if (game.next_level) {
+                    if (game.altar) {
+                        game.stats["item" + game.altar.item_num] = false;
+                    }
+
+                    game.stats.total_score += game.stats.score;
+                    game.stats.total_time += total_elapsed;
                     game.current_level = game.next_level;
                 }
                 construct_level(game.current_level);
@@ -429,6 +616,13 @@ let main_loop = function() {
             }
         }
     }
+
+    game.containers.score.text = String(game.stats.score);
+    game.containers.score_shadow.text = game.containers.score.text;
+    const minutes = Math.floor(total_elapsed / 60);
+    const seconds = Math.floor(total_elapsed % 60);
+    game.containers.time.text = (minutes < 10 ? "0" + minutes : minutes) + " : " + (seconds < 10 ? "0" + seconds : seconds);
+    game.containers.time_shadow.text = game.containers.time.text;
 };
 
 window.onfocus = function() {

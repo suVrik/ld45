@@ -526,8 +526,6 @@
     <tile x="40" y="27" tx="7" ty="7" />
     <tile x="40" y="28" tx="7" ty="7" />
     <tile x="40" y="29" tx="7" ty="7" />
-    <tile x="41" y="7" tx="0" ty="2" />
-    <tile x="41" y="8" tx="0" ty="3" />
     <tile x="41" y="18" tx="7" ty="6" />
     <tile x="41" y="19" tx="7" ty="7" />
     <tile x="41" y="20" tx="7" ty="7" />
@@ -540,8 +538,6 @@
     <tile x="41" y="27" tx="7" ty="7" />
     <tile x="41" y="28" tx="7" ty="7" />
     <tile x="41" y="29" tx="7" ty="7" />
-    <tile x="42" y="7" tx="1" ty="2" />
-    <tile x="42" y="8" tx="1" ty="3" />
     <tile x="42" y="18" tx="7" ty="6" />
     <tile x="42" y="19" tx="7" ty="7" />
     <tile x="42" y="20" tx="7" ty="7" />
@@ -1297,7 +1293,7 @@
     <coin id="18" x="296" y="112" />
     <coin id="19" x="224" y="256" />
     <coin id="20" x="208" y="256" />
-    <coin id="21" x="215" y="240" />
+    <coin id="21" x="216" y="240" />
     <coin id="22" x="320" y="256" />
     <coin id="23" x="352" y="256" />
     <coin id="24" x="384" y="256" />
@@ -1312,14 +1308,16 @@
     <coin id="33" x="576" y="320" />
     <coin id="34" x="576" y="256" />
     <coin id="35" x="576" y="192" />
-    <coin id="36" x="576" y="128" />
+    <coin id="36" x="576" y="112" />
     <coin id="37" x="608" y="96" />
-    <exit id="38" x="656" y="112" next_level="stage_2" />
     <hazard_vines id="2" x="96" y="448" width="64" height="16" />
     <hazard_vines id="39" x="544" y="240" width="16" height="64" />
     <enemy_cloud id="3" x="584" y="390" script="">
       <node x="584" y="214" />
     </enemy_cloud>
+    <coin id="40" x="591" y="101" />
+    <altar id="38" x="656" y="112" item2="4" next_level="stage_2" />
+    <tutorial id="41" x="112" y="256" a="button_s" b="button_down" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords" />
   <hitboxes exportMode="Rectangles">
@@ -1327,14 +1325,14 @@
     <rect x="0" y="16" w="80" h="176" />
     <rect x="0" y="192" w="16" h="288" />
     <rect x="16" y="272" w="16" h="96" />
-    <rect x="16" y="448" w="64" h="32" />
+    <rect x="16" y="448" w="80" h="32" />
     <rect x="80" y="144" w="112" h="48" />
-    <rect x="80" y="464" w="640" h="16" />
     <rect x="96" y="272" w="32" h="96" />
+    <rect x="96" y="464" w="624" h="16" />
     <rect x="128" y="288" w="416" h="16" />
     <rect x="128" y="304" w="80" h="16" />
     <rect x="128" y="320" w="16" h="48" />
-    <rect x="144" y="448" w="576" h="16" />
+    <rect x="160" y="448" w="560" h="16" />
     <rect x="192" y="160" w="160" h="32" />
     <rect x="192" y="272" w="64" h="16" />
     <rect x="224" y="384" w="336" h="64" />

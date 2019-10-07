@@ -1,7 +1,6 @@
 const update_physical_size = function() {
-    const horizontal_padding = 0, vertical_padding = 0;
-    const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
-    const height = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - vertical_padding;
+    const width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 
     render.scale = 1;
     render.physical_width = render.render_width;
@@ -32,7 +31,7 @@ const update_physical_size = function() {
 const init_window = function() {
     PIXI.settings.ROUND_PIXELS = true;
 
-    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height, backgroundColor: 0x349EAD });
+    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
     render.stage = render.application.stage;
 
     const game_window = document.getElementById("game_window");

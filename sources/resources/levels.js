@@ -115,6 +115,7 @@ const load_levels = function() {
     load_level("stage_2");
     load_level("backstage_3");
     load_level("level0");
+    load_level("main_menu_1");
 };
 
 const levels = {

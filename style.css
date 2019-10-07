@@ -2,19 +2,13 @@ html, body {
     margin: 0;
     padding: 0;
     font-family: Verdana, serif;
-}
-
-body {
-    background: #24252B url("sprites/background.png");
+    background-color: #000;
 }
 
 #game_window {
-    background-color: #24252B;
     position: absolute;
-    padding: 20px;
-    top: 50%;
     left: 50%;
-    z-index: 1;
+    top: 50%;
 }
 
 #loading_bar {
@@ -31,26 +25,4 @@ canvas {
     image-rendering: -o-crisp-edges;
     image-rendering: pixelated;
     -ms-interpolation-mode: nearest-neighbor;
-}
-
-footer {
-    position: absolute;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
-    z-index: 0;
-}
-
-footer p {
-    display: inline-block;
-    padding: 8px;
-    color: #BABAB6;
-    font-size: 12pt;
-    background-color: #24252B;
-}
-
-footer p a {
-    color: #95A6FF;
-    text-decoration: none;
-    display: inline-block;
 }

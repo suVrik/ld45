@@ -1,4 +1,62 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+class Altar extends PIXI.Container {
+    constructor(x, y, next_level, item) {
+        super();
+
+        this.x = x;
+        this.y = y;
+        this.next_level = next_level;
+        this.item_num = item;
+
+        const altar = new PIXI.Sprite(game.resources.sprites["altar"]);
+        this.addChild(altar);
+
+        this.item = new PIXI.Sprite(game.resources.sprites["artifact_" + item]);
+        this.item.visible = false;
+        this.item.x = 8;
+        this.addChild(this.item);
+
+        this.timeout = null;
+    }
+
+    update_altar(elapsed) {
+        if (!game.player.dead) {
+            const force_next_level = game.input.is_key_down("ShiftLeft") && game.input.is_key_pressed("Digit9");
+            if (force_next_level || (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2)) {
+                if (this.timeout == null) {
+                    this.item.visible = true;
+                    this.timeout = 1;
+
+                    for (let i = 0; i < 5; i++) {
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_coin_flash"]);
+                        effect.x = this.x + 8 + Math.random() * 20 - 10;
+                        effect.y = this.y + 2 + Math.random() * 20 - 10;
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function () {
+                            game.containers.effects.removeChild(effect);
+                        };
+                        game.containers.effects.addChild(effect);
+                    }
+
+                    game.resources.sounds["Pickup_Coin9"].play();
+                }
+            }
+            if (this.timeout && this.timeout > 0) {
+                this.timeout -= elapsed;
+                if (this.timeout <= 0) {
+                    return this.next_level;
+                }
+            }
+        }
+        return null;
+    }
+}
+
+module.exports = Altar;
+
+},{}],2:[function(require,module,exports){
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 
@@ -83,7 +141,7 @@ class BlockFalling extends PIXI.Sprite {
 
 module.exports = BlockFalling;
 
-},{"./movie_clip.js":17,"./physics.js":18}],2:[function(require,module,exports){
+},{"./movie_clip.js":18,"./physics.js":19}],3:[function(require,module,exports){
 class Camera {
     constructor() {
         this.offset = 0;
@@ -112,7 +170,7 @@ class Camera {
 
 module.exports = Camera;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 const Physics = require("./physics.js");
 
 class Coin extends PIXI.AnimatedSprite {
@@ -130,23 +188,29 @@ class Coin extends PIXI.AnimatedSprite {
     update_coin(elapsed) {
         this.time += elapsed * 5;
         this.y = this.initial_y + Math.sin(this.time) * 3;
-        if (Physics.aabb(this.x, this.y, game.config.coin.size, game.config.coin.size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
-            game.coins.splice(game.coins.indexOf(this), 1);
-            this.parent.removeChild(this);
 
-            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_coin_flash"]);
-            effect.x = this.x;
-            effect.y = this.y;
-            effect.animationSpeed = 0.3;
-            effect.loop = false;
-            effect.play();
-            effect.onComplete = function() {
-                game.containers.effects.removeChild(effect);
-            };
-            game.containers.effects.addChild(effect);
+        if (!game.player.dead) {
+            if (Physics.aabb(this.x, this.y, game.config.coin.size, game.config.coin.size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                game.coins.splice(game.coins.indexOf(this), 1);
+                this.parent.removeChild(this);
 
-            game.resources.sounds["Pickup_Coin9"].play();
+                game.stats.score++;
+
+                const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_coin_flash"]);
+                effect.x = this.x;
+                effect.y = this.y;
+                effect.animationSpeed = 0.3;
+                effect.loop = false;
+                effect.play();
+                effect.onComplete = function () {
+                    game.containers.effects.removeChild(effect);
+                };
+                game.containers.effects.addChild(effect);
+
+                game.resources.sounds["Pickup_Coin9"].play();
+            }
         }
+
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(this.x, this.y, game.config.coin.size, game.config.coin.size);
         }
@@ -155,7 +219,7 @@ class Coin extends PIXI.AnimatedSprite {
 
 module.exports = Coin;
 
-},{"./physics.js":18}],4:[function(require,module,exports){
+},{"./physics.js":19}],5:[function(require,module,exports){
 module.exports = {
     tile_size: 16,
     level: {
@@ -235,7 +299,7 @@ module.exports = {
     },
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -314,7 +378,7 @@ class Cloud extends MovieClip {
 
 module.exports = Cloud;
 
-},{"../movie_clip.js":17,"../physics.js":18}],6:[function(require,module,exports){
+},{"../movie_clip.js":18,"../physics.js":19}],7:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const FlyingProjectile = require("./flying_projectile.js");
@@ -430,7 +494,7 @@ class Flying extends MovieClip {
 
 module.exports = Flying;
 
-},{"../movie_clip.js":17,"../physics.js":18,"./flying_projectile.js":7}],7:[function(require,module,exports){
+},{"../movie_clip.js":18,"../physics.js":19,"./flying_projectile.js":8}],8:[function(require,module,exports){
 const Physics = require("../physics.js");
 
 class FlyingProjectile extends PIXI.Sprite {
@@ -480,7 +544,7 @@ class FlyingProjectile extends PIXI.Sprite {
 
 module.exports = FlyingProjectile;
 
-},{"../physics.js":18}],8:[function(require,module,exports){
+},{"../physics.js":19}],9:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -588,7 +652,7 @@ class Mouse extends MovieClip {
                                 }
                             }
                         } else {
-                            if (this.is_attacking === 0 && player_x >= this.from && player_x <= this.to && player_y > this.y - game.config.mouse.attack_height) {
+                            if (this.is_attacking === 0 && player_x >= this.from - game.config.tile_size && player_x <= this.to + game.config.tile_size && player_y > this.y - game.config.mouse.attack_height) {
                                 if (player_x > this.x) {
                                     this.is_attacking = 1;
                                 } else {
@@ -722,7 +786,7 @@ class Mouse extends MovieClip {
 
 module.exports = Mouse;
 
-},{"../movie_clip.js":17,"../physics.js":18}],9:[function(require,module,exports){
+},{"../movie_clip.js":18,"../physics.js":19}],10:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -779,7 +843,7 @@ class Spiky extends MovieClip {
 
 module.exports = Spiky;
 
-},{"../movie_clip.js":17,"../physics.js":18}],10:[function(require,module,exports){
+},{"../movie_clip.js":18,"../physics.js":19}],11:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const SpittingProjectile = require("./spitting_projectile.js");
@@ -1036,7 +1100,7 @@ class Spitting extends MovieClip {
 
 module.exports = Spitting;
 
-},{"../movie_clip.js":17,"../physics.js":18,"./spitting_projectile.js":11}],11:[function(require,module,exports){
+},{"../movie_clip.js":18,"../physics.js":19,"./spitting_projectile.js":12}],12:[function(require,module,exports){
 const Physics = require("../physics.js");
 
 class SpittingProjectile extends PIXI.AnimatedSprite {
@@ -1112,7 +1176,7 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
 
 module.exports = SpittingProjectile;
 
-},{"../physics.js":18}],12:[function(require,module,exports){
+},{"../physics.js":19}],13:[function(require,module,exports){
 class Exit {
     constructor(x, y, next_level) {
         this.x = x;
@@ -1122,14 +1186,12 @@ class Exit {
 
     update_exit() {
         if (!game.player.dead) {
-            const force_next_level = game.input.is_key_pressed("Digit9");
+            const force_next_level = game.input.is_key_down("ShiftLeft") && game.input.is_key_pressed("Digit9");
             if (force_next_level) {
                 return this.next_level;
             }
             if (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2) {
-                if (game.input.is_key_pressed("KeyW") || game.input.is_key_pressed("Up")) {
-                    return this.next_level;
-                }
+                return this.next_level;
             }
         }
         return null;
@@ -1138,7 +1200,7 @@ class Exit {
 
 module.exports = Exit;
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 class Hat extends PIXI.AnimatedSprite {
     constructor(x, y, velocity_x, velocity_y) {
         super(game.resources.sprites["animations_32px_player_death_hat"]);
@@ -1172,7 +1234,7 @@ class Hat extends PIXI.AnimatedSprite {
 
 module.exports = Hat;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 const Physics = require("./physics.js");
 
 class HazardVines {
@@ -1196,7 +1258,7 @@ class HazardVines {
 
 module.exports = HazardVines;
 
-},{"./physics.js":18}],15:[function(require,module,exports){
+},{"./physics.js":19}],16:[function(require,module,exports){
 const init_input = function() {
     document.body.onkeydown = event => input.keys[event.code] = true;
     document.body.onkeyup = event => input.keys[event.code] = false;
@@ -1265,7 +1327,7 @@ const input = {
 
 module.exports = input;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
@@ -1277,6 +1339,8 @@ const Coin = require("./coin.js");
 const Spitting = require("./enemies/spitting.js");
 const Camera = require("./camera.js");
 const Exit = require("./exit.js");
+const Altar = require("./altar.js");
+const Tutorial = require("./tutorial.js");
 const Physics = require("./physics.js");
 
 window.game = {
@@ -1302,6 +1366,7 @@ window.game = {
     current_level: "main_menu_0",
     next_level: null,
     exit: null,
+    altar: null,
     start_button: null,
     num_clicks: 0,
     dialog: false,
@@ -1310,6 +1375,16 @@ window.game = {
     dialog_text_duration: 0,
     dialog_text_timeout: 0,
     dialog_callback: null,
+    stats: {
+        score: 0,
+        level_start: null,
+        total_score: 0,
+        total_time: 0,
+        item1: true,
+        item2: true,
+        item3: true,
+        item4: true,
+    },
     scripts: {
         sc_game_menu_0: function(entity, elapsed) {
             if (!entity.activated && (game.num_clicks > 1 || game.player.x > 300)) {
@@ -1332,11 +1407,11 @@ window.game = {
                     game.dialog_text_duration = 2;
                     game.dialog_text_timeout = 0;
                     game.dialog_callback = function() {
-                        game.dialog_text = "Looks like Start button is broken.";
+                        game.dialog_text = "Looks like Start button is broken";
                         game.dialog_text_duration = 3;
                         game.dialog_text_timeout = 0;
                         game.dialog_callback = function() {
-                            game.dialog_text = "Follow me, I gotta check something...";
+                            game.dialog_text = "Follow me, I gotta check something . . .";
                             game.dialog_text_duration = 3;
                             game.dialog_text_timeout = 0;
                             game.dialog_callback = function() {
@@ -1367,7 +1442,65 @@ window.game = {
                 return true;
             }
             return false;
-        }
+        },
+        sc_backstage_1: function(entity, elapsed) {
+            if (!entity.state) {
+                entity.state = 1;
+            }
+            if (entity.state === 1) {
+                entity.scale.x = 1;
+                if (entity.x < 180) {
+                    entity.x += elapsed * game.config.spitting.speed;
+                } else {
+                    entity.state = 2;
+                }
+            } else if (entity.state === 2) {
+                game.dialog = true;
+                game.dialog_time = 0;
+
+                game.dialog_text = "Alright . . . Okay . . .  I see . . .";
+                game.dialog_text_duration = 2.5;
+                game.dialog_text_timeout = 0;
+                game.dialog_callback = function() {
+                    game.dialog_text = "You have 4 items you were supposed to collect during the game";
+                    game.dialog_text_duration = 4.5;
+                    game.dialog_text_timeout = 0;
+                    game.dialog_callback = function() {
+                        game.dialog_text = "For some reason you have these items before the start";
+                        game.dialog_text_duration = 4;
+                        game.dialog_text_timeout = 0;
+                        game.dialog_callback = function() {
+                            game.dialog_text = "You must place these items back where they belong";
+                            game.dialog_text_duration = 3.5;
+                            game.dialog_text_timeout = 0;
+                            game.dialog_callback = function() {
+                                game.dialog_text = "Then you can start the game normally";
+                                game.dialog_text_duration = 3;
+                                game.dialog_text_timeout = 0;
+                                game.dialog_callback = function() {
+                                    game.dialog_text = "Now go! The first level is upstairs.\nYou need to climb the wall to get there.";
+                                    game.dialog_text_duration = 6;
+                                    game.dialog_text_timeout = 0;
+                                    game.dialog_callback = function() {
+                                        game.dialog = false;
+                                        entity.state = 4;
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+
+                entity.state = 3;
+            } else if (entity.state === 3) {
+                if (entity.x > game.player.x + game.player.bounds.width / 2) {
+                    entity.scale.x = -1;
+                } else {
+                    entity.scale.x = 1;
+                }
+            }
+            return true;
+        },
     }
 };
 
@@ -1389,6 +1522,11 @@ let construct_level = function(level_name) {
 
     game.config.level.width = game.level.width;
     game.config.level.height = game.level.height;
+
+    game.stats.time = 0;
+    game.stats.score = 0;
+
+    game.stats.level_start = new Date();
 
     function draw_tiles_layer(layer_name) {
         for (let i = 0; i < game.level[layer_name].length; i++) {
@@ -1427,9 +1565,23 @@ let construct_level = function(level_name) {
         front_effects: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
+        ui: new PIXI.Container(),
+        coin: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
+        coin_shadow: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
+        timer: new PIXI.Sprite(game.resources.sprites["ui_timer"]),
+        timer_shadow: new PIXI.Sprite(game.resources.sprites["ui_timer"]),
+        score: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
+        score_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
+        time: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
+        time_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
+        items: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         dialog_background: new PIXI.Graphics(),
         dialog_text: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         spawn_transition: new PIXI.Graphics(),
+        item1: new PIXI.Sprite(game.resources.sprites["artifact_1"]),
+        item2: new PIXI.Sprite(game.resources.sprites["artifact_2"]),
+        item3: new PIXI.Sprite(game.resources.sprites["artifact_3"]),
+        item4: new PIXI.Sprite(game.resources.sprites["artifact_4"]),
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
@@ -1445,6 +1597,7 @@ let construct_level = function(level_name) {
 
     game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background_0"]));
     game.containers.stage.addChild(game.containers.level);
+    game.containers.stage.addChild(game.containers.ui);
     game.containers.stage.addChild(game.containers.dialog_background);
     game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
@@ -1465,6 +1618,7 @@ let construct_level = function(level_name) {
     game.spittings = [];
     game.spitting_projectiles = [];
     game.exit = null;
+    game.altar = null;
     game.next_level = null;
 
     for (let i = 0; i < game.level["entities"].length; i++) {
@@ -1510,6 +1664,12 @@ let construct_level = function(level_name) {
             game.containers.entities.addChild(spitting);
         } else if (entity.type === "exit") {
             game.exit = new Exit(entity.x, entity.y, entity.next_level);
+        } else if (entity.type === "altar") {
+            game.altar = new Altar(entity.x, entity.y, entity.next_level, entity.item2);
+            game.containers.entities.addChild(game.altar);
+        } else if (entity.type === "tutorial") {
+            const tutorial = new Tutorial(entity.x, entity.y, entity.a, entity.b);
+            game.containers.entities.addChild(tutorial);
         }
     }
 
@@ -1532,11 +1692,9 @@ let construct_level = function(level_name) {
 
     game.start_button = null;
     game.num_clicks = 0;
-    if (level_name === "main_menu_0") {
-        game.start_button = new PIXI.Sprite(game.resources.sprites["alpha_red"]);
+    if (level_name === "main_menu_0" || level_name === "main_menu_1") {
+        game.start_button = new PIXI.Sprite(game.resources.sprites["button_start"]);
         game.start_button.anchor.set(0.5);
-        game.start_button.width = 100;
-        game.start_button.height = 30;
         const initial_x = -game.containers.level.x;
         const initial_y = -game.containers.level.y;
         game.start_button.x = initial_x + game.render.render_width / 2;
@@ -1544,16 +1702,87 @@ let construct_level = function(level_name) {
         game.start_button.interactive = true;
         game.start_button.buttonMode = true;
         game.containers.level.addChild(game.start_button);
+        game.start_button.on("pointerover", function() {
+            game.start_button.texture = game.resources.sprites["button_start_hover"];
+        });
+        game.start_button.on("pointerout", function() {
+            game.start_button.texture = game.resources.sprites["button_start"];
+        });
         game.start_button.on("pointerdown", function(evt) {
-            const world_x = -game.containers.level.x + evt.data.global.x;
-            const world_y = -game.containers.level.y + evt.data.global.y;
-            do {
-                game.start_button.x = initial_x + game.start_button.width / 2 + Math.random() * (game.render.render_width - game.start_button.width);
-                game.start_button.y = initial_y + game.start_button.height / 2 + Math.random() * (game.render.render_height - game.start_button.height - 150);
-            } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
-            game.num_clicks++;
+            if (level_name === "main_menu_0") {
+                const world_x = -game.containers.level.x + evt.data.global.x;
+                const world_y = -game.containers.level.y + evt.data.global.y;
+                do {
+                    game.start_button.x = initial_x + game.start_button.width / 2 + Math.random() * (game.render.render_width - game.start_button.width);
+                    game.start_button.y = initial_y + game.start_button.height / 2 + Math.random() * (game.render.render_height - game.start_button.height - 150);
+                } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
+                game.num_clicks++;
+            } else {
+                // TODO
+            }
+            game.resources.sounds["Laser_Shoot8"].play();
         });
     }
+
+    game.containers.score.text = "0";
+    game.containers.score.x = 24;
+    game.containers.score.y = 7;
+
+    game.containers.score_shadow.text = game.containers.score.text;
+    game.containers.score_shadow.x = game.containers.score.x;
+    game.containers.score_shadow.y = game.containers.score.y + 1;
+
+    game.containers.time.text = "00 : 00";
+    game.containers.time.x = 24;
+    game.containers.time.y = 15 + game.containers.score.height;
+
+    game.containers.coin.x = 7;
+    game.containers.coin.y = 7;
+
+    game.containers.coin_shadow.x = game.containers.coin.x;
+    game.containers.coin_shadow.y = game.containers.coin.y + 1;
+    game.containers.coin_shadow.tint = 0x000000;
+
+    game.containers.timer.x = 7;
+    game.containers.timer.y = 13 + game.containers.score.height;
+
+    game.containers.timer_shadow.x = game.containers.timer.x;
+    game.containers.timer_shadow.y = game.containers.timer.y + 1;
+    game.containers.timer_shadow.tint = 0x000000;
+
+    game.containers.time_shadow.text = game.containers.time.text;
+    game.containers.time_shadow.x = game.containers.time.x;
+    game.containers.time_shadow.y = game.containers.time.y + 1;
+
+    game.containers.item1.x = game.render.render_width - 23;
+    game.containers.item1.y = 7;
+    game.containers.item1.visible = game.stats.item1;
+
+    game.containers.item2.x = game.render.render_width - 23 - 20;
+    game.containers.item2.y = 7;
+    game.containers.item2.visible = game.stats.item2;
+
+    game.containers.item3.x = game.render.render_width - 23 - 20 * 2;
+    game.containers.item3.y = 7;
+    game.containers.item3.visible = game.stats.item3;
+
+    game.containers.item4.x = game.render.render_width - 23 - 20 * 3;
+    game.containers.item4.y = 7;
+    game.containers.item4.visible = game.stats.item4;
+
+    game.containers.ui.addChild(game.containers.coin_shadow);
+    game.containers.ui.addChild(game.containers.coin);
+    game.containers.ui.addChild(game.containers.timer_shadow);
+    game.containers.ui.addChild(game.containers.timer);
+    game.containers.ui.addChild(game.containers.score_shadow);
+    game.containers.ui.addChild(game.containers.score);
+    game.containers.ui.addChild(game.containers.time_shadow);
+    game.containers.ui.addChild(game.containers.time);
+    game.containers.ui.addChild(game.containers.items);
+    game.containers.ui.addChild(game.containers.item1);
+    game.containers.ui.addChild(game.containers.item2);
+    game.containers.ui.addChild(game.containers.item3);
+    game.containers.ui.addChild(game.containers.item4);
 };
 
 let initialize = function() {
@@ -1562,6 +1791,9 @@ let initialize = function() {
 
 let main_loop = function() {
     const elapsed = game.render.application.ticker.elapsedMS / 1000;
+
+    const current_time = new Date();
+    const total_elapsed = (current_time.getTime() - game.stats.level_start.getTime()) / 1000;
 
     if (game.draw_hitboxes) {
         game.containers.hitboxes.clear();
@@ -1628,8 +1860,19 @@ let main_loop = function() {
             i++;
         }
     }
-    if (game.exit) {
+    if (game.next_level == null && game.exit) {
         const next_level = game.exit.update_exit();
+        if (next_level) {
+            game.next_level = next_level;
+
+            const player_x = game.player.x + game.containers.level.x + game.player.bounds.width / 2;
+            const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
+            const max_x = Math.max(player_x, game.render.render_width - player_x);
+            const max_y = Math.max(player_y, game.render.render_height - player_y);
+            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+        }
+    } else if (game.next_level == null && game.altar) {
+        const next_level = game.altar.update_altar(elapsed);
         if (next_level) {
             game.next_level = next_level;
 
@@ -1661,6 +1904,12 @@ let main_loop = function() {
 
             if (Math.abs(game.spawn_effect_radius) < 1e-5) {
                 if (game.next_level) {
+                    if (game.altar) {
+                        game.stats["item" + game.altar.item_num] = false;
+                    }
+
+                    game.stats.total_score += game.stats.score;
+                    game.stats.total_time += total_elapsed;
                     game.current_level = game.next_level;
                 }
                 construct_level(game.current_level);
@@ -1697,6 +1946,13 @@ let main_loop = function() {
             }
         }
     }
+
+    game.containers.score.text = String(game.stats.score);
+    game.containers.score_shadow.text = game.containers.score.text;
+    const minutes = Math.floor(total_elapsed / 60);
+    const seconds = Math.floor(total_elapsed % 60);
+    game.containers.time.text = (minutes < 10 ? "0" + minutes : minutes) + " : " + (seconds < 10 ? "0" + seconds : seconds);
+    game.containers.time_shadow.text = game.containers.time.text;
 };
 
 window.onfocus = function() {
@@ -1707,7 +1963,7 @@ window.onblur = function() {
     Howler.volume(0);
 };
 
-},{"./block_falling.js":1,"./camera.js":2,"./coin.js":3,"./config.js":4,"./enemies/cloud.js":5,"./enemies/flying.js":6,"./enemies/mouse.js":8,"./enemies/spiky.js":9,"./enemies/spitting.js":10,"./exit.js":12,"./hazard_vines.js":14,"./input.js":15,"./physics.js":18,"./player.js":19,"./render.js":20,"./resources/resources.js":22}],17:[function(require,module,exports){
+},{"./altar.js":1,"./block_falling.js":2,"./camera.js":3,"./coin.js":4,"./config.js":5,"./enemies/cloud.js":6,"./enemies/flying.js":7,"./enemies/mouse.js":9,"./enemies/spiky.js":10,"./enemies/spitting.js":11,"./exit.js":13,"./hazard_vines.js":15,"./input.js":16,"./physics.js":19,"./player.js":20,"./render.js":21,"./resources/resources.js":23,"./tutorial.js":26}],18:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors, default_animation) {
         super(descriptors[default_animation].frames);
@@ -1749,7 +2005,7 @@ class MovieClip extends PIXI.AnimatedSprite {
 
 module.exports = MovieClip;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
 };
@@ -1918,7 +2174,7 @@ module.exports = {
     move: move,
 };
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 const Hat = require("./hat.js");
@@ -1965,8 +2221,8 @@ class Player extends MovieClip {
 
     update_movement(elapsed) {
         if (!this.dead) {
-            const left_pressed = game.input.is_key_down("KeyA");
-            const right_pressed = game.input.is_key_down("KeyD");
+            const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
+            const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
             if (left_pressed && !right_pressed) {
                 this.face = "left";
                 this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
@@ -2135,10 +2391,17 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration -= elapsed;
         }
 
-        if (!was_grounded && this.is_grounded) {
+        if (was_grounded !== this.is_grounded) {
             const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
             effect.x = this.x + this.bounds.width / 2;
-            effect.y = this.y + this.bounds.height - 32;
+
+            if (!was_grounded && this.is_grounded) {
+                effect.y = this.y + this.bounds.height - 32;
+                game.resources.sounds["step"].play();
+            } else {
+                effect.y = this.previous_y + this.bounds.height - 32;
+            }
+
             effect.anchor.set(0.5, 0);
             effect.animationSpeed = 0.3;
             effect.loop = false;
@@ -2148,7 +2411,6 @@ class Player extends MovieClip {
             };
             game.containers.effects.addChild(effect);
 
-            game.resources.sounds["step"].play();
         } else {
             if (this.is_grounded) {
                 if (this.is_grounded_counter > 13) {
@@ -2168,8 +2430,8 @@ class Player extends MovieClip {
 
                     this.is_grounded_counter = 0;
                 } else {
-                    const left_pressed = game.input.is_key_down("KeyA");
-                    const right_pressed = game.input.is_key_down("KeyD");
+                    const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
+                    const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
                     if (left_pressed || right_pressed) {
                         this.is_grounded_counter++;
                     } else {
@@ -2249,11 +2511,10 @@ class Player extends MovieClip {
 
 module.exports = Player;
 
-},{"./hat.js":13,"./movie_clip.js":17,"./physics.js":18}],20:[function(require,module,exports){
+},{"./hat.js":14,"./movie_clip.js":18,"./physics.js":19}],21:[function(require,module,exports){
 const update_physical_size = function() {
-    const horizontal_padding = 0, vertical_padding = 0;
-    const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
-    const height = (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) - vertical_padding;
+    const width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 
     render.scale = 1;
     render.physical_width = render.render_width;
@@ -2284,7 +2545,7 @@ const update_physical_size = function() {
 const init_window = function() {
     PIXI.settings.ROUND_PIXELS = true;
 
-    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height, backgroundColor: 0x349EAD });
+    render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
     render.stage = render.application.stage;
 
     const game_window = document.getElementById("game_window");
@@ -2312,7 +2573,7 @@ const render = {
 
 module.exports = render;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -2430,6 +2691,7 @@ const load_levels = function() {
     load_level("stage_2");
     load_level("backstage_3");
     load_level("level0");
+    load_level("main_menu_1");
 };
 
 const levels = {
@@ -2441,7 +2703,7 @@ const levels = {
 
 module.exports = levels;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -2489,7 +2751,7 @@ const resources = {
 
 module.exports = resources;
 
-},{"./levels.js":21,"./sounds.js":23,"./sprites.js":24}],23:[function(require,module,exports){
+},{"./levels.js":22,"./sounds.js":24,"./sprites.js":25}],24:[function(require,module,exports){
 const load_sounds = function() {
     function load_sound(name, volume = 1.0, extension = "wav", loop = false) {
         sounds.total_count++;
@@ -2513,7 +2775,7 @@ const load_sounds = function() {
         });
     }
 
-    load_sound("music", 0.75, "mp3", true);
+    load_sound("music", 1, "mp3", true);
     load_sound("block_unstable", 20);
     load_sound("death", 1);
     load_sound("Explosion4", 1);
@@ -2533,7 +2795,7 @@ const sounds = {
 
 module.exports = sounds;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -2574,4 +2836,19 @@ const sprites = {
 
 module.exports = sprites;
 
-},{}]},{},[16]);
+},{}],26:[function(require,module,exports){
+class Tutorial extends PIXI.AnimatedSprite {
+    constructor(x, y, frame_a, frame_b) {
+        super([ game.resources.sprites[frame_a], game.resources.sprites[frame_b] ]);
+        this.animationSpeed = 0.025;
+        this.x = x;
+        this.y = y;
+        this.anchor.set(0.5, 0.5);
+        this.alpha = 0.5;
+        this.play();
+    }
+}
+
+module.exports = Tutorial;
+
+},{}]},{},[17]);

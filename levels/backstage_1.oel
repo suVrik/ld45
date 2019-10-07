@@ -910,6 +910,7 @@
     <player id="0" x="48" y="288" />
     <exit id="1" x="192" y="112" next_level="stage_1" />
     <enemy_spitting id="2" x="80" y="304" friendly="True" script="sc_backstage_1" />
+    <tutorial id="3" x="208" y="240" a="button_space_0" b="button_space_1" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">
     <tile x="11" y="9" tx="1" ty="0" />

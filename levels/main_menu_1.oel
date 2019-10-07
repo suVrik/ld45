@@ -1,4 +1,4 @@
-<level width="608" height="240">
+<level width="464" height="240">
   <tiles_very_back tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="10" tx="7" ty="6" />
     <tile x="0" y="11" tx="7" ty="7" />
@@ -145,51 +145,6 @@
     <tile x="28" y="12" tx="7" ty="7" />
     <tile x="28" y="13" tx="7" ty="7" />
     <tile x="28" y="14" tx="7" ty="7" />
-    <tile x="29" y="10" tx="7" ty="6" />
-    <tile x="29" y="11" tx="7" ty="7" />
-    <tile x="29" y="12" tx="7" ty="7" />
-    <tile x="29" y="13" tx="7" ty="7" />
-    <tile x="29" y="14" tx="7" ty="7" />
-    <tile x="30" y="10" tx="7" ty="6" />
-    <tile x="30" y="11" tx="7" ty="7" />
-    <tile x="30" y="12" tx="7" ty="7" />
-    <tile x="30" y="13" tx="7" ty="7" />
-    <tile x="30" y="14" tx="7" ty="7" />
-    <tile x="31" y="10" tx="7" ty="6" />
-    <tile x="31" y="11" tx="7" ty="7" />
-    <tile x="31" y="12" tx="0" ty="2" />
-    <tile x="31" y="13" tx="0" ty="3" />
-    <tile x="31" y="14" tx="7" ty="7" />
-    <tile x="32" y="10" tx="7" ty="6" />
-    <tile x="32" y="11" tx="7" ty="7" />
-    <tile x="32" y="12" tx="1" ty="2" />
-    <tile x="32" y="13" tx="1" ty="3" />
-    <tile x="32" y="14" tx="7" ty="7" />
-    <tile x="33" y="10" tx="7" ty="6" />
-    <tile x="33" y="11" tx="7" ty="7" />
-    <tile x="33" y="12" tx="7" ty="7" />
-    <tile x="33" y="13" tx="7" ty="7" />
-    <tile x="33" y="14" tx="7" ty="7" />
-    <tile x="34" y="10" tx="7" ty="6" />
-    <tile x="34" y="11" tx="7" ty="7" />
-    <tile x="34" y="12" tx="7" ty="7" />
-    <tile x="34" y="13" tx="7" ty="7" />
-    <tile x="34" y="14" tx="7" ty="7" />
-    <tile x="35" y="10" tx="7" ty="6" />
-    <tile x="35" y="11" tx="7" ty="7" />
-    <tile x="35" y="12" tx="7" ty="7" />
-    <tile x="35" y="13" tx="7" ty="7" />
-    <tile x="35" y="14" tx="7" ty="7" />
-    <tile x="36" y="10" tx="7" ty="6" />
-    <tile x="36" y="11" tx="7" ty="7" />
-    <tile x="36" y="12" tx="7" ty="7" />
-    <tile x="36" y="13" tx="7" ty="7" />
-    <tile x="36" y="14" tx="7" ty="7" />
-    <tile x="37" y="10" tx="7" ty="6" />
-    <tile x="37" y="11" tx="7" ty="7" />
-    <tile x="37" y="12" tx="7" ty="7" />
-    <tile x="37" y="13" tx="7" ty="7" />
-    <tile x="37" y="14" tx="7" ty="7" />
   </tiles_very_back>
   <tiles_back tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="0" tx="2" ty="6" />
@@ -234,43 +189,30 @@
     <tile x="25" y="14" tx="1" ty="6" />
     <tile x="26" y="14" tx="1" ty="6" />
     <tile x="27" y="14" tx="1" ty="6" />
-    <tile x="28" y="14" tx="1" ty="6" />
-    <tile x="29" y="14" tx="1" ty="6" />
-    <tile x="30" y="14" tx="1" ty="6" />
-    <tile x="31" y="14" tx="1" ty="6" />
-    <tile x="32" y="14" tx="1" ty="6" />
-    <tile x="33" y="14" tx="1" ty="6" />
-    <tile x="34" y="14" tx="1" ty="6" />
-    <tile x="35" y="14" tx="1" ty="6" />
-    <tile x="36" y="14" tx="1" ty="6" />
-    <tile x="37" y="0" tx="0" ty="6" />
-    <tile x="37" y="1" tx="0" ty="7" />
-    <tile x="37" y="2" tx="0" ty="7" />
-    <tile x="37" y="3" tx="0" ty="7" />
-    <tile x="37" y="4" tx="0" ty="7" />
-    <tile x="37" y="5" tx="0" ty="7" />
-    <tile x="37" y="6" tx="0" ty="7" />
-    <tile x="37" y="7" tx="0" ty="7" />
-    <tile x="37" y="8" tx="0" ty="7" />
-    <tile x="37" y="9" tx="0" ty="7" />
-    <tile x="37" y="10" tx="0" ty="7" />
-    <tile x="37" y="11" tx="0" ty="7" />
-    <tile x="37" y="12" tx="0" ty="7" />
-    <tile x="37" y="13" tx="0" ty="7" />
-    <tile x="37" y="14" tx="6" ty="7" />
+    <tile x="28" y="0" tx="0" ty="6" />
+    <tile x="28" y="1" tx="0" ty="7" />
+    <tile x="28" y="2" tx="0" ty="7" />
+    <tile x="28" y="3" tx="0" ty="7" />
+    <tile x="28" y="4" tx="0" ty="7" />
+    <tile x="28" y="5" tx="0" ty="7" />
+    <tile x="28" y="6" tx="0" ty="7" />
+    <tile x="28" y="7" tx="0" ty="7" />
+    <tile x="28" y="8" tx="0" ty="7" />
+    <tile x="28" y="9" tx="0" ty="7" />
+    <tile x="28" y="10" tx="0" ty="7" />
+    <tile x="28" y="11" tx="0" ty="7" />
+    <tile x="28" y="12" tx="0" ty="7" />
+    <tile x="28" y="13" tx="0" ty="7" />
+    <tile x="28" y="14" tx="6" ty="7" />
   </tiles_back>
   <entities>
     <player id="0" x="240" y="208" />
-    <enemy_spitting id="1" x="480" y="224" friendly="True" script="sc_game_menu_0" />
-    <exit id="2" x="496" y="192" next_level="backstage_1" />
-    <tutorial id="3" x="336" y="208" a="button_a" b="button_left" />
-    <tutorial id="4" x="368" y="208" a="button_d" b="button_right" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords" />
   <hitboxes exportMode="Rectangles">
-    <rect x="0" y="0" w="608" h="16" />
+    <rect x="0" y="0" w="464" h="16" />
     <rect x="0" y="16" w="16" h="224" />
-    <rect x="16" y="224" w="592" h="16" />
-    <rect x="592" y="16" w="16" h="208" />
+    <rect x="16" y="224" w="448" h="16" />
+    <rect x="448" y="16" w="16" h="208" />
   </hitboxes>
 </level>
