@@ -1335,7 +1335,7 @@
       <node x="584" y="214" />
     </enemy_cloud>
     <coin id="40" x="591" y="101" />
-    <altar id="38" x="656" y="112" item2="4" next_level="stage_2" />
+    <altar id="38" x="656" y="112" item2="4" next_level="backstage_2" />
     <tutorial id="41" x="336" y="112" a="button_s" b="button_down" />
     <hazard_vines id="42" x="336" y="48" width="16" height="16" />
     <hazard_vines id="43" x="352" y="48" width="16" height="16" />

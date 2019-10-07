@@ -1199,7 +1199,7 @@
   </tiles_back>
   <entities>
     <player id="0" x="80" y="64" />
-    <exit id="1" x="64" y="160" next_level="backstage_3" />
+    <exit id="1" x="64" y="160" next_level="stage_2" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="1" tx="0" ty="2" />

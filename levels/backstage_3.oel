@@ -1002,7 +1002,7 @@
       <node x="112" y="304" />
     </enemy_cloud>
     <player id="1" x="64" y="64" />
-    <exit id="2" x="288" y="160" next_level="backstage_4" />
+    <exit id="2" x="288" y="160" next_level="stage_3" />
     <hazard_vines id="3" x="96" y="320" width="288" height="16" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">

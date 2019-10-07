@@ -1219,7 +1219,7 @@
     <block_falling id="4" x="448" y="304" width="16" height="16" />
     <block_falling id="5" x="496" y="336" width="16" height="16" />
     <player id="6" x="80" y="80" />
-    <altar id="7" x="48" y="432" item2="3" next_level="stage_3" />
+    <altar id="7" x="48" y="432" item2="3" next_level="backstage_3" />
     <enemy_spiky id="8" x="112" y="464" script="">
       <node x="256" y="464" />
     </enemy_spiky>
