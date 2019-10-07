@@ -186,10 +186,31 @@
             <key type="filename">sources/animations_16px_coin_1.png</key>
             <key type="filename">sources/animations_16px_coin_2.png</key>
             <key type="filename">sources/animations_16px_coin_3.png</key>
+            <key type="filename">sources/animations_16px_coin_flash_0.png</key>
+            <key type="filename">sources/animations_16px_coin_flash_1.png</key>
+            <key type="filename">sources/animations_16px_coin_flash_2.png</key>
+            <key type="filename">sources/animations_16px_coin_flash_3.png</key>
+            <key type="filename">sources/animations_16px_coin_flash_4.png</key>
+            <key type="filename">sources/animations_16px_effect_dust_wall_0.png</key>
+            <key type="filename">sources/animations_16px_effect_dust_wall_1.png</key>
+            <key type="filename">sources/animations_16px_effect_dust_wall_2.png</key>
+            <key type="filename">sources/animations_16px_effect_dust_wall_3.png</key>
+            <key type="filename">sources/animations_16px_effect_dust_wall_4.png</key>
+            <key type="filename">sources/animations_16px_effect_projectile_flying_drop_0.png</key>
+            <key type="filename">sources/animations_16px_effect_projectile_flying_drop_1.png</key>
+            <key type="filename">sources/animations_16px_effect_projectile_flying_drop_2.png</key>
+            <key type="filename">sources/animations_16px_effect_projectile_spit_0.png</key>
+            <key type="filename">sources/animations_16px_effect_projectile_spit_1.png</key>
+            <key type="filename">sources/animations_16px_effect_projectile_spit_2.png</key>
+            <key type="filename">sources/animations_16px_projectile_flying_0.png</key>
             <key type="filename">sources/animations_16px_projectile_spit_0.png</key>
             <key type="filename">sources/animations_16px_projectile_spit_1.png</key>
             <key type="filename">sources/animations_16px_projectile_spit_2.png</key>
             <key type="filename">sources/animations_16px_projectile_spit_3.png</key>
+            <key type="filename">sources/artifact_1.png</key>
+            <key type="filename">sources/artifact_2.png</key>
+            <key type="filename">sources/artifact_3.png</key>
+            <key type="filename">sources/artifact_4.png</key>
             <key type="filename">sources/block_falling.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -203,6 +224,15 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">sources/animations_32px_effect_0.png</key>
+            <key type="filename">sources/animations_32px_effect_1.png</key>
+            <key type="filename">sources/animations_32px_effect_2.png</key>
+            <key type="filename">sources/animations_32px_effect_3.png</key>
+            <key type="filename">sources/animations_32px_effect_dust_ground_0.png</key>
+            <key type="filename">sources/animations_32px_effect_dust_ground_1.png</key>
+            <key type="filename">sources/animations_32px_effect_dust_ground_2.png</key>
+            <key type="filename">sources/animations_32px_effect_dust_ground_3.png</key>
+            <key type="filename">sources/animations_32px_effect_dust_ground_4.png</key>
             <key type="filename">sources/animations_32px_effect_smoke_0.png</key>
             <key type="filename">sources/animations_32px_effect_smoke_1.png</key>
             <key type="filename">sources/animations_32px_effect_smoke_2.png</key>
@@ -223,10 +253,24 @@
             <key type="filename">sources/animations_32px_enemy_flying_fly_1.png</key>
             <key type="filename">sources/animations_32px_enemy_flying_fly_2.png</key>
             <key type="filename">sources/animations_32px_enemy_flying_fly_3.png</key>
+            <key type="filename">sources/animations_32px_enemy_mouse_run_0.png</key>
+            <key type="filename">sources/animations_32px_enemy_mouse_run_1.png</key>
+            <key type="filename">sources/animations_32px_enemy_mouse_run_2.png</key>
+            <key type="filename">sources/animations_32px_enemy_mouse_run_3.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_0.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_1.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_2.png</key>
             <key type="filename">sources/animations_32px_enemy_spiky_walk_3.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_attack_0.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_attack_1.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_attack_2.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_attack_3.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_charging_0.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_charging_1.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_run_0.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_run_1.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_run_2.png</key>
+            <key type="filename">sources/animations_32px_enemy_spitting_run_3.png</key>
             <key type="filename">sources/animations_32px_player_climb_0.png</key>
             <key type="filename">sources/animations_32px_player_crouch_walk_0.png</key>
             <key type="filename">sources/animations_32px_player_crouch_walk_1.png</key>
@@ -267,6 +311,7 @@
                 <false/>
             </struct>
             <key type="filename">sources/background.png</key>
+            <key type="filename">sources/background_0.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0,0</point_f>
@@ -276,6 +321,47 @@
                 <rect>100,60,200,120</rect>
                 <key>scale9Paddings</key>
                 <rect>100,60,200,120</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/background_1.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>200,36,400,71</rect>
+                <key>scale9Paddings</key>
+                <rect>200,36,400,71</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/background_2.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>200,26,400,53</rect>
+                <key>scale9Paddings</key>
+                <rect>200,26,400,53</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/cloud_0.png</key>
+            <key type="filename">sources/cloud_1.png</key>
+            <key type="filename">sources/cloud_2.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>18,4,35,8</rect>
+                <key>scale9Paddings</key>
+                <rect>18,4,35,8</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
