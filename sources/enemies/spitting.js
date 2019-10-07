@@ -31,6 +31,7 @@ class Spitting extends MovieClip {
 
     update_spitting(elapsed) {
         let is_walking = this.attack_cooldown <= 0;
+        let force_calm = false;
 
         if (this.script.length > 0) {
             if (game.scripts.hasOwnProperty(this.script)) {
@@ -87,6 +88,7 @@ class Spitting extends MovieClip {
                         if (angle < 0 && !(Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
                             success = false;
                             is_walking = false;
+                            force_calm = true;
                         } else {
                             middle_x = (this_x + player_x) / 2;
                             middle_y = (this_y + player_y) / 2;
@@ -152,7 +154,7 @@ class Spitting extends MovieClip {
             }
         }
 
-        if (is_walking) {
+        if (is_walking || force_calm) {
             this.gotoAndPlay("idle");
 
             const next_node = (this.current_node + 1) % this.nodes.length;

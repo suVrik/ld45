@@ -289,12 +289,12 @@ module.exports = {
         height: 13,
         speed: 50,
         bezier_height: 80,
-        max_shooting_distance: 250,
-        projectile_speed: 250,
+        max_shooting_distance: 170,
+        projectile_speed: 230,
         projectile_size: 3,
         projectile_cooldown: 1.2,
         bezier_angle: 50 / 180 * Math.PI,
-        prepare_timeout: 0.5,
+        prepare_timeout: 0.7,
         prediction_seconds: 0.1,
     },
 };
@@ -877,6 +877,7 @@ class Spitting extends MovieClip {
 
     update_spitting(elapsed) {
         let is_walking = this.attack_cooldown <= 0;
+        let force_calm = false;
 
         if (this.script.length > 0) {
             if (game.scripts.hasOwnProperty(this.script)) {
@@ -933,6 +934,7 @@ class Spitting extends MovieClip {
                         if (angle < 0 && !(Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
                             success = false;
                             is_walking = false;
+                            force_calm = true;
                         } else {
                             middle_x = (this_x + player_x) / 2;
                             middle_y = (this_y + player_y) / 2;
@@ -998,7 +1000,7 @@ class Spitting extends MovieClip {
             }
         }
 
-        if (is_walking) {
+        if (is_walking || force_calm) {
             this.gotoAndPlay("idle");
 
             const next_node = (this.current_node + 1) % this.nodes.length;
@@ -1364,7 +1366,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "main_menu_0",
+    current_level: "stage_4",
     next_level: null,
     exit: null,
     altar: null,
@@ -2748,6 +2750,7 @@ const load_levels = function() {
     }
 
     load_level("stage_3");
+    load_level("stage_4");
     load_level("main_menu_0");
     load_level("backstage_1");
     load_level("stage_1");
@@ -2840,7 +2843,7 @@ const load_sounds = function() {
     }
 
     load_sound("music", 1, "mp3", true);
-    load_sound("block_unstable", 20);
+    load_sound("block_unstable", 5);
     load_sound("death", 1);
     load_sound("Explosion4", 1);
     load_sound("Jump8", 1);
