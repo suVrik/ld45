@@ -34,9 +34,9 @@ class Altar extends PIXI.Container {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.effects.removeChild(effect);
+                            game.containers.front_effects.removeChild(effect);
                         };
-                        game.containers.effects.addChild(effect);
+                        game.containers.front_effects.addChild(effect);
                     }
 
                     game.resources.sounds["Pickup_Coin9"].play();

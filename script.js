@@ -35,9 +35,9 @@ class Altar extends PIXI.Container {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.effects.removeChild(effect);
+                            game.containers.front_effects.removeChild(effect);
                         };
-                        game.containers.effects.addChild(effect);
+                        game.containers.front_effects.addChild(effect);
                     }
 
                     game.resources.sounds["Pickup_Coin9"].play();
@@ -1368,6 +1368,7 @@ window.game = {
     exit: null,
     altar: null,
     start_button: null,
+    ui_logo: null,
     num_clicks: 0,
     dialog: false,
     dialog_time: 0,
@@ -1387,7 +1388,7 @@ window.game = {
     },
     scripts: {
         sc_game_menu_0: function(entity, elapsed) {
-            if (!entity.activated && (game.num_clicks > 1 || game.player.x > 300)) {
+            if (!entity.activated && (game.num_clicks >= 1 || game.player.x > 300)) {
                 entity.activated = true;
                 entity.state = 1;
             }
@@ -1582,6 +1583,10 @@ let construct_level = function(level_name) {
         item2: new PIXI.Sprite(game.resources.sprites["artifact_2"]),
         item3: new PIXI.Sprite(game.resources.sprites["artifact_3"]),
         item4: new PIXI.Sprite(game.resources.sprites["artifact_4"]),
+        background_1: null,
+        background_2: null,
+        clouds: [],
+        clouds_container: null,
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
@@ -1595,7 +1600,26 @@ let construct_level = function(level_name) {
         game.containers.level.addChild(game.containers.hitboxes);
     }
 
+    game.containers.background_1 = new PIXI.Sprite(game.resources.sprites["background_1"]);
+    game.containers.background_1.y = game.render.render_height - game.containers.background_1.height;
+    game.containers.background_2 = new PIXI.Sprite(game.resources.sprites["background_2"]);
+    game.containers.background_2.y = game.render.render_height - game.containers.background_2.height;
+    game.containers.clouds_container = new PIXI.Container();
+
+    for (let i = 0; i < 10; i++) {
+        const cloud = new PIXI.Sprite(game.resources.sprites["cloud_" + Math.round(Math.random() * 2)]);
+        cloud.y = game.containers.background_2.y - 100 + Math.random() * 50;
+        cloud.x = Math.random() * game.render.render_width;
+        cloud.speed = 0.1 + Math.random() / 5;
+        cloud.anchor.set(0, 0.5);
+        game.containers.clouds.push(cloud);
+        game.containers.clouds_container.addChild(cloud);
+    }
+
     game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background_0"]));
+    game.containers.stage.addChild(game.containers.background_1);
+    game.containers.stage.addChild(game.containers.clouds_container);
+    game.containers.stage.addChild(game.containers.background_2);
     game.containers.stage.addChild(game.containers.level);
     game.containers.stage.addChild(game.containers.ui);
     game.containers.stage.addChild(game.containers.dialog_background);
@@ -1691,14 +1715,19 @@ let construct_level = function(level_name) {
     game.dialog_time = 0;
 
     game.start_button = null;
-    game.num_clicks = 0;
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
-        game.start_button = new PIXI.Sprite(game.resources.sprites["button_start"]);
-        game.start_button.anchor.set(0.5);
+        game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
+        game.ui_logo.anchor.set(0.5);
         const initial_x = -game.containers.level.x;
         const initial_y = -game.containers.level.y;
+        game.ui_logo.x = initial_x + game.render.render_width / 2;
+        game.ui_logo.y = initial_y + game.render.render_height / 2 - 55;
+        game.containers.level.addChild(game.ui_logo);
+
+        game.start_button = new PIXI.Sprite(game.resources.sprites["button_start"]);
+        game.start_button.anchor.set(0.5);
         game.start_button.x = initial_x + game.render.render_width / 2;
-        game.start_button.y = initial_y + game.render.render_height / 2;
+        game.start_button.y = initial_y + game.render.render_height / 2 + 20;
         game.start_button.interactive = true;
         game.start_button.buttonMode = true;
         game.containers.level.addChild(game.start_button);
@@ -1718,10 +1747,18 @@ let construct_level = function(level_name) {
                 } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
                 game.num_clicks++;
             } else {
-                // TODO
+                game.ui_logo.visible = game.start_button.visible = false;
+
+                const credits = new PIXI.Sprite(game.resources.sprites["ui_credits"]);
+                credits.anchor.set(0.5);
+                credits.x = initial_x + game.render.render_width / 2;
+                credits.y = initial_y + game.render.render_height / 2;
+                game.containers.level.addChild(credits);
             }
             game.resources.sounds["Laser_Shoot8"].play();
         });
+    } else {
+        game.num_clicks++;
     }
 
     game.containers.score.text = "0";
@@ -1860,6 +1897,12 @@ let main_loop = function() {
             i++;
         }
     }
+    for (let i = 0; i < game.containers.clouds.length; i++) {
+        game.containers.clouds[i].x += game.containers.clouds[i].speed;
+        if (game.containers.clouds[i].x > game.render.render_width) {
+            game.containers.clouds[i].x -= game.render.render_width + game.containers.clouds[i].width;
+        }
+    }
     if (game.next_level == null && game.exit) {
         const next_level = game.exit.update_exit();
         if (next_level) {
@@ -1947,12 +1990,24 @@ let main_loop = function() {
         }
     }
 
-    game.containers.score.text = String(game.stats.score);
-    game.containers.score_shadow.text = game.containers.score.text;
-    const minutes = Math.floor(total_elapsed / 60);
-    const seconds = Math.floor(total_elapsed % 60);
-    game.containers.time.text = (minutes < 10 ? "0" + minutes : minutes) + " : " + (seconds < 10 ? "0" + seconds : seconds);
-    game.containers.time_shadow.text = game.containers.time.text;
+    if (game.current_level === "main_menu_1") {
+        game.containers.score.text = game.stats.total_score + " total";
+        game.containers.score_shadow.text = game.containers.score.text;
+        const minutes = Math.floor(game.stats.total_time / 60);
+        const seconds = Math.floor(game.stats.total_time % 60);
+        game.containers.time.text = (minutes < 10 ? "0" + minutes : minutes) + " : " + (seconds < 10 ? "0" + seconds : seconds) + " total";
+        game.containers.time_shadow.text = game.containers.time.text;
+    } else {
+        game.containers.score.text = String(game.stats.score);
+        game.containers.score_shadow.text = game.containers.score.text;
+        const minutes = Math.floor(total_elapsed / 60);
+        const seconds = Math.floor(total_elapsed % 60);
+        game.containers.time.text = (minutes < 10 ? "0" + minutes : minutes) + " : " + (seconds < 10 ? "0" + seconds : seconds);
+        game.containers.time_shadow.text = game.containers.time.text;
+    }
+
+    game.containers.background_1.x = (500 - game.render.render_width) * (game.containers.level.x / game.config.level.width);
+    game.containers.background_2.x = (580 - game.render.render_width) * (game.containers.level.x / game.config.level.width);
 };
 
 window.onfocus = function() {
@@ -2379,9 +2434,12 @@ class Player extends MovieClip {
         this.previous_x = this.x;
         this.previous_y = this.y;
 
-        this.update_movement(elapsed);
-        this.update_sliding(elapsed);
-        this.update_jumping(elapsed);
+        if (game.num_clicks >= 1) {
+            this.update_movement(elapsed);
+            this.update_sliding(elapsed);
+            this.update_jumping(elapsed);
+        }
+
         this.update_gravity(elapsed);
         this.update_sprite();
 
@@ -2473,7 +2531,7 @@ class Player extends MovieClip {
             this.hat.update_hat(elapsed);
         }
 
-        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("Down");
+        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
         this.crouching = !!(this.is_grounded && down_pressed);
 
         if (game.draw_hitboxes) {
@@ -2846,6 +2904,10 @@ class Tutorial extends PIXI.AnimatedSprite {
         this.anchor.set(0.5, 0.5);
         this.alpha = 0.5;
         this.play();
+        this.visible = game.num_clicks >= 1;
+        this.onFrameChange = function() {
+            this.visible = game.num_clicks >= 1;
+        };
     }
 }
 

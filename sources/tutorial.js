@@ -7,6 +7,10 @@ class Tutorial extends PIXI.AnimatedSprite {
         this.anchor.set(0.5, 0.5);
         this.alpha = 0.5;
         this.play();
+        this.visible = game.num_clicks >= 1;
+        this.onFrameChange = function() {
+            this.visible = game.num_clicks >= 1;
+        };
     }
 }
 

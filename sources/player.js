@@ -202,9 +202,12 @@ class Player extends MovieClip {
         this.previous_x = this.x;
         this.previous_y = this.y;
 
-        this.update_movement(elapsed);
-        this.update_sliding(elapsed);
-        this.update_jumping(elapsed);
+        if (game.num_clicks >= 1) {
+            this.update_movement(elapsed);
+            this.update_sliding(elapsed);
+            this.update_jumping(elapsed);
+        }
+
         this.update_gravity(elapsed);
         this.update_sprite();
 
@@ -296,7 +299,7 @@ class Player extends MovieClip {
             this.hat.update_hat(elapsed);
         }
 
-        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("Down");
+        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
         this.crouching = !!(this.is_grounded && down_pressed);
 
         if (game.draw_hitboxes) {
