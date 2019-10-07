@@ -7,7 +7,7 @@ module.exports = {
     player: {
         width: 16,
         height: 20,
-        speed: 120,
+        speed: 130,
         acceleration: 1080,
         gravity_acceleration: 1080,
         fall_gravity: 90,
@@ -22,6 +22,7 @@ module.exports = {
         post_jump_slowdown_factor: 0.9,
         post_jump_sliding_factor: 0.6,
         post_jump_slowdown_duration: 0.5,
+        crouching_speed_factor: 0.5,
     },
     spiky: {
         width: 14,
@@ -34,7 +35,7 @@ module.exports = {
         speed: 60,
         projectile_speed: 120,
         projectile_size: 8,
-        projectile_cooldown: 0.75,
+        projectile_cooldown: 0.9,
         attack_area_width: 50,
         attack_area_height: 1000,
     },
@@ -46,5 +47,32 @@ module.exports = {
     block_falling: {
         destroy_timeout: 0.5,
         respawn_timeout: 2,
-    }
+    },
+    mouse: {
+        width: 14,
+        height: 13,
+        speed: 60,
+        rush_speed: 80,
+        attack_speed: 80,
+        predictable_max_player_jump_distance: 30,
+        dangerous_max_player_jump_distance: 50,
+        attack_height: 40,
+        max_prediction_distance: 200,
+    },
+    coin: {
+        size: 16,
+    },
+    spitting: {
+        width: 14,
+        height: 13,
+        speed: 25,
+        bezier_height: 80,
+        max_shooting_distance: 250,
+        projectile_speed: 333,
+        projectile_size: 3,
+        projectile_cooldown: 1,
+        bezier_angle: 50 / 180 * Math.PI,
+        prepare_timeout: 0.8,
+        prediction_seconds: 0.1,
+    },
 };

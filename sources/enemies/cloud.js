@@ -42,6 +42,7 @@ class Cloud extends MovieClip {
             game.player.vertical_speed = -250;
             game.player.y = this.y + delta_y - game.config.cloud.height / 2 - game.player.bounds.height;
             this.gotoAndPlay("jump");
+            this.gotoAndPlay(0);
         }
 
         this.x += delta_x;

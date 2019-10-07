@@ -30,6 +30,18 @@ class BlockFalling extends MovieClip {
                 if (this.destroy_timeout <= 0) {
                     this.respawn_timeout = game.config.block_falling.respawn_timeout;
                     this.visible = false;
+
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                    effect.x = this.x + game.config.tile_size / 2;
+                    effect.y = this.y + game.config.tile_size / 2;
+                    effect.anchor.set(0.5, 0.5);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function() {
+                        game.containers.effects.removeChild(effect);
+                    };
+                    game.containers.effects.addChild(effect);
                 }
             } else {
                 this.respawn_timeout -= elapsed;
@@ -38,6 +50,18 @@ class BlockFalling extends MovieClip {
                         this.destroy_timeout = null;
                         this.respawn_timeout = null;
                         this.visible = true;
+
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                        effect.x = this.x + game.config.tile_size / 2;
+                        effect.y = this.y + game.config.tile_size / 2;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function() {
+                            game.containers.front_effects.removeChild(effect);
+                        };
+                        game.containers.front_effects.addChild(effect);
                     }
                 }
             }

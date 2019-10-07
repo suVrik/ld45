@@ -31,6 +31,18 @@ class BlockFalling extends MovieClip {
                 if (this.destroy_timeout <= 0) {
                     this.respawn_timeout = game.config.block_falling.respawn_timeout;
                     this.visible = false;
+
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                    effect.x = this.x + game.config.tile_size / 2;
+                    effect.y = this.y + game.config.tile_size / 2;
+                    effect.anchor.set(0.5, 0.5);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function() {
+                        game.containers.effects.removeChild(effect);
+                    };
+                    game.containers.effects.addChild(effect);
                 }
             } else {
                 this.respawn_timeout -= elapsed;
@@ -39,6 +51,18 @@ class BlockFalling extends MovieClip {
                         this.destroy_timeout = null;
                         this.respawn_timeout = null;
                         this.visible = true;
+
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                        effect.x = this.x + game.config.tile_size / 2;
+                        effect.y = this.y + game.config.tile_size / 2;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function() {
+                            game.containers.front_effects.removeChild(effect);
+                        };
+                        game.containers.front_effects.addChild(effect);
                     }
                 }
             }
@@ -50,12 +74,24 @@ class BlockFalling extends MovieClip {
 
 module.exports = BlockFalling;
 
-},{"./movie_clip.js":11,"./physics.js":12}],2:[function(require,module,exports){
+},{"./movie_clip.js":15,"./physics.js":16}],2:[function(require,module,exports){
 class Camera {
+    constructor() {
+        this.offset = 0;
+    }
+
     update_camera(elapsed) {
         if (!game.player.dead) {
             game.containers.level.x = Math.max(Math.min(game.render.render_width / 2 - game.player.x, 0), game.render.render_width - game.config.level.width);
-            game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y, 0), game.render.render_height - game.config.level.height);
+
+            const target_offset = game.render.render_height / 3;
+            if (game.player.crouching) {
+                this.offset = Math.min(this.offset + elapsed * 3 * target_offset, target_offset);
+            } else {
+                this.offset = Math.max(this.offset - elapsed * 4 * target_offset, 0);
+            }
+
+            game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y - this.offset, 0), game.render.render_height - game.config.level.height);
         }
     }
 }
@@ -63,6 +99,36 @@ class Camera {
 module.exports = Camera;
 
 },{}],3:[function(require,module,exports){
+const Physics = require("./physics.js");
+
+class Coin extends PIXI.AnimatedSprite {
+    constructor(x, y) {
+        super(game.resources.sprites["animations_16px_coin"]);
+
+        this.x = x;
+        this.y = y;
+        this.initial_y = y;
+        this.animationSpeed = 0.2;
+        this.time = x + y;
+        this.play();
+    }
+
+    update_coin(elapsed) {
+        this.time += elapsed * 5;
+        this.y = this.initial_y + Math.sin(this.time) * 3;
+        if (Physics.aabb(this.x, this.y, game.config.coin.size, game.config.coin.size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+            game.coins.splice(game.coins.indexOf(this), 1);
+            this.parent.removeChild(this);
+        }
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x, this.y, game.config.coin.size, game.config.coin.size);
+        }
+    }
+}
+
+module.exports = Coin;
+
+},{"./physics.js":16}],4:[function(require,module,exports){
 module.exports = {
     tile_size: 16,
     level: {
@@ -72,7 +138,7 @@ module.exports = {
     player: {
         width: 16,
         height: 20,
-        speed: 120,
+        speed: 130,
         acceleration: 1080,
         gravity_acceleration: 1080,
         fall_gravity: 90,
@@ -87,6 +153,7 @@ module.exports = {
         post_jump_slowdown_factor: 0.9,
         post_jump_sliding_factor: 0.6,
         post_jump_slowdown_duration: 0.5,
+        crouching_speed_factor: 0.5,
     },
     spiky: {
         width: 14,
@@ -99,7 +166,7 @@ module.exports = {
         speed: 60,
         projectile_speed: 120,
         projectile_size: 8,
-        projectile_cooldown: 0.75,
+        projectile_cooldown: 0.9,
         attack_area_width: 50,
         attack_area_height: 1000,
     },
@@ -111,10 +178,37 @@ module.exports = {
     block_falling: {
         destroy_timeout: 0.5,
         respawn_timeout: 2,
-    }
+    },
+    mouse: {
+        width: 14,
+        height: 13,
+        speed: 60,
+        rush_speed: 80,
+        attack_speed: 80,
+        predictable_max_player_jump_distance: 30,
+        dangerous_max_player_jump_distance: 50,
+        attack_height: 40,
+        max_prediction_distance: 200,
+    },
+    coin: {
+        size: 16,
+    },
+    spitting: {
+        width: 14,
+        height: 13,
+        speed: 25,
+        bezier_height: 80,
+        max_shooting_distance: 250,
+        projectile_speed: 333,
+        projectile_size: 3,
+        projectile_cooldown: 1,
+        bezier_angle: 50 / 180 * Math.PI,
+        prepare_timeout: 0.8,
+        prediction_seconds: 0.1,
+    },
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -159,6 +253,7 @@ class Cloud extends MovieClip {
             game.player.vertical_speed = -250;
             game.player.y = this.y + delta_y - game.config.cloud.height / 2 - game.player.bounds.height;
             this.gotoAndPlay("jump");
+            this.gotoAndPlay(0);
         }
 
         this.x += delta_x;
@@ -177,7 +272,7 @@ class Cloud extends MovieClip {
 
 module.exports = Cloud;
 
-},{"../movie_clip.js":11,"../physics.js":12}],5:[function(require,module,exports){
+},{"../movie_clip.js":15,"../physics.js":16}],6:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const FlyingProjectile = require("./flying_projectile.js");
@@ -216,12 +311,22 @@ class Flying extends MovieClip {
         if (!game.player.dead) {
             if (Physics.aabb(this.x - game.config.flying.width / 2, this.y - game.config.flying.height / 2,
                              game.config.flying.width, game.config.flying.height,
-                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
+                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1)) {
                 game.player.vertical_speed = -250;
-                game.player.y = this.y + delta_y - game.config.flying.height / 2 - game.player.bounds.height;
-
                 game.flyings.splice(game.flyings.indexOf(this), 1);
                 this.parent.removeChild(this);
+
+                const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                effect.x = this.x;
+                effect.y = this.y;
+                effect.anchor.set(0.5, 0.5);
+                effect.animationSpeed = 0.3;
+                effect.loop = false;
+                effect.play();
+                effect.onComplete = function() {
+                    game.containers.effects.removeChild(effect);
+                };
+                game.containers.effects.addChild(effect);
             }
         }
 
@@ -233,12 +338,11 @@ class Flying extends MovieClip {
             }
         }
 
-        this.x += delta_x;
-        this.y += delta_y;
+        Physics.move(this, delta_x, delta_y, -game.config.flying.width / 2, -game.config.flying.height / 2);
 
         if (this.attack_cooldown <= 0 && !game.player.dead) {
             if (Physics.aabb(this.x - game.config.flying.attack_area_width / 2, this.y + game.config.flying.height / 2, game.config.flying.attack_area_width, game.config.flying.attack_area_height,
-                game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
+                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 const flying_projectile = new FlyingProjectile(this.x, this.y + game.config.flying.height / 2 + game.config.flying.projectile_size / 2 + 1);
                 game.flying_projectiles.push(flying_projectile);
                 game.containers.entities.addChild(flying_projectile);
@@ -262,7 +366,7 @@ class Flying extends MovieClip {
 
 module.exports = Flying;
 
-},{"../movie_clip.js":11,"../physics.js":12,"./flying_projectile.js":6}],6:[function(require,module,exports){
+},{"../movie_clip.js":15,"../physics.js":16,"./flying_projectile.js":7}],7:[function(require,module,exports){
 const Physics = require("../physics.js");
 
 class FlyingProjectile extends PIXI.Sprite {
@@ -277,10 +381,6 @@ class FlyingProjectile extends PIXI.Sprite {
 
     update_flying_projectile(elapsed) {
         this.y += game.config.flying.projectile_speed * elapsed;
-        if (Physics.overlap(this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size)) {
-            game.flying_projectiles.splice(game.flying_projectiles.indexOf(this), 1);
-            this.parent.removeChild(this);
-        }
 
         if (this.scale.x < 1) {
             this.scale.x = Math.min(this.scale.x + elapsed * 3, 1);
@@ -291,6 +391,11 @@ class FlyingProjectile extends PIXI.Sprite {
             game.player.murder();
         }
 
+        if (Physics.overlap(game.player, this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size)) {
+            game.flying_projectiles.splice(game.flying_projectiles.indexOf(this), 1);
+            this.parent.removeChild(this);
+        }
+
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size);
         }
@@ -299,7 +404,201 @@ class FlyingProjectile extends PIXI.Sprite {
 
 module.exports = FlyingProjectile;
 
-},{"../physics.js":12}],7:[function(require,module,exports){
+},{"../physics.js":16}],8:[function(require,module,exports){
+const MovieClip = require("../movie_clip.js");
+const Physics = require("../physics.js");
+
+class Mouse extends MovieClip {
+    constructor(x, y, nodes) {
+        super({
+            idle: {name: "idle", frames: [game.resources.sprites["enemy_mouse"]], speed: 0.15},
+        }, "idle");
+
+        this.anchor.set(0.5, 1);
+        this.x = x;
+        this.y = y;
+        this.nodes = nodes ? nodes.slice() : [];
+        while (this.nodes.length < 2) {
+            this.nodes.unshift({x: x, y: y});
+        }
+        this.current_node = 0;
+        this.play();
+
+        this.from = Math.min(this.nodes[0].x, this.nodes[1].x);
+        this.to = Math.max(this.nodes[0].x, this.nodes[1].x);
+        this.is_attacking = 0;
+        this.state_color = 0xFFFFFF;
+
+        this.bounds = {
+            width: game.config.mouse.width,
+            height: game.config.mouse.height,
+        };
+    }
+
+    update_mouse(elapsed) {
+        let calm_walk = true;
+
+        this.state_color = 0xFFFFFF;
+
+        if (!game.player.dead) {
+            const player_y = game.player.y + game.player.bounds.height / 2;
+            if (player_y < this.y - game.config.mouse.height / 2) {
+                const this_y = this.y - game.config.mouse.height / 2;
+                const player_x = game.player.x + game.player.bounds.width / 2;
+                const distance = Math.sqrt((this.x - player_x) * (this.x - player_x) + (this_y - player_y) * (this_y - player_y));
+                if (distance < game.config.mouse.max_prediction_distance) {
+                    if (!Physics.raycast(game.player, this.x, this.y - game.config.mouse.height / 2, player_x, player_y)) {
+                        if (!game.player.is_grounded) {
+                            let player_x_from = player_x - game.config.mouse.predictable_max_player_jump_distance;
+                            let player_x_to = player_x + game.config.mouse.predictable_max_player_jump_distance;
+                            if (this.x >= player_x_from && this.x <= player_x_to) {
+                                if (Math.abs(this.x - player_x_from) < Math.abs(this.x - player_x_to) && this.from < player_x_from - game.config.mouse.width) {
+                                    this.x = Math.max(this.x - game.config.mouse.rush_speed * elapsed, this.from);
+                                    this.scale.x = -1;
+                                    calm_walk = false;
+
+                                    if (this.nodes[0].x < this.nodes[1].x) {
+                                        this.current_node = 1;
+                                    } else {
+                                        this.current_node = 0;
+                                    }
+                                } else {
+                                    this.x = Math.min(this.x + game.config.mouse.rush_speed * elapsed, this.to);
+                                    this.scale.x = 1;
+                                    calm_walk = false;
+
+                                    if (this.nodes[0].x < this.nodes[1].x) {
+                                        this.current_node = 0;
+                                    } else {
+                                        this.current_node = 1;
+                                    }
+                                }
+
+                                this.state_color = 0xFF0000;
+                            } else {
+                                player_x_from = player_x - game.config.mouse.dangerous_max_player_jump_distance;
+                                player_x_to = player_x + game.config.mouse.dangerous_max_player_jump_distance;
+                                if (this.x >= player_x_from && this.x <= player_x_to) {
+                                    if (player_x > this.x) {
+                                        if (this.nodes[0].x < this.nodes[1].x) {
+                                            this.current_node = 1;
+                                        } else {
+                                            this.current_node = 0;
+                                        }
+
+                                        this.state_color = 0xFFFF00;
+                                    } else {
+                                        if (this.nodes[0].x < this.nodes[1].x) {
+                                            this.current_node = 0;
+                                        } else {
+                                            this.current_node = 1;
+                                        }
+
+                                        this.state_color = 0xFF00FF;
+                                    }
+                                }
+                            }
+                        } else {
+                            if (this.is_attacking === 0 && player_x >= this.from && player_x <= this.to && player_y > this.y - game.config.mouse.attack_height) {
+                                if (player_x > this.x) {
+                                    this.is_attacking = 1;
+                                } else {
+                                    this.is_attacking = -1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (calm_walk) {
+            if (this.is_attacking === 1) {
+                this.state_color = 0x0000FF;
+                this.x = Math.min(this.x + game.config.mouse.attack_speed * elapsed, this.to);
+                this.scale.x = 1;
+                calm_walk = false;
+
+                if (Math.abs(this.x - this.to) < 1e-5) {
+                    this.is_attacking = 0;
+                }
+            } else if (this.is_attacking === -1) {
+                this.state_color = 0x0000FF;
+                this.x = Math.max(this.x - game.config.mouse.attack_speed * elapsed, this.from);
+                this.scale.x = -1;
+                calm_walk = false;
+
+                if (Math.abs(this.x - this.from) < 1e-5) {
+                    this.is_attacking = 0;
+                }
+            } else {
+                const next_node = (this.current_node + 1) % this.nodes.length;
+                if (this.x < this.nodes[next_node].x) {
+                    this.x = Math.min(this.x + game.config.mouse.speed * elapsed, this.nodes[next_node].x);
+                    this.scale.x = 1;
+                } else {
+                    this.x = Math.max(this.x - game.config.mouse.speed * elapsed, this.nodes[next_node].x);
+                    this.scale.x = -1;
+                }
+                if (Math.abs(this.x - this.nodes[next_node].x) < 1e-5) {
+                    this.current_node = next_node;
+                }
+            }
+        }
+
+        if (!game.player.dead) {
+            if (Physics.aabb(this.x - game.config.mouse.width / 2, this.y - game.config.mouse.height, game.config.mouse.width, game.config.mouse.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                if (game.player.previous_y + game.player.bounds.height < this.y - game.config.mouse.height && game.player.y + game.player.bounds.height >= this.y - game.config.mouse.height) {
+                    game.player.vertical_speed = -250;
+                    game.mice.splice(game.mice.indexOf(this), 1);
+                    this.parent.removeChild(this);
+
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                    effect.x = this.x;
+                    effect.y = this.y - game.config.mouse.height / 2;
+                    effect.anchor.set(0.5, 0.5);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function() {
+                        game.containers.effects.removeChild(effect);
+                    };
+                    game.containers.effects.addChild(effect);
+                } else {
+                    game.player.murder();
+                }
+            }
+        }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.lineStyle(1, this.state_color, 1);
+            game.containers.hitboxes.drawRect(this.x - game.config.mouse.width / 2, this.y - game.config.mouse.height, game.config.mouse.width, game.config.mouse.height);
+
+            if (!game.player.dead) {
+                const player_x = game.player.x + game.player.bounds.width / 2;
+                const player_y = game.player.y + game.player.bounds.height / 2;
+                const this_y = this.y - game.config.mouse.height / 2;
+                const distance = Math.sqrt((this.x - player_x) * (this.x - player_x) + (this_y - player_y) * (this_y - player_y));
+
+                if (distance < game.config.mouse.max_prediction_distance) {
+                    if (Physics.raycast(game.player, this.x, this_y, player_x, player_y)) {
+                        game.containers.hitboxes.lineStyle(1, 0xFF00FF, 1);
+                    } else {
+                        game.containers.hitboxes.lineStyle(1, 0xFFFF00, 1);
+                    }
+
+                    game.containers.hitboxes.moveTo(this.x, this.y - game.config.mouse.height / 2);
+                    game.containers.hitboxes.lineTo(game.player.x + game.player.bounds.width / 2, game.player.y + game.player.bounds.height / 2);
+                    game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+                }
+            }
+        }
+    }
+}
+
+module.exports = Mouse;
+
+},{"../movie_clip.js":15,"../physics.js":16}],9:[function(require,module,exports){
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -346,7 +645,282 @@ class Spiky extends MovieClip {
 
 module.exports = Spiky;
 
-},{"../movie_clip.js":11,"../physics.js":12}],8:[function(require,module,exports){
+},{"../movie_clip.js":15,"../physics.js":16}],10:[function(require,module,exports){
+const MovieClip = require("../movie_clip.js");
+const Physics = require("../physics.js");
+const SpittingProjectile = require("./spitting_projectile.js");
+
+class Spitting extends MovieClip {
+    constructor(x, y, nodes) {
+        super({
+            idle: {name: "idle", frames: [game.resources.sprites["enemy_spitting"]], speed: 0.15},
+        }, "idle");
+
+        this.anchor.set(0.5, 1);
+        this.x = x;
+        this.y = y;
+        this.nodes = nodes ? nodes.slice() : [];
+        this.nodes.unshift({x: x, y: y});
+        this.current_node = 0;
+        this.play();
+        this.attack_cooldown = 0;
+        this.prepare_timeout = 0;
+
+        this.bounds = {
+            width: game.config.spitting.width,
+            height: game.config.spitting.height,
+        };
+    }
+
+    update_spitting(elapsed) {
+        this.attack_cooldown -= elapsed;
+        let is_walking = this.attack_cooldown <= 0;
+        if (!game.player.dead) {
+            if (this.attack_cooldown <= 0) {
+                const this_x = this.x;
+                const this_y = this.y - game.config.spitting.height / 2;
+                const player_x = game.player.x + game.player.bounds.width / 2 + game.player.horizontal_speed * game.config.spitting.prediction_seconds;
+                const player_y = game.player.y + game.player.bounds.height / 2 + (game.player.previous_y - game.player.y) * game.config.spitting.prediction_seconds;
+                const distance = Math.sqrt((this_x - player_x) * (this_x - player_x) + (this_y - player_y) * (this_y - player_y));
+                if (distance > 1e-5 && distance < game.config.spitting.max_shooting_distance) {
+                    let success = true;
+                    let middle_x, middle_y;
+                    let total_distance = 0;
+
+                    const angle = Math.atan2(player_y - this_y, player_x - this_x);
+                    const straigh_shoot = Physics.raycast(game.player, this_x, this_y, player_x, player_y);
+                    if (straigh_shoot && (Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
+                        const center_x = (this_x + player_x) / 2;
+                        const center_y = (this_y + player_y) / 2;
+                        const vector_x = (this_x - player_x) / distance;
+                        const vector_y = (this_y - player_y) / distance;
+                        if (vector_x < 0) {
+                            middle_x = center_x - vector_y * game.config.spitting.bezier_height;
+                            middle_y = center_y + vector_x * game.config.spitting.bezier_height;
+                        } else {
+                            middle_x = center_x + vector_y * game.config.spitting.bezier_height;
+                            middle_y = center_y - vector_x * game.config.spitting.bezier_height;
+                        }
+
+                        let previous_bezier_x = this_x;
+                        let previous_bezier_y = this_y;
+                        for (let t = 0.25; t <= 1; t += 0.25) {
+                            const bezier_x = (1 - t) * (1 - t) * this_x + 2 * t * (1 - t) * middle_x + t * t * player_x;
+                            const bezier_y = (1 - t) * (1 - t) * this_y + 2 * t * (1 - t) * middle_y + t * t * player_y;
+                            if (Physics.raycast(game.player, previous_bezier_x, previous_bezier_y, bezier_x, bezier_y)) {
+                                success = false;
+                                break;
+                            }
+                            total_distance += Math.sqrt((bezier_x - previous_bezier_x) * (bezier_x - previous_bezier_x) + (bezier_y - previous_bezier_y) * (bezier_y - previous_bezier_y));
+                            previous_bezier_x = bezier_x;
+                            previous_bezier_y = bezier_y;
+                        }
+                    } else {
+                        middle_x = (this_x + player_x) / 2;
+                        middle_y = (this_y + player_y) / 2;
+                        total_distance = Math.sqrt((this_x - player_x) * (this_x - player_x) + (this_y - player_y) * (this_y - player_y));
+                        success = !straigh_shoot;
+                    }
+
+                    if (success) {
+                        is_walking = false;
+
+                        if (player_x < this_x) {
+                            this.scale.x = -1;
+                        } else {
+                            this.scale.x = 1;
+                        }
+
+                        if (this.prepare_timeout >= game.config.spitting.prepare_timeout) {
+                            const spitting_projectile = new SpittingProjectile(this_x, this_y, middle_x, middle_y, player_x, player_y, total_distance);
+                            game.spitting_projectiles.push(spitting_projectile);
+                            game.containers.entities.addChild(spitting_projectile);
+
+                            this.attack_cooldown = game.config.spitting.projectile_cooldown;
+                            this.prepare_timeout = 0;
+                        } else {
+                            this.prepare_timeout += elapsed;
+                        }
+                    }
+                }
+            }
+
+            if (Physics.aabb(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                if (game.player.previous_y + game.player.bounds.height < this.y - game.config.spitting.height && game.player.y + game.player.bounds.height >= this.y - game.config.spitting.height) {
+                    game.player.vertical_speed = -250;
+                    game.spittings.splice(game.spittings.indexOf(this), 1);
+                    this.parent.removeChild(this);
+
+                    const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                    effect.x = this.x;
+                    effect.y = this.y - game.config.spitting.height / 2;
+                    effect.anchor.set(0.5, 0.5);
+                    effect.animationSpeed = 0.3;
+                    effect.loop = false;
+                    effect.play();
+                    effect.onComplete = function() {
+                        game.containers.effects.removeChild(effect);
+                    };
+                    game.containers.effects.addChild(effect);
+                } else {
+                    game.player.murder();
+                }
+            }
+        }
+
+        if (is_walking) {
+            const next_node = (this.current_node + 1) % this.nodes.length;
+            if (this.x < this.nodes[next_node].x) {
+                this.x = Math.min(this.x + game.config.spitting.speed * elapsed, this.nodes[next_node].x);
+                this.scale.x = 1;
+            } else {
+                this.x = Math.max(this.x - game.config.spitting.speed * elapsed, this.nodes[next_node].x);
+                this.scale.x = -1;
+            }
+            if (Math.abs(this.x - this.nodes[next_node].x) < 1e-5) {
+                this.current_node = next_node;
+            }
+        }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height);
+
+            const this_x = this.x;
+            const this_y = this.y - game.config.spitting.height / 2;
+            const player_x = game.player.x + game.player.bounds.width / 2 + game.player.horizontal_speed * game.config.spitting.prediction_seconds;
+            const player_y = game.player.y + game.player.bounds.height / 2 + (game.player.previous_y - game.player.y) * game.config.spitting.prediction_seconds;
+            const distance = Math.sqrt((this_x - player_x) * (this_x - player_x) + (this_y - player_y) * (this_y - player_y));
+            if (distance > 1e-5 && distance < game.config.spitting.max_shooting_distance) {
+                const angle = Math.atan2(player_y - this_y, player_x - this_x);
+                const straigh_shoot = Physics.raycast(game.player, this_x, this_y, player_x, player_y);
+                if (straigh_shoot && (Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
+                    game.containers.hitboxes.lineStyle(1, 0xCCCCCC, 1);
+                    game.containers.hitboxes.moveTo(this_x, this_y);
+                    game.containers.hitboxes.lineTo(player_x, player_y);
+
+                    const center_x = (this_x + player_x) / 2;
+                    const center_y = (this_y + player_y) / 2;
+                    const vector_x = (this_x - player_x) / distance;
+                    const vector_y = (this_y - player_y) / distance;
+                    game.containers.hitboxes.moveTo(center_x, center_y);
+
+                    let middle_x, middle_y;
+                    if (vector_x < 0) {
+                        middle_x = center_x - vector_y * game.config.spitting.bezier_height;
+                        middle_y = center_y + vector_x * game.config.spitting.bezier_height;
+                    } else {
+                        middle_x = center_x + vector_y * game.config.spitting.bezier_height;
+                        middle_y = center_y - vector_x * game.config.spitting.bezier_height;
+                    }
+                    game.containers.hitboxes.lineTo(middle_x, middle_y);
+
+                    game.containers.hitboxes.moveTo(this_x, this_y);
+                    game.containers.hitboxes.lineTo(middle_x, middle_y);
+                    game.containers.hitboxes.lineTo(player_x, player_y);
+
+                    game.containers.hitboxes.moveTo(this_x, this_y);
+
+                    let previous_bezier_x = this_x;
+                    let previous_bezier_y = this_y;
+                    for (let t = 0.25; t <= 1; t += 0.25) {
+                        const bezier_x = (1 - t) * (1 - t) * this_x + 2 * t * (1 - t) * middle_x + t * t * player_x;
+                        const bezier_y = (1 - t) * (1 - t) * this_y + 2 * t * (1 - t) * middle_y + t * t * player_y;
+
+                        if (Physics.raycast(game.player, previous_bezier_x, previous_bezier_y, bezier_x, bezier_y)) {
+                            game.containers.hitboxes.lineStyle(1, 0xFF00FF, 1);
+                        } else {
+                            game.containers.hitboxes.lineStyle(1, 0xFFFF00, 1);
+                        }
+
+                        game.containers.hitboxes.lineTo(bezier_x, bezier_y);
+
+                        previous_bezier_x = bezier_x;
+                        previous_bezier_y = bezier_y;
+                    }
+                } else {
+                    if (straigh_shoot) {
+                        game.containers.hitboxes.lineStyle(1, 0xFF00FF, 1);
+                    } else {
+                        game.containers.hitboxes.lineStyle(1, 0xFFFF00, 1);
+                    }
+
+                    game.containers.hitboxes.moveTo(this_x, this_y);
+                    game.containers.hitboxes.lineTo(player_x, player_y);
+                }
+            }
+
+            game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+        }
+    }
+}
+
+module.exports = Spitting;
+
+},{"../movie_clip.js":15,"../physics.js":16,"./spitting_projectile.js":11}],11:[function(require,module,exports){
+const Physics = require("../physics.js");
+
+class SpittingProjectile extends PIXI.AnimatedSprite {
+    constructor(sx, sy, bx, by, tx, ty, distance) {
+        super(game.resources.sprites["animations_16px_projectile_spit"]);
+
+        this.anchor.set(0.5, 0.5);
+        this.x = sx;
+        this.y = sy;
+        this.sx = sx;
+        this.sy = sy;
+        this.bx = bx;
+        this.by = by;
+        this.tx = tx;
+        this.ty = ty;
+        this.distance = distance;
+        this.t = 0;
+        this.scale.x = this.scale.y = 0.5;
+        this.play();
+    }
+
+    update_spitting_projectile(elapsed) {
+        this.t += elapsed * game.config.spitting.projectile_speed / this.distance;
+
+        if (this.t < 1) {
+            this.x = (1 - this.t) * (1 - this.t) * this.sx + 2 * this.t * (1 - this.t) * this.bx + this.t * this.t * this.tx;
+            this.y = (1 - this.t) * (1 - this.t) * this.sy + 2 * this.t * (1 - this.t) * this.by + this.t * this.t * this.ty;
+        } else {
+            const last_x = 0.01 * this.sx + 0.18 * this.bx + 0.81 * this.tx;
+            const last_y = 0.01 * this.sy + 0.18 * this.by + 0.81 * this.ty;
+            const distance = Math.sqrt((last_x - this.tx) * (last_x - this.tx) + (last_y - this.ty) * (last_y - this.ty));
+            if (distance > 1e-5) {
+                this.x += elapsed * game.config.spitting.projectile_speed * (this.tx - last_x) / distance;
+                this.y += elapsed * game.config.spitting.projectile_speed * (this.ty - last_y) / distance;
+            } else {
+                game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
+                this.parent.removeChild(this);
+                return;
+            }
+        }
+
+        if (this.scale.x < 1) {
+            this.scale.x = Math.min(this.scale.x + elapsed * 3, 1);
+            this.scale.y = this.scale.x;
+        }
+
+        if (Physics.aabb(this.x - game.config.spitting.projectile_size / 2, this.y - game.config.spitting.projectile_size / 2, game.config.spitting.projectile_size, game.config.spitting.projectile_size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+            game.player.murder();
+        }
+
+        if (Physics.overlap(game.player, this.x - game.config.spitting.projectile_size / 2, this.y - game.config.spitting.projectile_size / 2, game.config.spitting.projectile_size, game.config.spitting.projectile_size)) {
+            game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
+            this.parent.removeChild(this);
+        }
+
+        if (game.draw_hitboxes) {
+            game.containers.hitboxes.drawRect(this.x - game.config.spitting.projectile_size / 2, this.y - game.config.spitting.projectile_size / 2, game.config.spitting.projectile_size, game.config.spitting.projectile_size);
+        }
+    }
+}
+
+module.exports = SpittingProjectile;
+
+},{"../physics.js":16}],12:[function(require,module,exports){
 const Physics = require("./physics.js");
 
 class HazardVines {
@@ -370,7 +944,7 @@ class HazardVines {
 
 module.exports = HazardVines;
 
-},{"./physics.js":12}],9:[function(require,module,exports){
+},{"./physics.js":16}],13:[function(require,module,exports){
 const init_input = function() {
     document.body.onkeydown = event => input.keys[event.code] = true;
     document.body.onkeyup = event => input.keys[event.code] = false;
@@ -439,13 +1013,16 @@ const input = {
 
 module.exports = input;
 
-},{}],10:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
 const Flying = require("./enemies/flying.js");
 const Cloud = require("./enemies/cloud.js");
 const BlockFalling = require("./block_falling.js");
+const Mouse = require("./enemies/mouse.js");
+const Coin = require("./coin.js");
+const Spitting = require("./enemies/spitting.js");
 const Camera = require("./camera.js");
 
 window.game = {
@@ -462,7 +1039,12 @@ window.game = {
     flying_projectiles: [],
     clouds: [],
     block_fallings: [],
+    mice: [],
+    coins: [],
+    spittings: [],
+    spitting_projectiles: [],
     draw_hitboxes: false,
+    spawn_effect_radius: 1,
 };
 
 game.render.init();
@@ -515,22 +1097,29 @@ let construct_level = function(level_name) {
         stage: game.render.stage,
         level: new PIXI.Container(),
         tiles_very_back: new PIXI.Container(),
+        effects: new PIXI.Container(),
         tiles_back: new PIXI.Container(),
         entities: new PIXI.Container(),
+        front_effects: new PIXI.Container(),
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
+        spawn_transition: new PIXI.Graphics(),
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
+    game.containers.level.addChild(game.containers.effects);
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
+    game.containers.level.addChild(game.containers.front_effects);
     game.containers.level.addChild(game.containers.tiles_front);
 
     if (game.draw_hitboxes) {
         game.containers.level.addChild(game.containers.hitboxes);
     }
 
+    game.containers.stage.addChild(new PIXI.Sprite(game.resources.sprites["background"]));
     game.containers.stage.addChild(game.containers.level);
+    game.containers.stage.addChild(game.containers.spawn_transition);
 
     draw_tiles_layer("tiles_very_back");
     draw_tiles_layer("tiles_back");
@@ -543,6 +1132,10 @@ let construct_level = function(level_name) {
     game.flying_projectiles = [];
     game.clouds = [];
     game.block_fallings = [];
+    game.mice = [];
+    game.coins = [];
+    game.spittings = [];
+    game.spitting_projectiles = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -573,17 +1166,37 @@ let construct_level = function(level_name) {
                     game.containers.entities.addChild(block_falling);
                 }
             }
+        } else if (entity.type === "enemy_mouse") {
+            const mouse = new Mouse(entity.x, entity.y, entity.nodes);
+            game.mice.push(mouse);
+            game.containers.entities.addChild(mouse);
+        } else if (entity.type === "coin") {
+            const coin = new Coin(entity.x, entity.y);
+            game.coins.push(coin);
+            game.containers.entities.addChild(coin);
+        } else if (entity.type === "enemy_spitting") {
+            const spitting = new Spitting(entity.x, entity.y, entity.nodes);
+            game.spittings.push(spitting);
+            game.containers.entities.addChild(spitting);
         }
     }
 
     game.camera = new Camera();
+    game.camera.update_camera(1 / 60);
+
+    const player_x = game.player.x + game.containers.level.x + game.player.bounds.width / 2;
+    const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
+    const max_x = Math.max(player_x, game.render.render_width - player_x);
+    const max_y = Math.max(player_y, game.render.render_height - player_y);
+    game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+
+    game.containers.spawn_transition.clear();
+    game.containers.spawn_transition.beginFill(0x000000);
+    game.containers.spawn_transition.drawRect(0, 0, game.render.render_width, game.render.render_height);
+    game.containers.spawn_transition.endFill();
 };
 
 let initialize = function() {
-    construct_level("level0");
-};
-
-game.restart = function() {
     construct_level("level0");
 };
 
@@ -593,6 +1206,11 @@ let main_loop = function() {
     if (game.draw_hitboxes) {
         game.containers.hitboxes.clear();
         game.containers.hitboxes.lineStyle(1, 0xFF0000, 1);
+
+        const hitboxes = game.level["hitboxes"];
+        for (let i = 0; i < hitboxes.length; i++) {
+            game.containers.hitboxes.drawRect(hitboxes[i].x, hitboxes[i].y, hitboxes[i].width, hitboxes[i].height);
+        }
     }
 
     game.player.update_player(elapsed);
@@ -603,14 +1221,14 @@ let main_loop = function() {
         game.spikes[i].update_spiky(elapsed);
     }
     for (let i = 0; i < game.flyings.length; ) {
-        let flying = game.flyings[i];
+        const flying = game.flyings[i];
         game.flyings[i].update_flying(elapsed);
         if (i < game.flyings.length && game.flyings[i] === flying) {
             i++;
         }
     }
     for (let i = 0; i < game.flying_projectiles.length; ) {
-        let projectile = game.flying_projectiles[i];
+        const projectile = game.flying_projectiles[i];
         projectile.update_flying_projectile(elapsed);
         if (i < game.flying_projectiles.length && game.flying_projectiles[i] === projectile) {
             i++;
@@ -622,11 +1240,66 @@ let main_loop = function() {
     for (let i = 0; i < game.block_fallings.length; i++) {
         game.block_fallings[i].update_block_falling(elapsed);
     }
+    for (let i = 0; i < game.mice.length; ) {
+        const mouse = game.mice[i];
+        mouse.update_mouse(elapsed);
+        if (i < game.mice.length && game.mice[i] === mouse) {
+            i++;
+        }
+    }
+    for (let i = 0; i < game.coins.length; ) {
+        const coin = game.coins[i];
+        coin.update_coin(elapsed);
+        if (i < game.coins.length && game.coins[i] === coin) {
+            i++;
+        }
+    }
+    for (let i = 0; i < game.spittings.length; ) {
+        const spitting = game.spittings[i];
+        spitting.update_spitting(elapsed);
+        if (i < game.spittings.length && game.spittings[i] === spitting) {
+            i++;
+        }
+    }
+    for (let i = 0; i < game.spitting_projectiles.length; ) {
+        const projectile = game.spitting_projectiles[i];
+        projectile.update_spitting_projectile(elapsed);
+        if (i < game.spitting_projectiles.length && game.spitting_projectiles[i] === projectile) {
+            i++;
+        }
+    }
     game.camera.update_camera(elapsed);
     game.input.update();
+
+    const max_radius = Math.sqrt(game.render.render_width * game.render.render_width + game.render.render_height * game.render.render_height);
+    const max_side = Math.max(game.render.render_width, game.render.render_height) + max_radius * 2 + 10;
+
+    if (game.player.dead) {
+        game.containers.spawn_transition.clear();
+        game.containers.spawn_transition.beginFill(0x000000);
+        game.containers.spawn_transition.drawRect((game.render.render_width - max_side) / 2, (game.render.render_height - max_side) / 2, max_side, max_side);
+        game.containers.spawn_transition.endFill();
+
+        if (Math.abs(game.spawn_effect_radius) > 1e-5) {
+            game.containers.spawn_transition.beginHole();
+            game.containers.spawn_transition.drawCircle(game.player.x + game.containers.level.x + game.player.bounds.width / 2, game.player.y + game.containers.level.y + game.player.bounds.height / 2, game.spawn_effect_radius);
+            game.spawn_effect_radius = Math.max(game.spawn_effect_radius - elapsed * max_radius, 0);
+            game.containers.spawn_transition.endHole();
+
+            if (Math.abs(game.spawn_effect_radius) < 1e-5) {
+                construct_level("level0");
+            }
+        }
+    } else {
+        game.containers.spawn_transition.clear();
+        game.containers.spawn_transition.beginFill(0x000000);
+        game.containers.spawn_transition.drawCircle(game.player.x + game.player.bounds.width / 2 + game.containers.level.x, game.player.y + game.player.bounds.height / 2 + game.containers.level.y, game.spawn_effect_radius);
+        game.spawn_effect_radius = Math.max(game.spawn_effect_radius - elapsed * 1.5 * max_radius, 0);
+        game.containers.spawn_transition.endFill();
+    }
 };
 
-},{"./block_falling.js":1,"./camera.js":2,"./config.js":3,"./enemies/cloud.js":4,"./enemies/flying.js":5,"./enemies/spiky.js":7,"./hazard_vines.js":8,"./input.js":9,"./player.js":13,"./render.js":14,"./resources/resources.js":16}],11:[function(require,module,exports){
+},{"./block_falling.js":1,"./camera.js":2,"./coin.js":3,"./config.js":4,"./enemies/cloud.js":5,"./enemies/flying.js":6,"./enemies/mouse.js":8,"./enemies/spiky.js":9,"./enemies/spitting.js":10,"./hazard_vines.js":12,"./input.js":13,"./player.js":17,"./render.js":18,"./resources/resources.js":20}],15:[function(require,module,exports){
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors, default_animation) {
         super(descriptors[default_animation].frames);
@@ -638,35 +1311,65 @@ class MovieClip extends PIXI.AnimatedSprite {
     }
 
     gotoAndPlay(frameOrAnimation) {
-        if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
-            super.textures = this.descriptors[frameOrAnimation].frames;
-            super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
-            super.loop = !(this.descriptors[frameOrAnimation].loop === false);
-            this.animation = frameOrAnimation;
-            super.gotoAndPlay(0);
-        } else {
-            super.gotoAndPlay(frameOrAnimation);
+        if (this.animation !== frameOrAnimation) {
+            if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
+                super.textures = this.descriptors[frameOrAnimation].frames;
+                super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
+                super.loop = !(this.descriptors[frameOrAnimation].loop === false);
+                this.animation = frameOrAnimation;
+                super.gotoAndPlay(0);
+            } else {
+                super.gotoAndPlay(frameOrAnimation);
+            }
         }
     }
 
     gotoAndStop(frameOrAnimation) {
-        if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
-            super.textures = this.descriptors[frameOrAnimation].frames;
-            super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
-            super.loop = !(this.descriptors[frameOrAnimation].loop === false);
-            this.animation = frameOrAnimation;
-            super.gotoAndStop(0);
-        } else {
-            super.gotoAndStop(frameOrAnimation);
+        if (this.animation !== frameOrAnimation) {
+            if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
+                super.textures = this.descriptors[frameOrAnimation].frames;
+                super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
+                super.loop = !(this.descriptors[frameOrAnimation].loop === false);
+                this.animation = frameOrAnimation;
+                super.gotoAndStop(0);
+            } else {
+                super.gotoAndStop(frameOrAnimation);
+            }
         }
     }
 }
 
 module.exports = MovieClip;
 
-},{}],12:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
+};
+
+const point = function(x, y, width, height, px, py) {
+    return px > x && px < x + width && py > y && py < y + height;
+};
+
+const segment = function(x1, y1, x2, y2, x3, y3, x4, y4) {
+    function area(_x1, _y1, _x2, _y2, _x3, _y3) {
+        return (_x2 - _x1) * (_y3 - _y1) - (_y2 - _y1) * (_x3 - _x1);
+    }
+
+    function intersect_1(a, b, c, d) {
+        if (a > b) {
+            const temp = a;
+            a = b;
+            b = temp;
+        }
+        if (c > d) {
+            const temp = c;
+            c = d;
+            d = temp;
+        }
+        return Math.max(a, c) < Math.min(b, d);
+    }
+
+    return intersect_1(x1, x2, x3, x4) && intersect_1(y1, y2, y3, y4) && area(x1, y1, x2, y2, x3, y3) * area(x1, y1, x2, y2, x4, y4) < 1e-8 && area(x3, y3, x4, y4, x1, y1) * area(x3, y3, x4, y4, x2, y2) < 1e-8;
 };
 
 const iterate_over_all_hitboxes = function(callback) {
@@ -677,6 +1380,14 @@ const iterate_over_all_hitboxes = function(callback) {
             return result;
         }
     }
+
+    {
+        const result = callback(game.player, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
+        if (result != null) {
+            return result;
+        }
+    }
+
     for (let i = 0; i < game.flyings.length; i++) {
         const result = callback(game.flyings[i],
                                 game.flyings[i].x - game.config.flying.width / 2,
@@ -708,15 +1419,30 @@ const iterate_over_all_hitboxes = function(callback) {
     return null;
 };
 
-const overlap = function(x, y, width, height) {
+const overlap = function(entity, x, y, width, height) {
     return iterate_over_all_hitboxes(function(object, object_x, object_y, object_width, object_height) {
-        if (aabb(x, y, width, height, object_x, object_y, object_width, object_height)) {
-            return object;
+        if (object !== entity) {
+            if (aabb(x, y, width, height, object_x, object_y, object_width, object_height)) {
+                return object;
+            }
         }
     });
 };
 
-const move = function(entity, dx, dy) {
+const raycast = function(entity, x1, y1, x2, y2) {
+    return iterate_over_all_hitboxes(function(object, object_x, object_y, object_width, object_height) {
+        if (object !== entity) {
+            if (point(object_x, object_y, object_width, object_height, x1, y1) ||
+                point(object_x, object_y, object_width, object_height, x2, y2) ||
+                segment(x1, y1, x2, y2, object_x, object_y, object_x + object_width, object_y + object_height) ||
+                segment(x1, y1, x2, y2, object_x + object_width, object_y, object_x, object_y + object_height)) {
+                return object;
+            }
+        }
+    });
+};
+
+const move = function(entity, dx, dy, ox = 0, oy = 0) {
     const result = {
         top: false,
         bottom: false,
@@ -728,41 +1454,43 @@ const move = function(entity, dx, dy) {
     };
 
     iterate_over_all_hitboxes(function(object, object_x, object_y, object_width, object_height) {
-        if (aabb(entity.x - Math.max(-result.dx, 0),
-                 entity.y - Math.max(-result.dy, 0),
-                 entity.bounds.width + Math.abs(result.dx),
-                 entity.bounds.height + Math.abs(result.dy),
-                 object_x, object_y, object_width, object_height)) {
-            result.object = result.object || object;
+        if (entity !== object) {
+            if (aabb(entity.x + ox - Math.max(-result.dx, 0),
+                     entity.y + oy - Math.max(-result.dy, 0),
+                     entity.bounds.width + Math.abs(result.dx),
+                     entity.bounds.height + Math.abs(result.dy),
+                     object_x, object_y, object_width, object_height)) {
+                result.object = result.object || object;
 
-            let delta_x = null;
-            if (Math.abs(dx) > 1e-8) {
-                if (entity.x < object_x) {
-                    result.right = true;
-                    delta_x = (object_x - (entity.x + entity.bounds.width)) - result.dx;
-                } else {
-                    result.left = true;
-                    delta_x = ((object_x + object_width) - entity.x) - result.dx;
+                let delta_x = null;
+                if (Math.abs(dx) > 1e-8) {
+                    if (entity.x + ox < object_x) {
+                        result.right = true;
+                        delta_x = (object_x - (entity.x + ox + entity.bounds.width)) - result.dx;
+                    } else {
+                        result.left = true;
+                        delta_x = ((object_x + object_width) - entity.x + ox) - result.dx;
+                    }
                 }
-            }
 
-            let delta_y = null;
-            if (Math.abs(dy) > 1e-8) {
-                if (entity.y < object_y) {
-                    result.bottom = true;
-                    delta_y = (object_y - (entity.y + entity.bounds.height)) - result.dy;
-                } else {
-                    result.top = true;
-                    delta_y = ((object_y + object_height) - entity.y) - result.dy;
+                let delta_y = null;
+                if (Math.abs(dy) > 1e-8) {
+                    if (entity.y + oy < object_y) {
+                        result.bottom = true;
+                        delta_y = (object_y - (entity.y + oy + entity.bounds.height)) - result.dy;
+                    } else {
+                        result.top = true;
+                        delta_y = ((object_y + object_height) - entity.y + oy) - result.dy;
+                    }
                 }
-            }
 
-            if (delta_y && (!delta_x || Math.abs(delta_y) < Math.abs(delta_x))) {
-                result.left = result.right = false;
-                result.dy += delta_y;
-            } else if (delta_x) {
-                result.top = result.bottom = false;
-                result.dx += delta_x;
+                if (delta_y && (!delta_x || Math.abs(delta_y) < Math.abs(delta_x))) {
+                    result.left = result.right = false;
+                    result.dy += delta_y;
+                } else if (delta_x) {
+                    result.top = result.bottom = false;
+                    result.dx += delta_x;
+                }
             }
         }
     });
@@ -775,24 +1503,33 @@ const move = function(entity, dx, dy) {
 
 module.exports = {
     aabb: aabb,
+    point: point,
+    raycast: raycast,
+    segment: segment,
     overlap: overlap,
     move: move,
 };
 
-},{}],13:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics");
 
 class Player extends MovieClip {
     constructor(x, y) {
         super({
-            idle: { name: "idle", frames: [game.resources.sprites["player_still"]], speed: 0.1 },
-            jump: { name: "jump", frames: [game.resources.sprites["player_jump"]], speed: 0.1 },
+            idle: { frames: game.resources.sprites["animations_32px_player_idle"], speed: 0.15 },
+            crouching_idle: { frames: [game.resources.sprites["animations_32px_player_crouch_walk_0"]], speed: 0.15 },
+            run: { frames: game.resources.sprites["animations_32px_player_run"], speed: 0.2 },
+            crouching_run: { frames: game.resources.sprites["animations_32px_player_crouch_walk"], speed: 0.15 },
+            jump: { frames: game.resources.sprites["animations_32px_player_jump"], speed: 0.15 },
+            death: { frames: [game.resources.sprites["animations_32px_player_death_0"]], speed: 0.15 },
+            climb: { frames: [game.resources.sprites["animations_32px_player_climb_0"]], speed: 0.15 },
         }, "idle");
 
         this.anchor.set(0.25, 0.38);
         this.x = this.previous_x = x;
         this.y = this.previous_y = y;
+        this.play();
 
         this.bounds = {
             width: game.config.player.width,
@@ -802,6 +1539,7 @@ class Player extends MovieClip {
         this.vertical_speed = game.config.player.fall_gravity;
         this.horizontal_speed = 0;
         this.is_grounded = false;
+        this.crouching = false;
         this.late_jump_duration = 0;
         this.is_sliding = false;
         this.jump_off_walls_duration = 0;
@@ -833,7 +1571,10 @@ class Player extends MovieClip {
 
             if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
                 const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
-                const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+                let slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+                if (this.crouching) {
+                    slowdown_factor *= game.config.player.crouching_speed_factor;
+                }
                 Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
             }
         } else {
@@ -843,12 +1584,12 @@ class Player extends MovieClip {
 
     update_sliding(elapsed) {
         this.is_sliding = false;
-        if (Physics.overlap(this.x - 1e-1, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
+        if (Physics.overlap(this, this.x - 1e-2, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
             this.is_sliding = true;
             this.jump_off_left_wall = true;
             this.jump_off_right_wall = false;
         }
-        if (Physics.overlap(this.x + 1e-1, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
+        if (Physics.overlap(this, this.x + 1e-2, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
             this.is_sliding = true;
             this.jump_off_left_wall = false;
             this.jump_off_right_wall = true;
@@ -914,6 +1655,11 @@ class Player extends MovieClip {
                     }
                 }
             }
+            if (hit && hit.object) {
+                if (hit.object.constructor.name === "Cloud" || hit.object.constructor.name === "Flying") {
+                    this.is_grounded = false;
+                }
+            }
         } else {
             this.y += this.vertical_speed * elapsed;
             this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * elapsed, game.config.player.max_gravity);
@@ -921,18 +1667,38 @@ class Player extends MovieClip {
     }
 
     update_sprite() {
-        if (!this.dead && this.is_grounded) {
-            this.gotoAndPlay("idle");
+        if (this.dead) {
+            this.gotoAndPlay("death");
         } else {
-            this.gotoAndPlay("jump");
-        }
+            if (!this.dead && this.is_grounded) {
+                if (Math.abs(this.horizontal_speed) < 1e-5) {
+                    if (this.crouching) {
+                        this.gotoAndPlay("crouching_idle");
+                    } else {
+                        this.gotoAndPlay("idle");
+                    }
+                } else {
+                    if (this.crouching) {
+                        this.gotoAndPlay("crouching_run");
+                    } else {
+                        this.gotoAndPlay("run");
+                    }
+                }
+            } else {
+                if (this.is_sliding) {
+                    this.gotoAndPlay("climb");
+                } else {
+                    this.gotoAndPlay("jump");
+                }
+            }
 
-        if (this.face === "left") {
-            this.scale.x = -1;
-            this.anchor.set(0.75, 0.38);
-        } else {
-            this.scale.x = 1;
-            this.anchor.set(0.25, 0.38);
+            if (this.face === "left") {
+                this.scale.x = -1;
+                this.anchor.set(0.75, 0.38);
+            } else {
+                this.scale.x = 1;
+                this.anchor.set(0.25, 0.38);
+            }
         }
     }
 
@@ -955,6 +1721,10 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration -= elapsed;
         }
 
+
+        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("Down");
+        this.crouching = !!(this.is_grounded && down_pressed);
+
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
         }
@@ -963,24 +1733,29 @@ class Player extends MovieClip {
     murder() {
         if (!this.dead) {
             this.dead = true;
-            setTimeout(game.restart, 1000);
 
             if (this.face === "left") {
-                this.horizontal_speed = -100;
+                this.horizontal_speed = 100;
                 this.vertical_speed = -300;
             } else {
-                this.horizontal_speed = 100;
+                this.horizontal_speed = -100;
                 this.vertical_speed = -300;
             }
 
-            //game.speed_factor = 0.5;
+            game.containers.level.addChild(this);
+
+            const player_x = game.player.x + game.containers.level.x + game.player.bounds.width / 2;
+            const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
+            const max_x = Math.max(player_x, game.render.render_width - player_x);
+            const max_y = Math.max(player_y, game.render.render_height - player_y);
+            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
         }
     }
 }
 
 module.exports = Player;
 
-},{"./movie_clip.js":11,"./physics":12}],14:[function(require,module,exports){
+},{"./movie_clip.js":15,"./physics":16}],18:[function(require,module,exports){
 const update_physical_size = function() {
     const horizontal_padding = 80, vertical_padding = 180;
     const width = (window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth) - horizontal_padding;
@@ -1043,7 +1818,7 @@ const render = {
 
 module.exports = render;
 
-},{}],15:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -1161,7 +1936,7 @@ const levels = {
 
 module.exports = levels;
 
-},{}],16:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -1209,7 +1984,7 @@ const resources = {
 
 module.exports = resources;
 
-},{"./levels.js":15,"./sounds.js":17,"./sprites.js":18}],17:[function(require,module,exports){
+},{"./levels.js":19,"./sounds.js":21,"./sprites.js":22}],21:[function(require,module,exports){
 const load_sounds = function() {
     function load_sound(name, volume = 1.0) {
         sounds.total_count++;
@@ -1244,7 +2019,7 @@ const sounds = {
 
 module.exports = sounds;
 
-},{}],18:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -1285,4 +2060,4 @@ const sprites = {
 
 module.exports = sprites;
 
-},{}]},{},[10]);
+},{}]},{},[14]);

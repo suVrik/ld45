@@ -36,12 +36,22 @@ class Flying extends MovieClip {
         if (!game.player.dead) {
             if (Physics.aabb(this.x - game.config.flying.width / 2, this.y - game.config.flying.height / 2,
                              game.config.flying.width, game.config.flying.height,
-                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
+                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1)) {
                 game.player.vertical_speed = -250;
-                game.player.y = this.y + delta_y - game.config.flying.height / 2 - game.player.bounds.height;
-
                 game.flyings.splice(game.flyings.indexOf(this), 1);
                 this.parent.removeChild(this);
+
+                const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                effect.x = this.x;
+                effect.y = this.y;
+                effect.anchor.set(0.5, 0.5);
+                effect.animationSpeed = 0.3;
+                effect.loop = false;
+                effect.play();
+                effect.onComplete = function() {
+                    game.containers.effects.removeChild(effect);
+                };
+                game.containers.effects.addChild(effect);
             }
         }
 
@@ -53,12 +63,11 @@ class Flying extends MovieClip {
             }
         }
 
-        this.x += delta_x;
-        this.y += delta_y;
+        Physics.move(this, delta_x, delta_y, -game.config.flying.width / 2, -game.config.flying.height / 2);
 
         if (this.attack_cooldown <= 0 && !game.player.dead) {
             if (Physics.aabb(this.x - game.config.flying.attack_area_width / 2, this.y + game.config.flying.height / 2, game.config.flying.attack_area_width, game.config.flying.attack_area_height,
-                game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height + 1e-1)) {
+                             game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 const flying_projectile = new FlyingProjectile(this.x, this.y + game.config.flying.height / 2 + game.config.flying.projectile_size / 2 + 1);
                 game.flying_projectiles.push(flying_projectile);
                 game.containers.entities.addChild(flying_projectile);

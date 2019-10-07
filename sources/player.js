@@ -4,13 +4,19 @@ const Physics = require("./physics");
 class Player extends MovieClip {
     constructor(x, y) {
         super({
-            idle: { name: "idle", frames: [game.resources.sprites["player_still"]], speed: 0.1 },
-            jump: { name: "jump", frames: [game.resources.sprites["player_jump"]], speed: 0.1 },
+            idle: { frames: game.resources.sprites["animations_32px_player_idle"], speed: 0.15 },
+            crouching_idle: { frames: [game.resources.sprites["animations_32px_player_crouch_walk_0"]], speed: 0.15 },
+            run: { frames: game.resources.sprites["animations_32px_player_run"], speed: 0.2 },
+            crouching_run: { frames: game.resources.sprites["animations_32px_player_crouch_walk"], speed: 0.15 },
+            jump: { frames: game.resources.sprites["animations_32px_player_jump"], speed: 0.15 },
+            death: { frames: [game.resources.sprites["animations_32px_player_death_0"]], speed: 0.15 },
+            climb: { frames: [game.resources.sprites["animations_32px_player_climb_0"]], speed: 0.15 },
         }, "idle");
 
         this.anchor.set(0.25, 0.38);
         this.x = this.previous_x = x;
         this.y = this.previous_y = y;
+        this.play();
 
         this.bounds = {
             width: game.config.player.width,
@@ -20,6 +26,7 @@ class Player extends MovieClip {
         this.vertical_speed = game.config.player.fall_gravity;
         this.horizontal_speed = 0;
         this.is_grounded = false;
+        this.crouching = false;
         this.late_jump_duration = 0;
         this.is_sliding = false;
         this.jump_off_walls_duration = 0;
@@ -51,7 +58,10 @@ class Player extends MovieClip {
 
             if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
                 const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
-                const slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+                let slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
+                if (this.crouching) {
+                    slowdown_factor *= game.config.player.crouching_speed_factor;
+                }
                 Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
             }
         } else {
@@ -61,12 +71,12 @@ class Player extends MovieClip {
 
     update_sliding(elapsed) {
         this.is_sliding = false;
-        if (Physics.overlap(this.x - 1e-1, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
+        if (Physics.overlap(this, this.x - 1e-2, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
             this.is_sliding = true;
             this.jump_off_left_wall = true;
             this.jump_off_right_wall = false;
         }
-        if (Physics.overlap(this.x + 1e-1, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
+        if (Physics.overlap(this, this.x + 1e-2, this.y + this.bounds.height / 2 - 0.5, this.bounds.width, 1)) {
             this.is_sliding = true;
             this.jump_off_left_wall = false;
             this.jump_off_right_wall = true;
@@ -132,6 +142,11 @@ class Player extends MovieClip {
                     }
                 }
             }
+            if (hit && hit.object) {
+                if (hit.object.constructor.name === "Cloud" || hit.object.constructor.name === "Flying") {
+                    this.is_grounded = false;
+                }
+            }
         } else {
             this.y += this.vertical_speed * elapsed;
             this.vertical_speed = Math.min(this.vertical_speed + game.config.player.gravity_acceleration * elapsed, game.config.player.max_gravity);
@@ -139,18 +154,38 @@ class Player extends MovieClip {
     }
 
     update_sprite() {
-        if (!this.dead && this.is_grounded) {
-            this.gotoAndPlay("idle");
+        if (this.dead) {
+            this.gotoAndPlay("death");
         } else {
-            this.gotoAndPlay("jump");
-        }
+            if (!this.dead && this.is_grounded) {
+                if (Math.abs(this.horizontal_speed) < 1e-5) {
+                    if (this.crouching) {
+                        this.gotoAndPlay("crouching_idle");
+                    } else {
+                        this.gotoAndPlay("idle");
+                    }
+                } else {
+                    if (this.crouching) {
+                        this.gotoAndPlay("crouching_run");
+                    } else {
+                        this.gotoAndPlay("run");
+                    }
+                }
+            } else {
+                if (this.is_sliding) {
+                    this.gotoAndPlay("climb");
+                } else {
+                    this.gotoAndPlay("jump");
+                }
+            }
 
-        if (this.face === "left") {
-            this.scale.x = -1;
-            this.anchor.set(0.75, 0.38);
-        } else {
-            this.scale.x = 1;
-            this.anchor.set(0.25, 0.38);
+            if (this.face === "left") {
+                this.scale.x = -1;
+                this.anchor.set(0.75, 0.38);
+            } else {
+                this.scale.x = 1;
+                this.anchor.set(0.25, 0.38);
+            }
         }
     }
 
@@ -173,6 +208,10 @@ class Player extends MovieClip {
             this.post_jump_slowdown_duration -= elapsed;
         }
 
+
+        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("Down");
+        this.crouching = !!(this.is_grounded && down_pressed);
+
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
         }
@@ -181,17 +220,22 @@ class Player extends MovieClip {
     murder() {
         if (!this.dead) {
             this.dead = true;
-            setTimeout(game.restart, 1000);
 
             if (this.face === "left") {
-                this.horizontal_speed = -100;
+                this.horizontal_speed = 100;
                 this.vertical_speed = -300;
             } else {
-                this.horizontal_speed = 100;
+                this.horizontal_speed = -100;
                 this.vertical_speed = -300;
             }
 
-            //game.speed_factor = 0.5;
+            game.containers.level.addChild(this);
+
+            const player_x = game.player.x + game.containers.level.x + game.player.bounds.width / 2;
+            const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
+            const max_x = Math.max(player_x, game.render.render_width - player_x);
+            const max_y = Math.max(player_y, game.render.render_height - player_y);
+            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
         }
     }
 }

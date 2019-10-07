@@ -9,26 +9,30 @@ class MovieClip extends PIXI.AnimatedSprite {
     }
 
     gotoAndPlay(frameOrAnimation) {
-        if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
-            super.textures = this.descriptors[frameOrAnimation].frames;
-            super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
-            super.loop = !(this.descriptors[frameOrAnimation].loop === false);
-            this.animation = frameOrAnimation;
-            super.gotoAndPlay(0);
-        } else {
-            super.gotoAndPlay(frameOrAnimation);
+        if (this.animation !== frameOrAnimation) {
+            if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
+                super.textures = this.descriptors[frameOrAnimation].frames;
+                super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
+                super.loop = !(this.descriptors[frameOrAnimation].loop === false);
+                this.animation = frameOrAnimation;
+                super.gotoAndPlay(0);
+            } else {
+                super.gotoAndPlay(frameOrAnimation);
+            }
         }
     }
 
     gotoAndStop(frameOrAnimation) {
-        if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
-            super.textures = this.descriptors[frameOrAnimation].frames;
-            super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
-            super.loop = !(this.descriptors[frameOrAnimation].loop === false);
-            this.animation = frameOrAnimation;
-            super.gotoAndStop(0);
-        } else {
-            super.gotoAndStop(frameOrAnimation);
+        if (this.animation !== frameOrAnimation) {
+            if (this.descriptors && this.descriptors.hasOwnProperty(frameOrAnimation)) {
+                super.textures = this.descriptors[frameOrAnimation].frames;
+                super.animationSpeed = this.descriptors[frameOrAnimation].speed || 1;
+                super.loop = !(this.descriptors[frameOrAnimation].loop === false);
+                this.animation = frameOrAnimation;
+                super.gotoAndStop(0);
+            } else {
+                super.gotoAndStop(frameOrAnimation);
+            }
         }
     }
 }
