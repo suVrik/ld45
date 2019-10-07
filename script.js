@@ -25,7 +25,7 @@ class Altar extends PIXI.Container {
             if (force_next_level || (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2)) {
                 if (this.timeout == null) {
                     this.item.visible = true;
-                    this.timeout = 1;
+                    this.timeout = 0.75;
 
                     for (let i = 0; i < 5; i++) {
                         const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_coin_flash"]);
@@ -255,10 +255,10 @@ module.exports = {
         width: 16,
         height: 16,
         speed: 60,
-        projectile_speed: 120,
-        projectile_size: 8,
-        projectile_cooldown: 0.9,
-        attack_area_width: 50,
+        projectile_speed: 80,
+        projectile_size: 5,
+        projectile_cooldown: 1.1,
+        attack_area_width: 35,
         attack_area_height: 1000,
     },
     cloud: {
@@ -932,6 +932,7 @@ class Spitting extends MovieClip {
                     } else {
                         if (angle < 0 && !(Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
                             success = false;
+                            is_walking = false;
                         } else {
                             middle_x = (this_x + player_x) / 2;
                             middle_y = (this_y + player_y) / 2;
@@ -2488,12 +2489,14 @@ class Player extends MovieClip {
 
                     this.is_grounded_counter = 0;
                 } else {
-                    const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
-                    const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
-                    if (left_pressed || right_pressed) {
-                        this.is_grounded_counter++;
-                    } else {
-                        this.is_grounded_counter = 0;
+                    if (game.num_clicks >= 1) {
+                        const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
+                        const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
+                        if (left_pressed || right_pressed) {
+                            this.is_grounded_counter++;
+                        } else {
+                            this.is_grounded_counter = 0;
+                        }
                     }
                 }
             } else {
@@ -2531,8 +2534,10 @@ class Player extends MovieClip {
             this.hat.update_hat(elapsed);
         }
 
-        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
-        this.crouching = !!(this.is_grounded && down_pressed);
+        if (game.num_clicks >= 1) {
+            const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
+            this.crouching = !!(this.is_grounded && down_pressed);
+        }
 
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
@@ -2742,6 +2747,7 @@ const load_levels = function() {
         client.send();
     }
 
+    load_level("stage_3");
     load_level("main_menu_0");
     load_level("backstage_1");
     load_level("stage_1");

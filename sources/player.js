@@ -256,12 +256,14 @@ class Player extends MovieClip {
 
                     this.is_grounded_counter = 0;
                 } else {
-                    const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
-                    const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
-                    if (left_pressed || right_pressed) {
-                        this.is_grounded_counter++;
-                    } else {
-                        this.is_grounded_counter = 0;
+                    if (game.num_clicks >= 1) {
+                        const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
+                        const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
+                        if (left_pressed || right_pressed) {
+                            this.is_grounded_counter++;
+                        } else {
+                            this.is_grounded_counter = 0;
+                        }
                     }
                 }
             } else {
@@ -299,8 +301,10 @@ class Player extends MovieClip {
             this.hat.update_hat(elapsed);
         }
 
-        const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
-        this.crouching = !!(this.is_grounded && down_pressed);
+        if (game.num_clicks >= 1) {
+            const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
+            this.crouching = !!(this.is_grounded && down_pressed);
+        }
 
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);

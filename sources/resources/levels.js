@@ -108,6 +108,7 @@ const load_levels = function() {
         client.send();
     }
 
+    load_level("stage_3");
     load_level("main_menu_0");
     load_level("backstage_1");
     load_level("stage_1");

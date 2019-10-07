@@ -24,7 +24,7 @@ class Altar extends PIXI.Container {
             if (force_next_level || (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2)) {
                 if (this.timeout == null) {
                     this.item.visible = true;
-                    this.timeout = 1;
+                    this.timeout = 0.75;
 
                     for (let i = 0; i < 5; i++) {
                         const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_coin_flash"]);

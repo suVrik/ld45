@@ -86,6 +86,7 @@ class Spitting extends MovieClip {
                     } else {
                         if (angle < 0 && !(Math.abs(angle) < game.config.spitting.bezier_angle || Math.abs(angle) > Math.PI - game.config.spitting.bezier_angle)) {
                             success = false;
+                            is_walking = false;
                         } else {
                             middle_x = (this_x + player_x) / 2;
                             middle_y = (this_y + player_y) / 2;
