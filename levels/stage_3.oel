@@ -1403,7 +1403,7 @@
     <enemy_spiky id="5" x="480" y="448" script="">
       <node x="560" y="448" />
     </enemy_spiky>
-    <altar id="7" x="400" y="192" item2="2" next_level="level0" />
+    <altar id="7" x="400" y="192" item2="2" next_level="backstage_4" />
     <hazard_vines id="61" x="432" y="288" width="16" height="16" />
     <hazard_vines id="62" x="416" y="288" width="16" height="16" />
     <hazard_vines id="63" x="352" y="288" width="16" height="16" />

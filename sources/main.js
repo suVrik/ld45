@@ -49,9 +49,9 @@ window.game = {
     firework_timeout: 0,
     stats: {
         score: 0,
+        game_start: new Date(),
         level_start: null,
         total_score: 0,
-        total_time: 0,
         item1: true,
         item2: true,
         item3: true,
@@ -436,6 +436,8 @@ let construct_level = function(level_name) {
         });
         game.start_button.on("pointerdown", function(evt) {
             if (level_name === "main_menu_0") {
+                game.stats.game_start = new Date();
+                
                 const world_x = -game.containers.level.x + evt.data.global.x;
                 const world_y = -game.containers.level.y + evt.data.global.y;
                 do {
@@ -727,7 +729,6 @@ let main_loop = function() {
                     }
 
                     game.stats.total_score += game.stats.score;
-                    game.stats.total_time += total_elapsed;
                     game.current_level = game.next_level;
                 }
                 construct_level(game.current_level);
@@ -766,10 +767,11 @@ let main_loop = function() {
     }
 
     if (game.current_level === "main_menu_1") {
+        const very_total_elapsed = (current_time.getTime() - game.stats.game_start.getTime()) / 1000 - total_elapsed;
         game.containers.score.text = game.stats.total_score + " total";
         game.containers.score_shadow.text = game.containers.score.text;
-        const minutes = Math.floor(game.stats.total_time / 60);
-        const seconds = Math.floor(game.stats.total_time % 60);
+        const minutes = Math.floor(very_total_elapsed / 60);
+        const seconds = Math.floor(very_total_elapsed % 60);
         game.containers.time.text = (minutes < 10 ? "0" + minutes : minutes) + " : " + (seconds < 10 ? "0" + seconds : seconds) + " total";
         game.containers.time_shadow.text = game.containers.time.text;
     } else {

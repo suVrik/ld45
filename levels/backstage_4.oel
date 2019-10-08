@@ -2230,7 +2230,7 @@
     <block_falling id="62" x="480" y="432" width="16" height="16" />
     <block_falling id="63" x="464" y="432" width="16" height="16" />
     <player id="64" x="96" y="416" />
-    <exit id="65" x="576" y="112" next_level="" />
+    <exit id="65" x="576" y="112" next_level="stage_4" />
     <block_falling id="66" x="512" y="352" width="16" height="16" />
     <block_falling id="67" x="512" y="368" width="16" height="16" />
     <block_falling id="36" x="400" y="352" width="16" height="16" />
