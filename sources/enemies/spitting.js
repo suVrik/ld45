@@ -122,7 +122,7 @@ class Spitting extends MovieClip {
                 }
             }
 
-            if (Physics.aabb(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+            if (Physics.aabb(this.x - game.config.spitting.width / 2 - 6, this.y - game.config.spitting.height, game.config.spitting.width + 12, game.config.spitting.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 if (game.player.previous_y + game.player.bounds.height < this.y - game.config.spitting.height && game.player.y + game.player.bounds.height >= this.y - game.config.spitting.height) {
                     game.player.vertical_speed = -250;
 
@@ -147,8 +147,10 @@ class Spitting extends MovieClip {
                         // TODO: Ouch!
                     }
                 } else {
-                    if (!this.friendly) {
-                        game.player.murder();
+                    if (Physics.aabb(this.x - game.config.spitting.width / 2, this.y - game.config.spitting.height, game.config.spitting.width, game.config.spitting.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                        if (!this.friendly) {
+                            game.player.murder();
+                        }
                     }
                 }
             }

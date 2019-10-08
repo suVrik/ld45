@@ -1104,6 +1104,7 @@
     <exit id="1" x="192" y="112" next_level="stage_1" />
     <enemy_spitting id="2" x="80" y="304" friendly="True" script="sc_backstage_1" />
     <tutorial id="3" x="208" y="240" a="button_space_0" b="button_space_1" />
+    <animation id="4" x="176" y="272" animation_name="animations_32px_decor_computer" animation_speed="0.15" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="11" tx="0" ty="1" />

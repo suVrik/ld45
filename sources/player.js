@@ -202,7 +202,7 @@ class Player extends MovieClip {
         this.previous_x = this.x;
         this.previous_y = this.y;
 
-        if (game.num_clicks >= 1) {
+        if (game.num_clicks >= 1 && Math.abs(game.spawn_effect_radius) < 1e-5) {
             this.update_movement(elapsed);
             this.update_sliding(elapsed);
             this.update_jumping(elapsed);
@@ -301,7 +301,7 @@ class Player extends MovieClip {
             this.hat.update_hat(elapsed);
         }
 
-        if (game.num_clicks >= 1) {
+        if (game.num_clicks >= 1 && Math.abs(game.spawn_effect_radius) < 1e-5) {
             const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
             this.crouching = !!(this.is_grounded && down_pressed);
         }

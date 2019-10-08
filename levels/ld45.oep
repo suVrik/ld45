@@ -16,7 +16,7 @@
     <Width>16000</Width>
     <Height>16000</Height>
   </LevelMaximumSize>
-  <Filename>C:\Users\Oleg Klishin\Documents\LD45\project\levels\ld45.oep</Filename>
+  <Filename>C:\work\ld45\levels\ld45.oep</Filename>
   <AngleMode>Radians</AngleMode>
   <CameraEnabled>false</CameraEnabled>
   <CameraSize>
@@ -99,6 +99,24 @@
     </Tileset>
   </Tilesets>
   <EntityDefinitions>
+    <EntityDefinition Name="animation" Limit="-1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
+      <Size>
+        <Width>32</Width>
+        <Height>32</Height>
+      </Size>
+      <Origin>
+        <X>0</X>
+        <Y>0</Y>
+      </Origin>
+      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\animations_32px_decor_computer_0.png" Tiled="false">
+        <RectColor A="255" R="255" G="0" B="0" />
+      </ImageDefinition>
+      <ValueDefinitions>
+        <ValueDefinition xsi:type="StringValueDefinition" Name="animation_name" Default="animations_32px_decor_computer" MaxChars="-1" MultiLine="false" />
+        <ValueDefinition xsi:type="FloatValueDefinition" Name="animation_speed" Default="0.15" Min="0" Max="100" Round="0.01" />
+      </ValueDefinitions>
+      <NodesDefinition Enabled="false" Limit="-1" DrawMode="None" Ghost="false" />
+    </EntityDefinition>
     <EntityDefinition Name="player" Limit="1" ResizableX="false" ResizableY="false" Rotatable="false" RotateIncrement="15">
       <Size>
         <Width>32</Width>

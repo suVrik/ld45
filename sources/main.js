@@ -33,7 +33,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "backstage_4",
+    current_level: "backstage_1",
     next_level: null,
     exit: null,
     altar: null,
@@ -56,6 +56,20 @@ window.game = {
         item2: true,
         item3: true,
         item4: true,
+    },
+    order: {
+        Player: 91,
+        Flying: 90,
+        FlyingProjectile: 91,
+        Mouse: 90,
+        Spiky: 90,
+        Spitting: 90,
+        SplittingProjectile: 92,
+        Altar: 80,
+        BlockFalling: 80,
+        Coin: 85,
+        Tutorial: 50,
+        Hat: 91,
     },
     scripts: {
         sc_game_menu_0: function(entity, elapsed) {
@@ -370,6 +384,13 @@ let construct_level = function(level_name) {
         } else if (entity.type === "tutorial") {
             const tutorial = new Tutorial(entity.x, entity.y, entity.a, entity.b);
             game.containers.entities.addChild(tutorial);
+        } else if (entity.type === "animation") {
+            const animation = new PIXI.AnimatedSprite(game.resources.sprites[entity.animation_name]);
+            animation.x = entity.x;
+            animation.y = entity.y;
+            animation.animationSpeed = entity.animation_speed;
+            animation.play();
+            game.containers.entities.addChild(animation);
         }
     }
 
@@ -506,6 +527,19 @@ let construct_level = function(level_name) {
     game.containers.ui.addChild(game.containers.item2);
     game.containers.ui.addChild(game.containers.item3);
     game.containers.ui.addChild(game.containers.item4);
+
+    for (let i = 0; i < game.containers.entities.children.length; i++) {
+        if (game.containers.entities.children[i].constructor) {
+            if (game.order.hasOwnProperty(game.containers.entities.children[i].constructor.name)) {
+                game.containers.entities.children[i].zIndex = game.order[game.containers.entities.children[i].constructor.name];
+            } else {
+                game.containers.entities.children[i].zIndex = 0;
+            }
+        } else {
+            game.containers.entities.children[i].zIndex = 0;
+        }
+    }
+    game.containers.entities.sortChildren();
 };
 
 let initialize = function() {
@@ -517,6 +551,8 @@ let main_loop = function() {
 
     const current_time = new Date();
     const total_elapsed = (current_time.getTime() - game.stats.level_start.getTime()) / 1000;
+
+    game.firework_timeout -= elapsed;
 
     if (game.draw_hitboxes) {
         game.containers.hitboxes.clear();
@@ -591,7 +627,6 @@ let main_loop = function() {
     }
     game.containers.fireworks.clear();
     if (game.containers.fireworks_items.length > 0) {
-        game.firework_timeout -= elapsed;
         for (let i = 0; i < game.containers.fireworks_items.length; ) {
             game.containers.fireworks_items[i].x += game.containers.fireworks_items[i].velocity_x * elapsed;
             game.containers.fireworks_items[i].y += game.containers.fireworks_items[i].velocity_y * elapsed;

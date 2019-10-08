@@ -26,6 +26,7 @@ class Mouse extends MovieClip {
         this.is_attacking = 0;
         this.state_color = 0xFFFFFF;
         this.is_grounded_counter = 0;
+        this.attack_charge = 0;
 
         this.bounds = {
             width: game.config.mouse.width,
@@ -45,6 +46,9 @@ class Mouse extends MovieClip {
         let calm_walk = true;
 
         this.state_color = 0xFFFFFF;
+
+        const old_attack_charge = this.attack_charge;
+        this.attack_charge = 0;
 
         if (!this.friendly && !game.player.dead) {
             const player_y = game.player.y + game.player.bounds.height / 2;
@@ -106,12 +110,53 @@ class Mouse extends MovieClip {
                             }
                         } else {
                             if (this.is_attacking === 0 && player_x >= this.from - game.config.tile_size && player_x <= this.to + game.config.tile_size && player_y > this.y - game.config.mouse.attack_height) {
-                                if (player_x > this.x) {
-                                    this.is_attacking = 1;
+                                this.attack_charge = old_attack_charge;
+                                if (this.attack_charge >= 0.15) {
+                                    if (player_x > this.x) {
+                                        this.is_attacking = 1;
+                                    } else {
+                                        this.is_attacking = -1;
+                                    }
+                                    this.attack_charge = 0;
                                 } else {
-                                    this.is_attacking = -1;
+                                    this.attack_charge += elapsed;
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!game.player.dead) {
+            if (Physics.aabb(this.x - game.config.mouse.width / 2 - 6, this.y - game.config.mouse.height, game.config.mouse.width + 12, game.config.mouse.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                if (game.player.previous_y + game.player.bounds.height < this.y - game.config.mouse.height && game.player.y + game.player.bounds.height >= this.y - game.config.mouse.height) {
+                    game.player.vertical_speed = -250;
+
+                    if (!this.friendly) {
+                        game.mice.splice(game.mice.indexOf(this), 1);
+                        this.parent.removeChild(this);
+
+                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                        effect.x = this.x;
+                        effect.y = this.y - game.config.mouse.height / 2;
+                        effect.anchor.set(0.5, 0.5);
+                        effect.animationSpeed = 0.3;
+                        effect.loop = false;
+                        effect.play();
+                        effect.onComplete = function() {
+                            game.containers.effects.removeChild(effect);
+                        };
+                        game.containers.effects.addChild(effect);
+
+                        game.resources.sounds["Explosion4"].play();
+                    } else {
+                        // TODO: Ouch!
+                    }
+                } else {
+                    if (Physics.aabb(this.x - game.config.mouse.width / 2, this.y - game.config.mouse.height, game.config.mouse.width, game.config.mouse.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                        if (!this.friendly) {
+                            game.player.murder();
                         }
                     }
                 }
@@ -176,39 +221,6 @@ class Mouse extends MovieClip {
             this.is_grounded_counter = 0;
         } else {
             this.is_grounded_counter++;
-        }
-
-        if (!game.player.dead) {
-            if (Physics.aabb(this.x - game.config.mouse.width / 2, this.y - game.config.mouse.height, game.config.mouse.width, game.config.mouse.height, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
-                if (game.player.previous_y + game.player.bounds.height < this.y - game.config.mouse.height && game.player.y + game.player.bounds.height >= this.y - game.config.mouse.height) {
-                    game.player.vertical_speed = -250;
-
-                    if (!this.friendly) {
-                        game.mice.splice(game.mice.indexOf(this), 1);
-                        this.parent.removeChild(this);
-
-                        const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
-                        effect.x = this.x;
-                        effect.y = this.y - game.config.mouse.height / 2;
-                        effect.anchor.set(0.5, 0.5);
-                        effect.animationSpeed = 0.3;
-                        effect.loop = false;
-                        effect.play();
-                        effect.onComplete = function() {
-                            game.containers.effects.removeChild(effect);
-                        };
-                        game.containers.effects.addChild(effect);
-
-                        game.resources.sounds["Explosion4"].play();
-                    } else {
-                        // TODO: Ouch!
-                    }
-                } else {
-                    if (!this.friendly) {
-                        game.player.murder();
-                    }
-                }
-            }
         }
 
         if (game.draw_hitboxes) {

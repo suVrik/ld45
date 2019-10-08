@@ -45,7 +45,10 @@ class BlockFalling extends PIXI.Sprite {
                     };
                     game.containers.effects.addChild(effect);
 
-                    game.resources.sounds["Explosion4"].play();
+                    if (game.firework_timeout <= 0) {
+                        game.resources.sounds["Explosion4"].play();
+                        game.firework_timeout = 0.15;
+                    }
                 } else {
                     this.x = this.original_x + Math.round(Math.random() * 2 - 1);
                     this.y = this.original_y + Math.round(Math.random() * 2 - 1);
