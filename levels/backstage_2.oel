@@ -1200,6 +1200,16 @@
   <entities>
     <player id="0" x="80" y="64" />
     <exit id="1" x="64" y="160" next_level="stage_2" />
+    <animation id="2" x="192" y="32" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="3" x="192" y="32" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="4" x="240" y="32" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="5" x="160" y="144" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="6" x="144" y="336" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="7" x="112" y="336" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="8" x="304" y="96" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="9" x="304" y="192" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="10" x="304" y="288" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="11" x="208" y="144" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="1" tx="0" ty="2" />

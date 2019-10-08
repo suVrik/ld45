@@ -736,6 +736,7 @@
     <tile x="9" y="19" tx="1" ty="8" />
     <tile x="9" y="28" tx="7" ty="8" />
     <tile x="9" y="29" tx="1" ty="6" />
+    <tile x="10" y="8" tx="4" ty="14" />
     <tile x="10" y="9" tx="1" ty="6" />
     <tile x="10" y="10" tx="1" ty="7" />
     <tile x="10" y="11" tx="1" ty="8" />
@@ -744,6 +745,7 @@
     <tile x="10" y="19" tx="1" ty="8" />
     <tile x="10" y="28" tx="0" ty="6" />
     <tile x="10" y="29" tx="6" ty="7" />
+    <tile x="11" y="8" tx="5" ty="14" />
     <tile x="11" y="9" tx="2" ty="6" />
     <tile x="11" y="10" tx="5" ty="7" />
     <tile x="11" y="11" tx="1" ty="8" />
@@ -1106,7 +1108,7 @@
     <tile x="36" y="28" tx="0" ty="10" />
     <tile x="36" y="29" tx="1" ty="7" />
     <tile x="37" y="25" tx="1" ty="6" />
-    <tile x="37" y="26" tx="1" ty="7" />
+    <tile x="37" y="26" tx="2" ty="10" />
     <tile x="37" y="27" tx="1" ty="7" />
     <tile x="37" y="28" tx="1" ty="7" />
     <tile x="37" y="29" tx="1" ty="7" />
@@ -1130,13 +1132,14 @@
     <tile x="38" y="23" tx="4" ty="10" />
     <tile x="38" y="24" tx="0" ty="6" />
     <tile x="38" y="25" tx="6" ty="7" />
-    <tile x="38" y="26" tx="0" ty="10" />
-    <tile x="38" y="27" tx="1" ty="7" />
+    <tile x="38" y="26" tx="1" ty="7" />
+    <tile x="38" y="27" tx="0" ty="9" />
     <tile x="38" y="28" tx="1" ty="7" />
     <tile x="38" y="29" tx="1" ty="7" />
     <tile x="39" y="1" tx="6" ty="8" />
     <tile x="39" y="2" tx="0" ty="6" />
     <tile x="39" y="3" tx="0" ty="8" />
+    <tile x="39" y="8" tx="4" ty="14" />
     <tile x="39" y="9" tx="0" ty="6" />
     <tile x="39" y="10" tx="0" ty="7" />
     <tile x="39" y="11" tx="0" ty="7" />
@@ -1161,6 +1164,7 @@
     <tile x="40" y="1" tx="6" ty="8" />
     <tile x="40" y="2" tx="1" ty="6" />
     <tile x="40" y="3" tx="1" ty="8" />
+    <tile x="40" y="8" tx="5" ty="14" />
     <tile x="40" y="9" tx="1" ty="6" />
     <tile x="40" y="10" tx="1" ty="7" />
     <tile x="40" y="11" tx="1" ty="7" />
@@ -1352,8 +1356,19 @@
     <hazard_vines id="54" x="576" y="0" width="16" height="16" />
     <hazard_vines id="55" x="560" y="0" width="16" height="16" />
     <hazard_vines id="56" x="544" y="0" width="16" height="16" />
+    <animation id="57" x="288" y="112" animation_name="animations_32px_decor_windmill" animation_speed="0.15" />
   </entities>
-  <tiles_front tileset="tileset" exportMode="XMLCoords" />
+  <tiles_front tileset="tileset" exportMode="XMLCoords">
+    <tile x="5" y="8" tx="4" ty="13" />
+    <tile x="9" y="8" tx="4" ty="13" />
+    <tile x="10" y="27" tx="4" ty="13" />
+    <tile x="11" y="27" tx="4" ty="13" />
+    <tile x="12" y="27" tx="4" ty="13" />
+    <tile x="13" y="27" tx="4" ty="13" />
+    <tile x="35" y="24" tx="4" ty="13" />
+    <tile x="36" y="24" tx="4" ty="13" />
+    <tile x="37" y="24" tx="4" ty="13" />
+  </tiles_front>
   <hitboxes exportMode="Rectangles">
     <rect x="0" y="0" w="720" h="16" />
     <rect x="0" y="16" w="80" h="176" />

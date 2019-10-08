@@ -998,12 +998,21 @@
     <tile x="29" y="20" tx="0" ty="1" />
   </tiles_back>
   <entities>
-    <enemy_cloud id="0" x="368" y="304" script="scc_backstage_3">
-      <node x="112" y="304" />
+    <enemy_cloud id="0" x="112" y="304" script="scc_backstage_3">
+      <node x="368" y="304" />
     </enemy_cloud>
     <player id="1" x="64" y="64" />
     <exit id="2" x="288" y="160" next_level="stage_3" />
     <hazard_vines id="3" x="96" y="320" width="288" height="16" />
+    <animation id="4" x="288" y="256" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="5" x="208" y="256" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="6" x="128" y="256" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="7" x="400" y="16" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="8" x="272" y="48" animation_name="animations_32px_decor_computer" animation_speed="0.15" />
+    <animation id="9" x="256" y="48" animation_name="animations_32px_decor_computer" animation_speed="0.15" />
+    <animation id="10" x="256" y="160" animation_name="animations_32px_decor_computer" animation_speed="0.15" />
+    <animation id="11" x="80" y="128" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="12" x="128" y="128" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="7" tx="2" ty="1" />

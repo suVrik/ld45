@@ -147,10 +147,7 @@
     <tile x="28" y="14" tx="7" ty="7" />
   </tiles_very_back>
   <tiles_back tileset="tileset" exportMode="XMLCoords">
-    <tile x="0" y="0" tx="2" ty="6" />
-    <tile x="0" y="1" tx="2" ty="7" />
-    <tile x="0" y="2" tx="2" ty="7" />
-    <tile x="0" y="3" tx="2" ty="7" />
+    <tile x="0" y="3" tx="2" ty="6" />
     <tile x="0" y="4" tx="2" ty="7" />
     <tile x="0" y="5" tx="2" ty="7" />
     <tile x="0" y="6" tx="2" ty="7" />
@@ -162,37 +159,69 @@
     <tile x="0" y="12" tx="2" ty="7" />
     <tile x="0" y="13" tx="2" ty="7" />
     <tile x="0" y="14" tx="5" ty="7" />
+    <tile x="1" y="13" tx="5" ty="13" />
     <tile x="1" y="14" tx="1" ty="6" />
+    <tile x="2" y="11" tx="6" ty="11" />
+    <tile x="2" y="12" tx="6" ty="12" />
     <tile x="2" y="14" tx="1" ty="6" />
+    <tile x="3" y="11" tx="7" ty="11" />
+    <tile x="3" y="12" tx="7" ty="12" />
     <tile x="3" y="14" tx="1" ty="6" />
     <tile x="4" y="14" tx="1" ty="6" />
+    <tile x="5" y="12" tx="5" ty="11" />
     <tile x="5" y="14" tx="1" ty="6" />
     <tile x="6" y="14" tx="1" ty="6" />
+    <tile x="7" y="11" tx="5" ty="12" />
+    <tile x="7" y="12" tx="6" ty="13" />
+    <tile x="7" y="13" tx="6" ty="14" />
     <tile x="7" y="14" tx="1" ty="6" />
+    <tile x="8" y="12" tx="7" ty="13" />
+    <tile x="8" y="13" tx="7" ty="14" />
     <tile x="8" y="14" tx="1" ty="6" />
+    <tile x="9" y="12" tx="6" ty="11" />
+    <tile x="9" y="13" tx="6" ty="12" />
     <tile x="9" y="14" tx="1" ty="6" />
+    <tile x="10" y="12" tx="7" ty="11" />
+    <tile x="10" y="13" tx="7" ty="12" />
     <tile x="10" y="14" tx="1" ty="6" />
+    <tile x="11" y="11" tx="5" ty="12" />
     <tile x="11" y="14" tx="1" ty="6" />
     <tile x="12" y="14" tx="1" ty="6" />
+    <tile x="13" y="13" tx="5" ty="13" />
     <tile x="13" y="14" tx="1" ty="6" />
+    <tile x="14" y="11" tx="5" ty="11" />
+    <tile x="14" y="13" tx="4" ty="13" />
     <tile x="14" y="14" tx="1" ty="6" />
+    <tile x="15" y="13" tx="4" ty="13" />
     <tile x="15" y="14" tx="1" ty="6" />
+    <tile x="16" y="12" tx="5" ty="12" />
     <tile x="16" y="14" tx="1" ty="6" />
+    <tile x="17" y="11" tx="6" ty="11" />
+    <tile x="17" y="12" tx="6" ty="12" />
     <tile x="17" y="14" tx="1" ty="6" />
+    <tile x="18" y="11" tx="7" ty="11" />
+    <tile x="18" y="12" tx="7" ty="12" />
     <tile x="18" y="14" tx="1" ty="6" />
+    <tile x="19" y="12" tx="6" ty="13" />
+    <tile x="19" y="13" tx="6" ty="14" />
     <tile x="19" y="14" tx="1" ty="6" />
+    <tile x="20" y="12" tx="7" ty="13" />
+    <tile x="20" y="13" tx="7" ty="14" />
     <tile x="20" y="14" tx="1" ty="6" />
     <tile x="21" y="14" tx="1" ty="6" />
     <tile x="22" y="14" tx="1" ty="6" />
+    <tile x="23" y="11" tx="5" ty="12" />
     <tile x="23" y="14" tx="1" ty="6" />
+    <tile x="24" y="12" tx="6" ty="11" />
+    <tile x="24" y="13" tx="6" ty="12" />
     <tile x="24" y="14" tx="1" ty="6" />
+    <tile x="25" y="12" tx="7" ty="11" />
+    <tile x="25" y="13" tx="7" ty="12" />
     <tile x="25" y="14" tx="1" ty="6" />
     <tile x="26" y="14" tx="1" ty="6" />
+    <tile x="27" y="12" tx="5" ty="11" />
     <tile x="27" y="14" tx="1" ty="6" />
-    <tile x="28" y="0" tx="0" ty="6" />
-    <tile x="28" y="1" tx="0" ty="7" />
-    <tile x="28" y="2" tx="0" ty="7" />
-    <tile x="28" y="3" tx="0" ty="7" />
+    <tile x="28" y="3" tx="0" ty="6" />
     <tile x="28" y="4" tx="0" ty="7" />
     <tile x="28" y="5" tx="0" ty="7" />
     <tile x="28" y="6" tx="0" ty="7" />
@@ -207,12 +236,32 @@
   </tiles_back>
   <entities>
     <player id="0" x="240" y="208" />
+    <animation id="1" x="-9" y="16" animation_name="animations_32px_decor_windmill" animation_speed="0.15" />
+    <animation id="2" x="439" y="16" animation_name="animations_32px_decor_windmill" animation_speed="0.15" />
+    <animation id="3" x="391" y="192" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
+    <animation id="4" x="22" y="192" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
+    <animation id="5" x="187" y="192" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
   </entities>
-  <tiles_front tileset="tileset" exportMode="XMLCoords" />
+  <tiles_front tileset="tileset" exportMode="XMLCoords">
+    <tile x="3" y="13" tx="4" ty="13" />
+    <tile x="4" y="13" tx="4" ty="13" />
+    <tile x="5" y="13" tx="4" ty="13" />
+    <tile x="6" y="13" tx="4" ty="13" />
+    <tile x="9" y="13" tx="4" ty="13" />
+    <tile x="10" y="13" tx="4" ty="13" />
+    <tile x="11" y="13" tx="4" ty="13" />
+    <tile x="16" y="13" tx="4" ty="13" />
+    <tile x="17" y="13" tx="4" ty="13" />
+    <tile x="18" y="13" tx="4" ty="13" />
+    <tile x="22" y="13" tx="4" ty="13" />
+    <tile x="23" y="13" tx="4" ty="13" />
+    <tile x="26" y="13" tx="4" ty="13" />
+    <tile x="27" y="13" tx="4" ty="13" />
+  </tiles_front>
   <hitboxes exportMode="Rectangles">
-    <rect x="0" y="0" w="464" h="16" />
-    <rect x="0" y="16" w="16" h="224" />
+    <rect x="0" y="0" w="464" h="48" />
+    <rect x="0" y="48" w="16" h="192" />
     <rect x="16" y="224" w="448" h="16" />
-    <rect x="448" y="16" w="16" h="208" />
+    <rect x="448" y="48" w="16" h="176" />
   </hitboxes>
 </level>

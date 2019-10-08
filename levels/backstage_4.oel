@@ -2241,7 +2241,7 @@
     <block_falling id="41" x="752" y="144" width="16" height="208" />
     <block_falling id="42" x="688" y="144" width="16" height="208" />
     <enemy_cloud id="43" x="96" y="176" script="">
-      <node x="96" y="256" />
+      <node x="96" y="288" />
     </enemy_cloud>
     <block_falling id="44" x="736" y="432" width="16" height="16" />
     <block_falling id="45" x="720" y="432" width="16" height="16" />
@@ -2252,6 +2252,17 @@
     <block_falling id="50" x="624" y="432" width="16" height="16" />
     <block_falling id="51" x="688" y="368" width="16" height="16" />
     <block_falling id="52" x="688" y="352" width="16" height="16" />
+    <animation id="53" x="224" y="128" animation_name="animations_32px_decor_computer" animation_speed="0.15" />
+    <animation id="54" x="528" y="112" animation_name="animations_32px_decor_computer" animation_speed="0.15" />
+    <animation id="55" x="624" y="112" animation_name="animations_32px_decor_computer" animation_speed="0.15" />
+    <animation id="56" x="464" y="256" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="57" x="464" y="144" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="58" x="704" y="256" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="59" x="720" y="208" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="60" x="304" y="368" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="61" x="464" y="368" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <animation id="68" x="80" y="336" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <animation id="69" x="704" y="384" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords" />
   <hitboxes exportMode="Rectangles">
