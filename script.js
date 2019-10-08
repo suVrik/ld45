@@ -1366,7 +1366,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "main_menu_1",
+    current_level: "backstage_4",
     next_level: null,
     exit: null,
     altar: null,
@@ -2829,6 +2829,7 @@ const load_levels = function() {
     load_level("backstage_3");
     load_level("level0");
     load_level("main_menu_1");
+    load_level("backstage_4");
 };
 
 const levels = {

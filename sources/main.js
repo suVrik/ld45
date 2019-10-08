@@ -33,7 +33,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "main_menu_1",
+    current_level: "backstage_4",
     next_level: null,
     exit: null,
     altar: null,
