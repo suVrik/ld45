@@ -1388,11 +1388,11 @@
 },
 "tileset":
 {
-	"frame": {"x":802,"y":464,"w":128,"h":272},
+	"frame": {"x":802,"y":464,"w":128,"h":336},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":128,"h":272},
-	"sourceSize": {"w":128,"h":272},
+	"spriteSourceSize": {"x":0,"y":0,"w":128,"h":336},
+	"sourceSize": {"w":128,"h":336},
 	"anchor": {"x":0.5,"y":0.5}
 },
 "ui_coins":
@@ -1471,6 +1471,6 @@
 	"format": "RGBA8888",
 	"size": {"w":1024,"h":1024},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:5f2c4e18876e1cf480249d26c65fc4e1:ce213546e69c64cfe2c1e887f9ac2bd0:cbce6b53f0f49e0bf15173c25c41f876$"
+	"smartupdate": "$TexturePacker:SmartUpdate:c1a43d57967f6af2f54026e7ddb710da:10d1648199180f60858fdf18aa2c9e8a:cbce6b53f0f49e0bf15173c25c41f876$"
 }
 }

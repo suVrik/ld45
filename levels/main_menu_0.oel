@@ -157,13 +157,13 @@
     <tile x="30" y="14" tx="7" ty="7" />
     <tile x="31" y="10" tx="7" ty="6" />
     <tile x="31" y="11" tx="7" ty="7" />
-    <tile x="31" y="12" tx="0" ty="2" />
-    <tile x="31" y="13" tx="0" ty="3" />
+    <tile x="31" y="12" tx="7" ty="7" />
+    <tile x="31" y="13" tx="7" ty="7" />
     <tile x="31" y="14" tx="7" ty="7" />
     <tile x="32" y="10" tx="7" ty="6" />
     <tile x="32" y="11" tx="7" ty="7" />
-    <tile x="32" y="12" tx="1" ty="2" />
-    <tile x="32" y="13" tx="1" ty="3" />
+    <tile x="32" y="12" tx="7" ty="7" />
+    <tile x="32" y="13" tx="7" ty="7" />
     <tile x="32" y="14" tx="7" ty="7" />
     <tile x="33" y="10" tx="7" ty="6" />
     <tile x="33" y="11" tx="7" ty="7" />
