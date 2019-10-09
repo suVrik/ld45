@@ -1210,6 +1210,7 @@
     <animation id="9" x="304" y="192" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
     <animation id="10" x="304" y="288" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
     <animation id="11" x="208" y="144" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
+    <enemy_spiky id="12" x="328" y="416" script="sc_backstage_2" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="1" tx="0" ty="2" />

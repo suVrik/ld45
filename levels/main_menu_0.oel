@@ -299,8 +299,8 @@
     <player id="0" x="240" y="208" />
     <enemy_spitting id="1" x="480" y="224" friendly="True" script="sc_game_menu_0" />
     <exit id="2" x="496" y="192" next_level="backstage_1" />
-    <tutorial id="3" x="336" y="208" a="button_a" b="button_left" />
-    <tutorial id="4" x="368" y="208" a="button_d" b="button_right" />
+    <tutorial id="3" x="336" y="192" a="button_a" b="button_left" />
+    <tutorial id="4" x="368" y="192" a="button_d" b="button_right" />
     <animation id="5" x="32" y="192" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
     <animation id="6" x="256" y="192" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
     <animation id="7" x="544" y="192" animation_name="animations_32px_decor_flag" animation_speed="0.15" />

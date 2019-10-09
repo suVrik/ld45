@@ -30,6 +30,7 @@ const load_sounds = function() {
     load_sound("Pickup_Coin9", 1);
     load_sound("step", 8);
     load_sound("wall_grab", 3);
+    load_sound("cloud", 1);
 };
 
 const sounds = {

@@ -15,6 +15,8 @@ class Cloud extends MovieClip {
 
         this.script = script;
 
+        this.just_hit = false;
+
         this.nodes = nodes ? nodes.slice() : [];
         this.nodes.unshift({ x: x, y: y });
         this.current_node = 0;
@@ -54,7 +56,11 @@ class Cloud extends MovieClip {
             this.gotoAndPlay("jump");
             this.gotoAndPlay(0);
 
-            game.resources.sounds["Jump8"].play();
+            game.resources.sounds["cloud"].play();
+
+            this.just_hit = true;
+        } else {
+            this.just_hit = false;
         }
 
         const hit = Physics.move(this, delta_x, delta_y, -game.config.cloud.width / 2, -game.config.cloud.height / 2);

@@ -2263,6 +2263,9 @@
     <animation id="61" x="464" y="368" animation_name="animations_32px_decor_fan" animation_speed="0.15" />
     <animation id="68" x="80" y="336" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
     <animation id="69" x="704" y="384" animation_name="animations_32px_decor_screen" animation_speed="0.15" />
+    <enemy_mouse id="70" x="224" y="160" friendly="True" script="sc_backstage_4">
+      <node x="256" y="160" />
+    </enemy_mouse>
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords" />
   <hitboxes exportMode="Rectangles">

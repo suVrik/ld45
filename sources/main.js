@@ -33,7 +33,7 @@ window.game = {
     spitting_projectiles: [],
     draw_hitboxes: false,
     spawn_effect_radius: 1,
-    current_level: "backstage_1",
+    current_level: "main_menu_0",
     next_level: null,
     exit: null,
     altar: null,
@@ -186,6 +186,76 @@ window.game = {
                 }
             }
             return true;
+        },
+        sc_backstage_2: function(entity, elapsed) {
+            if (!entity.initialized) {
+                if (Physics.aabb(entity.x - 50, entity.y - 50, 100, 100, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                    entity.initialized = true;
+
+                    game.dialog = true;
+                    game.dialog_time = 0;
+
+                    game.dialog_text = "*crying*";
+                    game.dialog_text_duration = 2;
+                    game.dialog_text_timeout = 0;
+                    game.dialog_callback = function() {
+                        game.dialog_text = "He killed himself jumping on me!!!";
+                        game.dialog_text_duration = 2;
+                        game.dialog_text_timeout = 0;
+                        game.dialog_callback = function() {
+                            game.dialog_text = "WHY?????";
+                            game.dialog_text_duration = 2;
+                            game.dialog_text_timeout = 0;
+                            game.dialog_callback = function() {
+                                game.dialog = false;
+                            };
+                        };
+                    };
+                }
+            }
+        },
+        scc_backstage_3: function(entity, elapsed) {
+            if (entity.just_hit) {
+                if (!game.dialog) {
+                    game.dialog = true;
+                    game.dialog_time = 0;
+                }
+
+                const speaches = [ "Auch . . .", "Oi . . .", "Please!", "No!" ];
+                let text;
+                do {
+                    text = speaches[Math.round(Math.random() * (speaches.length - 1))];
+                } while (text === entity.last_speech);
+                entity.last_speech = text;
+                game.dialog_text = text;
+                game.dialog_text_duration = 0.5;
+                game.dialog_text_timeout = 0;
+                game.dialog_callback = function () {
+                    game.dialog = false;
+                };
+            }
+        },
+        sc_backstage_4: function(entity, elapsed) {
+            if (!entity.initialized) {
+                if (Physics.aabb(entity.x - 50, entity.y - 50, 100, 100, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
+                    entity.initialized = true;
+
+                    game.dialog = true;
+                    game.dialog_time = 0;
+
+                    game.dialog_text = "Everything great starts with nothing";
+                    game.dialog_text_duration = 3;
+                    game.dialog_text_timeout = 0;
+                    game.dialog_callback = function() {
+                        game.dialog_text = "Now go and make something!";
+                        game.dialog_text_duration = 2.5;
+                        game.dialog_text_timeout = 0;
+                        game.dialog_callback = function() {
+                            game.dialog = false;
+                        };
+                    };
+                }
+            }
         },
     }
 };
@@ -437,7 +507,7 @@ let construct_level = function(level_name) {
         game.start_button.on("pointerdown", function(evt) {
             if (level_name === "main_menu_0") {
                 game.stats.game_start = new Date();
-                
+
                 const world_x = -game.containers.level.x + evt.data.global.x;
                 const world_y = -game.containers.level.y + evt.data.global.y;
                 do {
@@ -767,6 +837,8 @@ let main_loop = function() {
     }
 
     if (game.current_level === "main_menu_1") {
+        game.containers.ui.visible = total_elapsed % 1.2 < 0.6;
+
         const very_total_elapsed = (current_time.getTime() - game.stats.game_start.getTime()) / 1000 - total_elapsed;
         game.containers.score.text = game.stats.total_score + " total";
         game.containers.score_shadow.text = game.containers.score.text;
