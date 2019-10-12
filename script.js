@@ -1763,7 +1763,7 @@ game.update_touchscreen_controls = function() {
             game.joystick.right = game.joystick.left = game.joystick.up = game.joystick.down = false;
         });
 
-        if (game.num_clicks === 0) {
+        if (!game.start_button || game.start_button.visible === true) {
             game.joystick_zone.style.display = "none";
             game.jump_button.style.display = "none";
         }
