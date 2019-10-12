@@ -307,7 +307,7 @@ class Player extends MovieClip {
         if (game.num_clicks >= 1 && Math.abs(game.spawn_effect_radius) < 1e-5) {
             const down_pressed = game.input.is_key_down("ArrowDown");
             if (down_pressed) {
-                if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+                if (game.render.touchscreen) {
                     this.crouch_timeout += elapsed;
                     if (this.crouch_timeout > 0.25) {
                         this.crouching = !!(this.is_grounded && down_pressed);

@@ -1683,7 +1683,7 @@ window.game = {
 };
 
 game.update_touchscreen_controls = function() {
-    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+    if (game.render.touchscreen) {
         const game_window = document.getElementById("game_window");
 
         const size = Math.min(game.render.physical_width, game.render.physical_height) / 4;
@@ -2005,10 +2005,11 @@ let construct_level = function(level_name) {
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
         if (level_name === "main_menu_0") {
             game.containers.ui.visible = false;
-            if (game.joystick_zone) {
-                game.joystick_zone.style.display = "none";
-                game.jump_button.style.display = "none";
-            }
+        }
+
+        if (game.joystick_zone) {
+            game.joystick_zone.style.display = "none";
+            game.jump_button.style.display = "none";
         }
 
         game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
@@ -2033,12 +2034,13 @@ let construct_level = function(level_name) {
             game.start_button.texture = game.resources.sprites["button_start"];
         });
         game.start_button.on("pointerdown", function(evt) {
+            if (game.joystick_zone) {
+                game.joystick_zone.style.display = "block";
+                game.jump_button.style.display = "block";
+            }
+
             if (level_name === "main_menu_0") {
                 game.containers.ui.visible = true;
-                if (game.joystick_zone) {
-                    game.joystick_zone.style.display = "block";
-                    game.jump_button.style.display = "block";
-                }
                 game.stats.level_start = game.stats.game_start = new Date();
 
                 const world_x = -game.containers.level.x + evt.data.global.x;
@@ -2071,8 +2073,10 @@ let construct_level = function(level_name) {
         });
     } else {
         game.num_clicks++;
-        game.joystick_zone.style.display = "block";
-        game.jump_button.style.display = "block";
+        if (game.joystick_zone) {
+            game.joystick_zone.style.display = "block";
+            game.jump_button.style.display = "block";
+        }
     }
 
     game.containers.score.text = "0";
@@ -2927,7 +2931,7 @@ class Player extends MovieClip {
         if (game.num_clicks >= 1 && Math.abs(game.spawn_effect_radius) < 1e-5) {
             const down_pressed = game.input.is_key_down("ArrowDown");
             if (down_pressed) {
-                if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+                if (game.render.touchscreen) {
                     this.crouch_timeout += elapsed;
                     if (this.crouch_timeout > 0.25) {
                         this.crouching = !!(this.is_grounded && down_pressed);
@@ -2991,7 +2995,7 @@ const update_physical_size = function() {
     render.physical_width = render.render_width;
     render.physical_height = render.render_height;
 
-    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+    if (game.render.touchscreen) {
         if (width / render.render_width > height / render.render_height) {
             render.physical_height = height;
             render.physical_width = render.render_width * render.physical_height / render.render_height;
@@ -3036,6 +3040,8 @@ const init_window = function() {
     render.application.view.onselectstart = () => false;
     render.application.view.oncontextmenu = event => event.preventDefault();
 
+    render.touchscreen = game.render.application.renderer.plugins.interaction.supportsTouchEvents;
+
     update_physical_size();
     window.onresize = update_physical_size;
 
@@ -3051,6 +3057,7 @@ const render = {
     scale: 1,
     application: null,
     stage: null,
+    touchscreen: false,
 };
 
 module.exports = render;

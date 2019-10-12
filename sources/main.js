@@ -266,7 +266,7 @@ window.game = {
 };
 
 game.update_touchscreen_controls = function() {
-    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+    if (game.render.touchscreen) {
         const game_window = document.getElementById("game_window");
 
         const size = Math.min(game.render.physical_width, game.render.physical_height) / 4;
@@ -588,10 +588,11 @@ let construct_level = function(level_name) {
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
         if (level_name === "main_menu_0") {
             game.containers.ui.visible = false;
-            if (game.joystick_zone) {
-                game.joystick_zone.style.display = "none";
-                game.jump_button.style.display = "none";
-            }
+        }
+
+        if (game.joystick_zone) {
+            game.joystick_zone.style.display = "none";
+            game.jump_button.style.display = "none";
         }
 
         game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
@@ -616,12 +617,13 @@ let construct_level = function(level_name) {
             game.start_button.texture = game.resources.sprites["button_start"];
         });
         game.start_button.on("pointerdown", function(evt) {
+            if (game.joystick_zone) {
+                game.joystick_zone.style.display = "block";
+                game.jump_button.style.display = "block";
+            }
+
             if (level_name === "main_menu_0") {
                 game.containers.ui.visible = true;
-                if (game.joystick_zone) {
-                    game.joystick_zone.style.display = "block";
-                    game.jump_button.style.display = "block";
-                }
                 game.stats.level_start = game.stats.game_start = new Date();
 
                 const world_x = -game.containers.level.x + evt.data.global.x;
@@ -654,8 +656,10 @@ let construct_level = function(level_name) {
         });
     } else {
         game.num_clicks++;
-        game.joystick_zone.style.display = "block";
-        game.jump_button.style.display = "block";
+        if (game.joystick_zone) {
+            game.joystick_zone.style.display = "block";
+            game.jump_button.style.display = "block";
+        }
     }
 
     game.containers.score.text = "0";

@@ -8,7 +8,7 @@ const update_physical_size = function() {
     render.physical_width = render.render_width;
     render.physical_height = render.render_height;
 
-    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+    if (game.render.touchscreen) {
         if (width / render.render_width > height / render.render_height) {
             render.physical_height = height;
             render.physical_width = render.render_width * render.physical_height / render.render_height;
@@ -53,6 +53,8 @@ const init_window = function() {
     render.application.view.onselectstart = () => false;
     render.application.view.oncontextmenu = event => event.preventDefault();
 
+    render.touchscreen = game.render.application.renderer.plugins.interaction.supportsTouchEvents;
+
     update_physical_size();
     window.onresize = update_physical_size;
 
@@ -68,6 +70,7 @@ const render = {
     scale: 1,
     application: null,
     stage: null,
+    touchscreen: false,
 };
 
 module.exports = render;
