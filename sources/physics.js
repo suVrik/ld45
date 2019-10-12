@@ -1,3 +1,5 @@
+"use strict";
+
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
 };

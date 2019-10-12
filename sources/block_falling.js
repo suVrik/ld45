@@ -1,3 +1,5 @@
+"use strict";
+
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 
@@ -41,7 +43,7 @@ class BlockFalling extends PIXI.Sprite {
                     effect.loop = false;
                     effect.play();
                     effect.onComplete = function() {
-                        game.containers.effects.removeChild(effect);
+                        effect.destroy();
                     };
                     game.containers.effects.addChild(effect);
 
@@ -71,7 +73,7 @@ class BlockFalling extends PIXI.Sprite {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function() {
-                            game.containers.front_effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.front_effects.addChild(effect);
                     }

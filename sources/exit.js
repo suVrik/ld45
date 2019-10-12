@@ -1,3 +1,5 @@
+"use strict";
+
 class Exit {
     constructor(x, y, next_level) {
         this.x = x;

@@ -1,5 +1,10 @@
 <level width="752" height="480">
   <tiles_very_back tileset="tileset" exportMode="XMLCoords">
+    <tile x="0" y="0" tx="6" ty="9" />
+    <tile x="0" y="1" tx="6" ty="9" />
+    <tile x="0" y="2" tx="6" ty="9" />
+    <tile x="0" y="3" tx="6" ty="9" />
+    <tile x="0" y="4" tx="6" ty="9" />
     <tile x="0" y="22" tx="7" ty="7" />
     <tile x="0" y="23" tx="7" ty="7" />
     <tile x="0" y="24" tx="7" ty="7" />
@@ -521,7 +526,16 @@
     <tile x="44" y="27" tx="7" ty="7" />
     <tile x="44" y="28" tx="7" ty="7" />
     <tile x="44" y="29" tx="7" ty="7" />
-    <tile x="45" y="9" tx="7" ty="6" />
+    <tile x="45" y="0" tx="6" ty="9" />
+    <tile x="45" y="1" tx="6" ty="9" />
+    <tile x="45" y="2" tx="6" ty="9" />
+    <tile x="45" y="3" tx="6" ty="9" />
+    <tile x="45" y="4" tx="6" ty="9" />
+    <tile x="45" y="5" tx="6" ty="9" />
+    <tile x="45" y="6" tx="6" ty="9" />
+    <tile x="45" y="7" tx="6" ty="9" />
+    <tile x="45" y="8" tx="6" ty="9" />
+    <tile x="45" y="9" tx="6" ty="9" />
     <tile x="45" y="10" tx="7" ty="7" />
     <tile x="45" y="11" tx="7" ty="7" />
     <tile x="45" y="12" tx="7" ty="7" />
@@ -692,7 +706,7 @@
     <tile x="10" y="28" tx="6" ty="8" />
     <tile x="10" y="29" tx="1" ty="6" />
     <tile x="11" y="8" tx="6" ty="8" />
-    <tile x="11" y="9" tx="1" ty="7" />
+    <tile x="11" y="9" tx="1" ty="6" />
     <tile x="11" y="10" tx="1" ty="8" />
     <tile x="11" y="19" tx="6" ty="8" />
     <tile x="11" y="20" tx="1" ty="6" />
@@ -701,7 +715,7 @@
     <tile x="11" y="28" tx="6" ty="8" />
     <tile x="11" y="29" tx="1" ty="6" />
     <tile x="12" y="8" tx="6" ty="8" />
-    <tile x="12" y="9" tx="1" ty="7" />
+    <tile x="12" y="9" tx="1" ty="6" />
     <tile x="12" y="10" tx="1" ty="8" />
     <tile x="12" y="19" tx="6" ty="8" />
     <tile x="12" y="20" tx="1" ty="6" />
@@ -710,7 +724,7 @@
     <tile x="12" y="28" tx="0" ty="6" />
     <tile x="12" y="29" tx="6" ty="7" />
     <tile x="13" y="8" tx="6" ty="8" />
-    <tile x="13" y="9" tx="1" ty="7" />
+    <tile x="13" y="9" tx="1" ty="6" />
     <tile x="13" y="10" tx="1" ty="8" />
     <tile x="13" y="19" tx="6" ty="8" />
     <tile x="13" y="20" tx="1" ty="6" />
@@ -819,7 +833,7 @@
     <tile x="23" y="28" tx="6" ty="8" />
     <tile x="23" y="29" tx="1" ty="6" />
     <tile x="24" y="8" tx="6" ty="8" />
-    <tile x="24" y="9" tx="1" ty="7" />
+    <tile x="24" y="9" tx="1" ty="6" />
     <tile x="24" y="10" tx="1" ty="8" />
     <tile x="24" y="17" tx="6" ty="8" />
     <tile x="24" y="18" tx="1" ty="6" />
@@ -828,7 +842,7 @@
     <tile x="24" y="28" tx="6" ty="8" />
     <tile x="24" y="29" tx="1" ty="6" />
     <tile x="25" y="8" tx="6" ty="8" />
-    <tile x="25" y="9" tx="1" ty="7" />
+    <tile x="25" y="9" tx="1" ty="6" />
     <tile x="25" y="10" tx="1" ty="8" />
     <tile x="25" y="17" tx="6" ty="8" />
     <tile x="25" y="18" tx="1" ty="6" />
@@ -837,7 +851,7 @@
     <tile x="25" y="28" tx="0" ty="6" />
     <tile x="25" y="29" tx="6" ty="7" />
     <tile x="26" y="8" tx="6" ty="8" />
-    <tile x="26" y="9" tx="1" ty="7" />
+    <tile x="26" y="9" tx="1" ty="6" />
     <tile x="26" y="10" tx="1" ty="8" />
     <tile x="26" y="16" tx="0" ty="6" />
     <tile x="26" y="17" tx="0" ty="7" />
@@ -1241,27 +1255,9 @@
     <coin id="75" x="288" y="256" />
     <coin id="76" x="336" y="240" />
     <coin id="77" x="384" y="240" />
-    <hazard_vines id="79" x="672" y="64" width="16" height="16" />
-    <hazard_vines id="80" x="688" y="64" width="16" height="16" />
-    <hazard_vines id="81" x="688" y="48" width="16" height="16" />
-    <hazard_vines id="82" x="672" y="48" width="16" height="16" />
-    <hazard_vines id="83" x="656" y="48" width="16" height="16" />
-    <hazard_vines id="84" x="656" y="32" width="16" height="16" />
-    <hazard_vines id="85" x="672" y="32" width="16" height="16" />
-    <hazard_vines id="86" x="688" y="32" width="16" height="16" />
-    <hazard_vines id="87" x="672" y="16" width="16" height="16" />
-    <hazard_vines id="88" x="656" y="16" width="16" height="16" />
-    <hazard_vines id="89" x="640" y="16" width="16" height="16" />
-    <hazard_vines id="90" x="640" y="0" width="16" height="16" />
-    <hazard_vines id="91" x="656" y="0" width="16" height="16" />
-    <hazard_vines id="92" x="672" y="0" width="16" height="16" />
-    <hazard_vines id="93" x="640" y="32" width="16" height="16" />
-    <hazard_vines id="94" x="640" y="48" width="16" height="16" />
-    <hazard_vines id="95" x="624" y="48" width="16" height="16" />
-    <hazard_vines id="96" x="624" y="32" width="16" height="16" />
-    <hazard_vines id="97" x="608" y="32" width="16" height="16" />
-    <hazard_vines id="98" x="624" y="16" width="16" height="16" />
-    <hazard_vines id="99" x="608" y="16" width="16" height="16" />
+    <hazard_vines id="79" x="672" y="64" width="32" height="16" />
+    <hazard_vines id="95" x="624" y="48" width="80" height="16" />
+    <hazard_vines id="97" x="608" y="0" width="96" height="48" />
     <animation id="78" x="528" y="96" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
     <animation id="100" x="288" y="96" animation_name="animations_32px_decor_windmill" animation_speed="0.15" />
   </entities>

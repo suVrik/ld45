@@ -1,3 +1,5 @@
+"use strict";
+
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();

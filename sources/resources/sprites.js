@@ -1,3 +1,5 @@
+"use strict";
+
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;

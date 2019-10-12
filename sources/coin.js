@@ -1,3 +1,5 @@
+"use strict";
+
 const Physics = require("./physics.js");
 
 class Coin extends PIXI.AnimatedSprite {
@@ -19,7 +21,6 @@ class Coin extends PIXI.AnimatedSprite {
         if (!game.player.dead) {
             if (Physics.aabb(this.x, this.y, game.config.coin.size, game.config.coin.size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 game.coins.splice(game.coins.indexOf(this), 1);
-                this.parent.removeChild(this);
 
                 game.stats.score++;
 
@@ -30,11 +31,14 @@ class Coin extends PIXI.AnimatedSprite {
                 effect.loop = false;
                 effect.play();
                 effect.onComplete = function () {
-                    game.containers.effects.removeChild(effect);
+                    effect.destroy();
                 };
                 game.containers.effects.addChild(effect);
 
                 game.resources.sounds["Pickup_Coin9"].play();
+
+                this.destroy();
+                return;
             }
         }
 

@@ -1,3 +1,5 @@
+"use strict";
+
 class Tutorial extends PIXI.AnimatedSprite {
     constructor(x, y, frame_a, frame_b) {
         super([ game.resources.sprites[frame_a], game.resources.sprites[frame_b] ]);

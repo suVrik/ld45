@@ -1,3 +1,5 @@
+"use strict";
+
 const load_sounds = function() {
     function load_sound(name, volume = 1.0, extension = "wav", loop = false) {
         sounds.total_count++;
@@ -31,6 +33,8 @@ const load_sounds = function() {
     load_sound("step", 8);
     load_sound("wall_grab", 3);
     load_sound("cloud", 1);
+
+    Howler.volume(0.1);
 };
 
 const sounds = {

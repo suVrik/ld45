@@ -1,3 +1,5 @@
+"use strict";
+
 const Physics = require("../physics.js");
 
 class SpittingProjectile extends PIXI.AnimatedSprite {
@@ -34,7 +36,7 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
                 this.y += elapsed * game.config.spitting.projectile_speed * (this.ty - last_y) / distance;
             } else {
                 game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
-                this.parent.removeChild(this);
+                this.destroy();
                 return;
             }
         }
@@ -50,7 +52,6 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
 
         if (Physics.overlap(game.player, this.x - game.config.spitting.projectile_size / 2, this.y - game.config.spitting.projectile_size / 2, game.config.spitting.projectile_size, game.config.spitting.projectile_size)) {
             game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
-            this.parent.removeChild(this);
 
             const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_spit"]);
             effect.x = this.x;
@@ -60,9 +61,12 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
             effect.loop = false;
             effect.play();
             effect.onComplete = function () {
-                game.containers.front_effects.removeChild(effect);
+                effect.destroy();
             };
             game.containers.front_effects.addChild(effect);
+
+            this.destroy();
+            return;
         }
 
         if (game.draw_hitboxes) {

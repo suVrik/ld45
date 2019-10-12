@@ -1,3 +1,5 @@
+"use strict";
+
 const Physics = require("./physics.js");
 
 class HazardVines {

@@ -1,3 +1,5 @@
+"use strict";
+
 class Hat extends PIXI.AnimatedSprite {
     constructor(x, y, velocity_x, velocity_y) {
         super(game.resources.sprites["animations_32px_player_death_hat"]);

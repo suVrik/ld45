@@ -1,3 +1,5 @@
+"use strict";
+
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const SpittingProjectile = require("./spitting_projectile.js");
@@ -128,7 +130,6 @@ class Spitting extends MovieClip {
 
                     if (!this.friendly) {
                         game.spittings.splice(game.spittings.indexOf(this), 1);
-                        this.parent.removeChild(this);
 
                         const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
                         effect.x = this.x;
@@ -138,11 +139,14 @@ class Spitting extends MovieClip {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.effects.addChild(effect);
 
                         game.resources.sounds["Explosion4"].play();
+
+                        this.destroy();
+                        return;
                     } else {
                         // TODO: Ouch!
                     }

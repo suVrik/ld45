@@ -1,4 +1,6 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+"use strict";
+
 class Altar extends PIXI.Container {
     constructor(x, y, next_level, item) {
         super();
@@ -35,7 +37,7 @@ class Altar extends PIXI.Container {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.front_effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.front_effects.addChild(effect);
                     }
@@ -57,6 +59,8 @@ class Altar extends PIXI.Container {
 module.exports = Altar;
 
 },{}],2:[function(require,module,exports){
+"use strict";
+
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 
@@ -100,7 +104,7 @@ class BlockFalling extends PIXI.Sprite {
                     effect.loop = false;
                     effect.play();
                     effect.onComplete = function() {
-                        game.containers.effects.removeChild(effect);
+                        effect.destroy();
                     };
                     game.containers.effects.addChild(effect);
 
@@ -130,7 +134,7 @@ class BlockFalling extends PIXI.Sprite {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function() {
-                            game.containers.front_effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.front_effects.addChild(effect);
                     }
@@ -145,6 +149,8 @@ class BlockFalling extends PIXI.Sprite {
 module.exports = BlockFalling;
 
 },{"./movie_clip.js":18,"./physics.js":19}],3:[function(require,module,exports){
+"use strict";
+
 class Camera {
     constructor() {
         this.offset = 0;
@@ -174,6 +180,8 @@ class Camera {
 module.exports = Camera;
 
 },{}],4:[function(require,module,exports){
+"use strict";
+
 const Physics = require("./physics.js");
 
 class Coin extends PIXI.AnimatedSprite {
@@ -195,7 +203,6 @@ class Coin extends PIXI.AnimatedSprite {
         if (!game.player.dead) {
             if (Physics.aabb(this.x, this.y, game.config.coin.size, game.config.coin.size, game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height)) {
                 game.coins.splice(game.coins.indexOf(this), 1);
-                this.parent.removeChild(this);
 
                 game.stats.score++;
 
@@ -206,11 +213,14 @@ class Coin extends PIXI.AnimatedSprite {
                 effect.loop = false;
                 effect.play();
                 effect.onComplete = function () {
-                    game.containers.effects.removeChild(effect);
+                    effect.destroy();
                 };
                 game.containers.effects.addChild(effect);
 
                 game.resources.sounds["Pickup_Coin9"].play();
+
+                this.destroy();
+                return;
             }
         }
 
@@ -223,6 +233,8 @@ class Coin extends PIXI.AnimatedSprite {
 module.exports = Coin;
 
 },{"./physics.js":19}],5:[function(require,module,exports){
+"use strict";
+
 module.exports = {
     tile_size: 16,
     level: {
@@ -303,6 +315,8 @@ module.exports = {
 };
 
 },{}],6:[function(require,module,exports){
+"use strict";
+
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -388,6 +402,8 @@ class Cloud extends MovieClip {
 module.exports = Cloud;
 
 },{"../movie_clip.js":18,"../physics.js":19}],7:[function(require,module,exports){
+"use strict";
+
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const FlyingProjectile = require("./flying_projectile.js");
@@ -442,7 +458,6 @@ class Flying extends MovieClip {
 
                 if (!this.friendly) {
                     game.flyings.splice(game.flyings.indexOf(this), 1);
-                    this.parent.removeChild(this);
 
                     const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
                     effect.x = this.x;
@@ -452,11 +467,14 @@ class Flying extends MovieClip {
                     effect.loop = false;
                     effect.play();
                     effect.onComplete = function () {
-                        game.containers.effects.removeChild(effect);
+                        effect.destroy();
                     };
                     game.containers.effects.addChild(effect);
 
                     game.resources.sounds["Explosion4"].play();
+
+                    this.destroy();
+                    return;
                 } else {
                     // TODO: Ouch!
                 }
@@ -504,6 +522,8 @@ class Flying extends MovieClip {
 module.exports = Flying;
 
 },{"../movie_clip.js":18,"../physics.js":19,"./flying_projectile.js":8}],8:[function(require,module,exports){
+"use strict";
+
 const Physics = require("../physics.js");
 
 class FlyingProjectile extends PIXI.Sprite {
@@ -530,7 +550,6 @@ class FlyingProjectile extends PIXI.Sprite {
 
         if (Physics.overlap(game.player, this.x - game.config.flying.projectile_size / 2, this.y - game.config.flying.projectile_size / 2, game.config.flying.projectile_size, game.config.flying.projectile_size)) {
             game.flying_projectiles.splice(game.flying_projectiles.indexOf(this), 1);
-            this.parent.removeChild(this);
 
             const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_flying_drop"]);
             effect.x = this.x;
@@ -540,9 +559,12 @@ class FlyingProjectile extends PIXI.Sprite {
             effect.loop = false;
             effect.play();
             effect.onComplete = function () {
-                game.containers.front_effects.removeChild(effect);
+                effect.destroy();
             };
             game.containers.front_effects.addChild(effect);
+
+            this.destroy();
+            return;
         }
 
         if (game.draw_hitboxes) {
@@ -554,6 +576,8 @@ class FlyingProjectile extends PIXI.Sprite {
 module.exports = FlyingProjectile;
 
 },{"../physics.js":19}],9:[function(require,module,exports){
+"use strict";
+
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -691,7 +715,6 @@ class Mouse extends MovieClip {
 
                     if (!this.friendly) {
                         game.mice.splice(game.mice.indexOf(this), 1);
-                        this.parent.removeChild(this);
 
                         const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
                         effect.x = this.x;
@@ -701,11 +724,14 @@ class Mouse extends MovieClip {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function() {
-                            game.containers.effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.effects.addChild(effect);
 
                         game.resources.sounds["Explosion4"].play();
+
+                        this.destroy();
+                        return;
                     } else {
                         // TODO: Ouch!
                     }
@@ -770,7 +796,7 @@ class Mouse extends MovieClip {
             effect.loop = false;
             effect.play();
             effect.onComplete = function () {
-                game.containers.effects.removeChild(effect);
+                effect.destroy();
             };
             game.containers.effects.addChild(effect);
 
@@ -808,6 +834,8 @@ class Mouse extends MovieClip {
 module.exports = Mouse;
 
 },{"../movie_clip.js":18,"../physics.js":19}],10:[function(require,module,exports){
+"use strict";
+
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
@@ -865,6 +893,8 @@ class Spiky extends MovieClip {
 module.exports = Spiky;
 
 },{"../movie_clip.js":18,"../physics.js":19}],11:[function(require,module,exports){
+"use strict";
+
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 const SpittingProjectile = require("./spitting_projectile.js");
@@ -995,7 +1025,6 @@ class Spitting extends MovieClip {
 
                     if (!this.friendly) {
                         game.spittings.splice(game.spittings.indexOf(this), 1);
-                        this.parent.removeChild(this);
 
                         const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
                         effect.x = this.x;
@@ -1005,11 +1034,14 @@ class Spitting extends MovieClip {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.effects.addChild(effect);
 
                         game.resources.sounds["Explosion4"].play();
+
+                        this.destroy();
+                        return;
                     } else {
                         // TODO: Ouch!
                     }
@@ -1127,6 +1159,8 @@ class Spitting extends MovieClip {
 module.exports = Spitting;
 
 },{"../movie_clip.js":18,"../physics.js":19,"./spitting_projectile.js":12}],12:[function(require,module,exports){
+"use strict";
+
 const Physics = require("../physics.js");
 
 class SpittingProjectile extends PIXI.AnimatedSprite {
@@ -1163,7 +1197,7 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
                 this.y += elapsed * game.config.spitting.projectile_speed * (this.ty - last_y) / distance;
             } else {
                 game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
-                this.parent.removeChild(this);
+                this.destroy();
                 return;
             }
         }
@@ -1179,7 +1213,6 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
 
         if (Physics.overlap(game.player, this.x - game.config.spitting.projectile_size / 2, this.y - game.config.spitting.projectile_size / 2, game.config.spitting.projectile_size, game.config.spitting.projectile_size)) {
             game.spitting_projectiles.splice(game.spitting_projectiles.indexOf(this), 1);
-            this.parent.removeChild(this);
 
             const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_spit"]);
             effect.x = this.x;
@@ -1189,9 +1222,12 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
             effect.loop = false;
             effect.play();
             effect.onComplete = function () {
-                game.containers.front_effects.removeChild(effect);
+                effect.destroy();
             };
             game.containers.front_effects.addChild(effect);
+
+            this.destroy();
+            return;
         }
 
         if (game.draw_hitboxes) {
@@ -1203,6 +1239,8 @@ class SpittingProjectile extends PIXI.AnimatedSprite {
 module.exports = SpittingProjectile;
 
 },{"../physics.js":19}],13:[function(require,module,exports){
+"use strict";
+
 class Exit {
     constructor(x, y, next_level) {
         this.x = x;
@@ -1227,6 +1265,8 @@ class Exit {
 module.exports = Exit;
 
 },{}],14:[function(require,module,exports){
+"use strict";
+
 class Hat extends PIXI.AnimatedSprite {
     constructor(x, y, velocity_x, velocity_y) {
         super(game.resources.sprites["animations_32px_player_death_hat"]);
@@ -1261,6 +1301,8 @@ class Hat extends PIXI.AnimatedSprite {
 module.exports = Hat;
 
 },{}],15:[function(require,module,exports){
+"use strict";
+
 const Physics = require("./physics.js");
 
 class HazardVines {
@@ -1285,8 +1327,10 @@ class HazardVines {
 module.exports = HazardVines;
 
 },{"./physics.js":19}],16:[function(require,module,exports){
+"use strict";
+
 const init_input = function() {
-    document.body.onkeydown = event => input.keys[event.code] = true;
+    document.body.onkeydown = event => {input.keys[event.code] = true; return event.code !== "ArrowDown" && event.code !== "Space";};
     document.body.onkeyup = event => input.keys[event.code] = false;
     document.body.onmousedown = event => input.mouse[event.button] = true;
     document.body.onmouseup = event => input.mouse[event.button] = false;
@@ -1354,6 +1398,8 @@ const input = {
 module.exports = input;
 
 },{}],17:[function(require,module,exports){
+"use strict";
+
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
@@ -1478,8 +1524,8 @@ window.game = {
                         entity.state = 5;
                     }
                 } else if (entity.state === 5) {
-                    entity.parent.removeChild(entity);
                     entity.state = 6;
+                    entity.visible = false;
                 }
                 return true;
             }
@@ -1577,14 +1623,13 @@ window.game = {
                     game.dialog_time = 0;
                 }
 
-                const speaches = [ "Auch . . .", "Oi . . .", "Please!", "No!" ];
-                let text;
-                do {
-                    text = speaches[Math.round(Math.random() * (speaches.length - 1))];
-                } while (text === entity.last_speech);
-                entity.last_speech = text;
-                game.dialog_text = text;
-                game.dialog_text_duration = 0.5;
+                const speaches = [ "Auch!", "Oi!", "Please!", "Stop!", "No!", "Why?" ];
+                if (entity.last_speech === undefined) {
+                    entity.last_speech = speaches.length - 1;
+                }
+                entity.last_speech = (entity.last_speech + 1) % speaches.length;
+                game.dialog_text = speaches[entity.last_speech];
+                game.dialog_text_duration = 0.7;
                 game.dialog_text_timeout = 0;
                 game.dialog_callback = function () {
                     game.dialog = false;
@@ -1640,6 +1685,19 @@ let construct_level = function(level_name) {
 
     game.stats.level_start = new Date();
 
+    const destroy_recursive = function(object) {
+        if (object instanceof PIXI.Container) {
+            while (object.children.length > 0) {
+                destroy_recursive(object.children[0]);
+            }
+        }
+        object.destroy();
+    };
+
+    while (game.render.stage.children.length > 0) {
+        destroy_recursive(game.render.stage.children[0]);
+    }
+
     function draw_tiles_layer(layer_name) {
         for (let i = 0; i < game.level[layer_name].length; i++) {
             const tile_descriptor = game.level[layer_name][i];
@@ -1661,10 +1719,6 @@ let construct_level = function(level_name) {
             tile.y = tile_descriptor.y * game.config.tile_size;
             game.containers[layer_name].addChild(tile);
         }
-    }
-
-    if (game.containers && game.containers.level) {
-        game.containers.stage.removeChild(game.containers.level);
     }
 
     game.containers = {
@@ -1839,6 +1893,8 @@ let construct_level = function(level_name) {
 
     game.start_button = null;
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
+        game.containers.ui.visible = level_name !== "main_menu_0";
+
         game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
         game.ui_logo.anchor.set(0.5);
         const initial_x = -game.containers.level.x;
@@ -1862,7 +1918,8 @@ let construct_level = function(level_name) {
         });
         game.start_button.on("pointerdown", function(evt) {
             if (level_name === "main_menu_0") {
-                game.stats.game_start = new Date();
+                game.containers.ui.visible = true;
+                game.stats.level_start = game.stats.game_start = new Date();
 
                 const world_x = -game.containers.level.x + evt.data.global.x;
                 const world_y = -game.containers.level.y + evt.data.global.y;
@@ -2083,7 +2140,7 @@ let main_loop = function() {
                     effect.loop = false;
                     effect.play();
                     effect.onComplete = function () {
-                        game.containers.firework_effects.removeChild(effect);
+                        effect.destroy();
                     };
                     game.containers.firework_effects.addChild(effect);
 
@@ -2216,7 +2273,7 @@ let main_loop = function() {
 };
 
 window.onfocus = function() {
-    Howler.volume(1);
+    Howler.volume(0.1);
 };
 
 window.onblur = function() {
@@ -2224,6 +2281,8 @@ window.onblur = function() {
 };
 
 },{"./altar.js":1,"./block_falling.js":2,"./camera.js":3,"./coin.js":4,"./config.js":5,"./enemies/cloud.js":6,"./enemies/flying.js":7,"./enemies/mouse.js":9,"./enemies/spiky.js":10,"./enemies/spitting.js":11,"./exit.js":13,"./hazard_vines.js":15,"./input.js":16,"./physics.js":19,"./player.js":20,"./render.js":21,"./resources/resources.js":23,"./tutorial.js":26}],18:[function(require,module,exports){
+"use strict";
+
 class MovieClip extends PIXI.AnimatedSprite {
     constructor(descriptors, default_animation) {
         super(descriptors[default_animation].frames);
@@ -2266,6 +2325,8 @@ class MovieClip extends PIXI.AnimatedSprite {
 module.exports = MovieClip;
 
 },{}],19:[function(require,module,exports){
+"use strict";
+
 const aabb = function(ax, ay, aw, ah, bx, by, bw, bh) {
     return ax < bx + bw - 1e-8 && ax + aw - 1e-8 > bx && ay < by + bh - 1e-8 && ay + ah - 1e-8 > by;
 };
@@ -2435,6 +2496,8 @@ module.exports = {
 };
 
 },{}],20:[function(require,module,exports){
+"use strict";
+
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 const Hat = require("./hat.js");
@@ -2670,7 +2733,7 @@ class Player extends MovieClip {
             effect.loop = false;
             effect.play();
             effect.onComplete = function () {
-                game.containers.effects.removeChild(effect);
+                effect.destroy();
             };
             game.containers.effects.addChild(effect);
 
@@ -2685,7 +2748,7 @@ class Player extends MovieClip {
                     effect.loop = false;
                     effect.play();
                     effect.onComplete = function () {
-                        game.containers.effects.removeChild(effect);
+                        effect.destroy();
                     };
                     game.containers.effects.addChild(effect);
 
@@ -2720,7 +2783,7 @@ class Player extends MovieClip {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.front_effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.front_effects.addChild(effect);
 
@@ -2745,6 +2808,10 @@ class Player extends MovieClip {
 
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
+        }
+
+        if (this.y > game.config.level.height) {
+            this.murder();
         }
     }
 
@@ -2779,6 +2846,8 @@ class Player extends MovieClip {
 module.exports = Player;
 
 },{"./hat.js":14,"./movie_clip.js":18,"./physics.js":19}],21:[function(require,module,exports){
+"use strict";
+
 const update_physical_size = function() {
     const width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
@@ -2841,6 +2910,8 @@ const render = {
 module.exports = render;
 
 },{}],22:[function(require,module,exports){
+"use strict";
+
 const load_levels = function() {
     function load_level(name) {
         levels.total_count++;
@@ -2959,7 +3030,6 @@ const load_levels = function() {
     load_level("backstage_2");
     load_level("stage_2");
     load_level("backstage_3");
-    load_level("level0");
     load_level("main_menu_1");
     load_level("backstage_4");
 };
@@ -2974,6 +3044,8 @@ const levels = {
 module.exports = levels;
 
 },{}],23:[function(require,module,exports){
+"use strict";
+
 const try_on_load = function() {
     if (resources.sprites_loaded === true && resources.sounds_loaded === true && resources.levels_loaded === true && resources.on_load) {
         const temp = resources.on_load();
@@ -3022,6 +3094,8 @@ const resources = {
 module.exports = resources;
 
 },{"./levels.js":22,"./sounds.js":24,"./sprites.js":25}],24:[function(require,module,exports){
+"use strict";
+
 const load_sounds = function() {
     function load_sound(name, volume = 1.0, extension = "wav", loop = false) {
         sounds.total_count++;
@@ -3055,6 +3129,8 @@ const load_sounds = function() {
     load_sound("step", 8);
     load_sound("wall_grab", 3);
     load_sound("cloud", 1);
+
+    Howler.volume(0.1);
 };
 
 const sounds = {
@@ -3067,6 +3143,8 @@ const sounds = {
 module.exports = sounds;
 
 },{}],25:[function(require,module,exports){
+"use strict";
+
 const load_sprites = function() {
     function sprites_loaded(loader, resources) {
         const temp = sprites.on_load;
@@ -3108,6 +3186,8 @@ const sprites = {
 module.exports = sprites;
 
 },{}],26:[function(require,module,exports){
+"use strict";
+
 class Tutorial extends PIXI.AnimatedSprite {
     constructor(x, y, frame_a, frame_b) {
         super([ game.resources.sprites[frame_a], game.resources.sprites[frame_b] ]);

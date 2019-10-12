@@ -1,3 +1,5 @@
+"use strict";
+
 const Player = require("./player.js");
 const HazardVines = require("./hazard_vines.js");
 const Spiky = require("./enemies/spiky.js");
@@ -122,8 +124,8 @@ window.game = {
                         entity.state = 5;
                     }
                 } else if (entity.state === 5) {
-                    entity.parent.removeChild(entity);
                     entity.state = 6;
+                    entity.visible = false;
                 }
                 return true;
             }
@@ -221,14 +223,13 @@ window.game = {
                     game.dialog_time = 0;
                 }
 
-                const speaches = [ "Auch . . .", "Oi . . .", "Please!", "No!" ];
-                let text;
-                do {
-                    text = speaches[Math.round(Math.random() * (speaches.length - 1))];
-                } while (text === entity.last_speech);
-                entity.last_speech = text;
-                game.dialog_text = text;
-                game.dialog_text_duration = 0.5;
+                const speaches = [ "Auch!", "Oi!", "Please!", "Stop!", "No!", "Why?" ];
+                if (entity.last_speech === undefined) {
+                    entity.last_speech = speaches.length - 1;
+                }
+                entity.last_speech = (entity.last_speech + 1) % speaches.length;
+                game.dialog_text = speaches[entity.last_speech];
+                game.dialog_text_duration = 0.7;
                 game.dialog_text_timeout = 0;
                 game.dialog_callback = function () {
                     game.dialog = false;
@@ -284,6 +285,19 @@ let construct_level = function(level_name) {
 
     game.stats.level_start = new Date();
 
+    const destroy_recursive = function(object) {
+        if (object instanceof PIXI.Container) {
+            while (object.children.length > 0) {
+                destroy_recursive(object.children[0]);
+            }
+        }
+        object.destroy();
+    };
+
+    while (game.render.stage.children.length > 0) {
+        destroy_recursive(game.render.stage.children[0]);
+    }
+
     function draw_tiles_layer(layer_name) {
         for (let i = 0; i < game.level[layer_name].length; i++) {
             const tile_descriptor = game.level[layer_name][i];
@@ -305,10 +319,6 @@ let construct_level = function(level_name) {
             tile.y = tile_descriptor.y * game.config.tile_size;
             game.containers[layer_name].addChild(tile);
         }
-    }
-
-    if (game.containers && game.containers.level) {
-        game.containers.stage.removeChild(game.containers.level);
     }
 
     game.containers = {
@@ -483,6 +493,8 @@ let construct_level = function(level_name) {
 
     game.start_button = null;
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
+        game.containers.ui.visible = level_name !== "main_menu_0";
+
         game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
         game.ui_logo.anchor.set(0.5);
         const initial_x = -game.containers.level.x;
@@ -506,7 +518,8 @@ let construct_level = function(level_name) {
         });
         game.start_button.on("pointerdown", function(evt) {
             if (level_name === "main_menu_0") {
-                game.stats.game_start = new Date();
+                game.containers.ui.visible = true;
+                game.stats.level_start = game.stats.game_start = new Date();
 
                 const world_x = -game.containers.level.x + evt.data.global.x;
                 const world_y = -game.containers.level.y + evt.data.global.y;
@@ -727,7 +740,7 @@ let main_loop = function() {
                     effect.loop = false;
                     effect.play();
                     effect.onComplete = function () {
-                        game.containers.firework_effects.removeChild(effect);
+                        effect.destroy();
                     };
                     game.containers.firework_effects.addChild(effect);
 
@@ -860,7 +873,7 @@ let main_loop = function() {
 };
 
 window.onfocus = function() {
-    Howler.volume(1);
+    Howler.volume(0.1);
 };
 
 window.onblur = function() {

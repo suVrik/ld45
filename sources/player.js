@@ -1,3 +1,5 @@
+"use strict";
+
 const MovieClip = require("./movie_clip.js");
 const Physics = require("./physics.js");
 const Hat = require("./hat.js");
@@ -233,7 +235,7 @@ class Player extends MovieClip {
             effect.loop = false;
             effect.play();
             effect.onComplete = function () {
-                game.containers.effects.removeChild(effect);
+                effect.destroy();
             };
             game.containers.effects.addChild(effect);
 
@@ -248,7 +250,7 @@ class Player extends MovieClip {
                     effect.loop = false;
                     effect.play();
                     effect.onComplete = function () {
-                        game.containers.effects.removeChild(effect);
+                        effect.destroy();
                     };
                     game.containers.effects.addChild(effect);
 
@@ -283,7 +285,7 @@ class Player extends MovieClip {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.front_effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.front_effects.addChild(effect);
 
@@ -308,6 +310,10 @@ class Player extends MovieClip {
 
         if (game.draw_hitboxes) {
             game.containers.hitboxes.drawRect(game.player.x, game.player.y, game.player.bounds.width, game.player.bounds.height);
+        }
+
+        if (this.y > game.config.level.height) {
+            this.murder();
         }
     }
 

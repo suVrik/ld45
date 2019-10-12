@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports = {
     tile_size: 16,
     level: {

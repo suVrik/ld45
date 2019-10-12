@@ -1,3 +1,5 @@
+"use strict";
+
 class Camera {
     constructor() {
         this.offset = 0;

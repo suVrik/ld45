@@ -1,3 +1,5 @@
+"use strict";
+
 class Altar extends PIXI.Container {
     constructor(x, y, next_level, item) {
         super();
@@ -34,7 +36,7 @@ class Altar extends PIXI.Container {
                         effect.loop = false;
                         effect.play();
                         effect.onComplete = function () {
-                            game.containers.front_effects.removeChild(effect);
+                            effect.destroy();
                         };
                         game.containers.front_effects.addChild(effect);
                     }

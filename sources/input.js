@@ -1,5 +1,7 @@
+"use strict";
+
 const init_input = function() {
-    document.body.onkeydown = event => input.keys[event.code] = true;
+    document.body.onkeydown = event => {input.keys[event.code] = true; return event.code !== "ArrowDown" && event.code !== "Space";};
     document.body.onkeyup = event => input.keys[event.code] = false;
     document.body.onmousedown = event => input.mouse[event.button] = true;
     document.body.onmouseup = event => input.mouse[event.button] = false;

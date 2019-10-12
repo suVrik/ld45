@@ -1,3 +1,5 @@
+"use strict";
+
 const MovieClip = require("../movie_clip.js");
 const Physics = require("../physics.js");
 
