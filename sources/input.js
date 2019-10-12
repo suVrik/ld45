@@ -1,8 +1,8 @@
 "use strict";
 
 const init_input = function() {
-    document.body.onkeydown = event => {input.keys[event.code] = true; return event.code !== "ArrowDown" && event.code !== "Space";};
-    document.body.onkeyup = event => input.keys[event.code] = false;
+    document.body.onkeydown = event => {input.current_keys[event.code] = true; return event.code !== "ArrowDown" && event.code !== "Space";};
+    document.body.onkeyup = event => input.current_keys[event.code] = false;
     document.body.onmousedown = event => input.mouse[event.button] = true;
     document.body.onmouseup = event => input.mouse[event.button] = false;
 
@@ -19,6 +19,22 @@ const update_input = function() {
         if (input.mouse.hasOwnProperty(key)) {
             input.previous_mouse[key] = input.mouse[key];
         }
+    }
+    if (game.jump_button) {
+        input.keys["Space"] = game.jump_button.is_pressed || input.current_keys["Space"];
+    } else {
+        input.keys["Space"] = input.current_keys["Space"];
+    }
+    if (game.joystick) {
+        input.keys["ArrowLeft"] = game.joystick.left || input.current_keys["ArrowLeft"] || input.current_keys["KeyA"];
+        input.keys["ArrowRight"] = game.joystick.right || input.current_keys["ArrowRight"] || input.current_keys["KeyD"];
+        input.keys["ArrowUp"] = game.joystick.up || input.current_keys["ArrowUp"] || input.current_keys["KeyW"];
+        input.keys["ArrowDown"] = game.joystick.down || input.current_keys["ArrowDown"] || input.current_keys["KeyS"];
+    } else {
+        input.keys["ArrowLeft"] = input.current_keys["ArrowLeft"] || input.current_keys["KeyA"];
+        input.keys["ArrowRight"] = input.current_keys["ArrowRight"] || input.current_keys["KeyD"];
+        input.keys["ArrowUp"] = input.current_keys["ArrowUp"] || input.current_keys["KeyW"];
+        input.keys["ArrowDown"] = input.current_keys["ArrowDown"] || input.current_keys["KeyS"];
     }
 };
 
@@ -61,6 +77,7 @@ const input = {
     is_mouse_pressed: is_mouse_pressed,
     is_mouse_released: is_mouse_released,
     keys: {},
+    current_keys: {},
     previous_keys: {},
     mouse: {},
     previous_mouse: {},

@@ -1330,8 +1330,8 @@ module.exports = HazardVines;
 "use strict";
 
 const init_input = function() {
-    document.body.onkeydown = event => {input.keys[event.code] = true; return event.code !== "ArrowDown" && event.code !== "Space";};
-    document.body.onkeyup = event => input.keys[event.code] = false;
+    document.body.onkeydown = event => {input.current_keys[event.code] = true; return event.code !== "ArrowDown" && event.code !== "Space";};
+    document.body.onkeyup = event => input.current_keys[event.code] = false;
     document.body.onmousedown = event => input.mouse[event.button] = true;
     document.body.onmouseup = event => input.mouse[event.button] = false;
 
@@ -1348,6 +1348,22 @@ const update_input = function() {
         if (input.mouse.hasOwnProperty(key)) {
             input.previous_mouse[key] = input.mouse[key];
         }
+    }
+    if (game.jump_button) {
+        input.keys["Space"] = game.jump_button.is_pressed || input.current_keys["Space"];
+    } else {
+        input.keys["Space"] = input.current_keys["Space"];
+    }
+    if (game.joystick) {
+        input.keys["ArrowLeft"] = game.joystick.left || input.current_keys["ArrowLeft"] || input.current_keys["KeyA"];
+        input.keys["ArrowRight"] = game.joystick.right || input.current_keys["ArrowRight"] || input.current_keys["KeyD"];
+        input.keys["ArrowUp"] = game.joystick.up || input.current_keys["ArrowUp"] || input.current_keys["KeyW"];
+        input.keys["ArrowDown"] = game.joystick.down || input.current_keys["ArrowDown"] || input.current_keys["KeyS"];
+    } else {
+        input.keys["ArrowLeft"] = input.current_keys["ArrowLeft"] || input.current_keys["KeyA"];
+        input.keys["ArrowRight"] = input.current_keys["ArrowRight"] || input.current_keys["KeyD"];
+        input.keys["ArrowUp"] = input.current_keys["ArrowUp"] || input.current_keys["KeyW"];
+        input.keys["ArrowDown"] = input.current_keys["ArrowDown"] || input.current_keys["KeyS"];
     }
 };
 
@@ -1390,6 +1406,7 @@ const input = {
     is_mouse_pressed: is_mouse_pressed,
     is_mouse_released: is_mouse_released,
     keys: {},
+    current_keys: {},
     previous_keys: {},
     mouse: {},
     previous_mouse: {},
@@ -1449,6 +1466,10 @@ window.game = {
     dialog_text_timeout: 0,
     dialog_callback: null,
     firework_timeout: 0,
+    joystick_zone: null,
+    joystick_manager: null,
+    joystick: null,
+    jump_button: null,
     stats: {
         score: 0,
         game_start: new Date(),
@@ -1661,10 +1682,99 @@ window.game = {
     }
 };
 
+game.update_touchscreen_controls = function() {
+    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+        const game_window = document.getElementById("game_window");
+
+        const size = Math.min(game.render.physical_width, game.render.physical_height) / 4;
+
+        if (game.joystick_zone) {
+            game.joystick_zone.remove();
+        }
+        game.joystick_zone = document.createElement("div");
+        game.joystick_zone.style.position = "absolute";
+        game.joystick_zone.style.width = "70%";
+        game.joystick_zone.style.height = "100%";
+        game.joystick_zone.style.top = "0%";
+        game.joystick_zone.style.left = "0%";
+        game_window.appendChild(game.joystick_zone);
+
+        if (!game.jump_button) {
+            game.jump_button = document.createElement("div");
+            game_window.appendChild(game.jump_button);
+        }
+        game.jump_button.is_pressed = false;
+        game.jump_button.style.position = "absolute";
+        game.jump_button.style.background = "white";
+        game.jump_button.style.opacity = "0.25";
+        game.jump_button.style.width = size + "px";
+        game.jump_button.style.height = size + "px";
+        game.jump_button.style.width = size + "px";
+        game.jump_button.style.height = size + "px";
+        game.jump_button.style.bottom = size + "px";
+        game.jump_button.style.right = size + "px";
+        game.jump_button.style.borderRadius = "50%";
+        game.jump_button.style.marginBottom = -Math.round(size / 2) + "px";
+        game.jump_button.style.marginRight = -Math.round(size / 2) + "px";
+        game.jump_button.style.transition = "opacity 250ms ease 0s";
+        game.jump_button.style.touchAction = "none";
+        game.jump_button.onmousedown = game.jump_button.ontouchstart = function() {
+            game.jump_button.is_pressed = true;
+            game.jump_button.style.opacity = "0.5";
+            return false;
+        };
+        game.jump_button.onmouseup = game.jump_button.onmouseout = game.jump_button.ontouchend = function() {
+            game.jump_button.is_pressed = false;
+            game.jump_button.style.opacity = "0.25";
+            return false;
+        };
+
+        game.joystick = {
+            left: false,
+            right: false,
+            up: false,
+            down: false,
+        };
+
+        game.joystick_manager = nipplejs.create({
+            zone: game.joystick_zone,
+            size: Math.min(game.render.physical_width, game.render.physical_height) / 5,
+            mode: "static",
+            position: { bottom: size + "px", left: size + "px" },
+        });
+        game.joystick_manager.on("move", function(event, nipple) {
+            if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 18 || Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 18) {
+                game.joystick.left = game.joystick.right = false;
+            } else {
+                game.joystick.left = nipple.angle.radian > Math.PI / 2 && nipple.angle.radian <= Math.PI * 3 / 2;
+                game.joystick.right = !game.joystick.left;
+            }
+            if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 4) {
+                game.joystick.up = true;
+                game.joystick.down = false;
+            } else if (Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 4) {
+                game.joystick.up = false;
+                game.joystick.down = true;
+            } else {
+                game.joystick.up = game.joystick.down = false;
+            }
+        });
+        game.joystick_manager.on("end", function() {
+            game.joystick.right = game.joystick.left = game.joystick.up = game.joystick.down = false;
+        });
+
+        if (game.num_clicks === 0) {
+            game.joystick_zone.style.display = "none";
+            game.jump_button.style.display = "none";
+        }
+    }
+};
+
 game.render.init();
 
 game.resources.on_load = function() {
     document.getElementById("loading_bar").remove();
+    game.update_touchscreen_controls();
     initialize();
     game.render.application.ticker.add(main_loop);
 };
@@ -1893,7 +2003,13 @@ let construct_level = function(level_name) {
 
     game.start_button = null;
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
-        game.containers.ui.visible = level_name !== "main_menu_0";
+        if (level_name === "main_menu_0") {
+            game.containers.ui.visible = false;
+            if (game.joystick_zone) {
+                game.joystick_zone.style.display = "none";
+                game.jump_button.style.display = "none";
+            }
+        }
 
         game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
         game.ui_logo.anchor.set(0.5);
@@ -1919,6 +2035,10 @@ let construct_level = function(level_name) {
         game.start_button.on("pointerdown", function(evt) {
             if (level_name === "main_menu_0") {
                 game.containers.ui.visible = true;
+                if (game.joystick_zone) {
+                    game.joystick_zone.style.display = "block";
+                    game.jump_button.style.display = "block";
+                }
                 game.stats.level_start = game.stats.game_start = new Date();
 
                 const world_x = -game.containers.level.x + evt.data.global.x;
@@ -1951,6 +2071,8 @@ let construct_level = function(level_name) {
         });
     } else {
         game.num_clicks++;
+        game.joystick_zone.style.display = "block";
+        game.jump_button.style.display = "block";
     }
 
     game.containers.score.text = "0";
@@ -2540,12 +2662,13 @@ class Player extends MovieClip {
         this.hat = null;
         this.is_grounded_counter = 0;
         this.is_sliding_counter = 0;
+        this.crouch_timeout = 0;
     }
 
     update_movement(elapsed) {
         if (!this.dead) {
-            const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
-            const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
+            const left_pressed = game.input.is_key_down("ArrowLeft");
+            const right_pressed = game.input.is_key_down("ArrowRight");
             if (left_pressed && !right_pressed) {
                 this.face = "left";
                 this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
@@ -2757,8 +2880,8 @@ class Player extends MovieClip {
                     this.is_grounded_counter = 0;
                 } else {
                     if (game.num_clicks >= 1) {
-                        const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
-                        const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
+                        const left_pressed = game.input.is_key_down("ArrowLeft");
+                        const right_pressed = game.input.is_key_down("ArrowRight");
                         if (left_pressed || right_pressed) {
                             this.is_grounded_counter++;
                         } else {
@@ -2802,8 +2925,20 @@ class Player extends MovieClip {
         }
 
         if (game.num_clicks >= 1 && Math.abs(game.spawn_effect_radius) < 1e-5) {
-            const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
-            this.crouching = !!(this.is_grounded && down_pressed);
+            const down_pressed = game.input.is_key_down("ArrowDown");
+            if (down_pressed) {
+                if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+                    this.crouch_timeout += elapsed;
+                    if (this.crouch_timeout > 0.25) {
+                        this.crouching = !!(this.is_grounded && down_pressed);
+                    }
+                } else {
+                    this.crouching = !!(this.is_grounded && down_pressed);
+                }
+            } else {
+                this.crouch_timeout = 0;
+                this.crouching = false;
+            }
         }
 
         if (game.draw_hitboxes) {
@@ -2856,17 +2991,28 @@ const update_physical_size = function() {
     render.physical_width = render.render_width;
     render.physical_height = render.render_height;
 
-    do {
-        const new_physical_width = render.render_width * (render.scale + 1);
-        const new_physical_height = render.render_height * (render.scale + 1);
-        if (new_physical_width < width && new_physical_height < height) {
-            render.physical_width = new_physical_width;
-            render.physical_height = new_physical_height;
-            render.scale++;
+    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+        if (width / render.render_width > height / render.render_height) {
+            render.physical_height = height;
+            render.physical_width = render.render_width * render.physical_height / render.render_height;
         } else {
-            break;
+            render.physical_width = width;
+            render.physical_height = render.render_height * render.physical_width / render.render_width;
         }
-    } while (render.scale < 10);
+        game.update_touchscreen_controls();
+    } else {
+        do {
+            const new_physical_width = render.render_width * (render.scale + 1);
+            const new_physical_height = render.render_height * (render.scale + 1);
+            if (new_physical_width < width && new_physical_height < height) {
+                render.physical_width = new_physical_width;
+                render.physical_height = new_physical_height;
+                render.scale++;
+            } else {
+                break;
+            }
+        } while (render.scale < 10);
+    }
 
     const game_window = document.getElementById("game_window");
     game_window.style.width = render.physical_width + "px";

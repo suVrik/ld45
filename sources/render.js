@@ -8,17 +8,28 @@ const update_physical_size = function() {
     render.physical_width = render.render_width;
     render.physical_height = render.render_height;
 
-    do {
-        const new_physical_width = render.render_width * (render.scale + 1);
-        const new_physical_height = render.render_height * (render.scale + 1);
-        if (new_physical_width < width && new_physical_height < height) {
-            render.physical_width = new_physical_width;
-            render.physical_height = new_physical_height;
-            render.scale++;
+    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+        if (width / render.render_width > height / render.render_height) {
+            render.physical_height = height;
+            render.physical_width = render.render_width * render.physical_height / render.render_height;
         } else {
-            break;
+            render.physical_width = width;
+            render.physical_height = render.render_height * render.physical_width / render.render_width;
         }
-    } while (render.scale < 10);
+        game.update_touchscreen_controls();
+    } else {
+        do {
+            const new_physical_width = render.render_width * (render.scale + 1);
+            const new_physical_height = render.render_height * (render.scale + 1);
+            if (new_physical_width < width && new_physical_height < height) {
+                render.physical_width = new_physical_width;
+                render.physical_height = new_physical_height;
+                render.scale++;
+            } else {
+                break;
+            }
+        } while (render.scale < 10);
+    }
 
     const game_window = document.getElementById("game_window");
     game_window.style.width = render.physical_width + "px";

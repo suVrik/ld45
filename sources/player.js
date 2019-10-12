@@ -42,12 +42,13 @@ class Player extends MovieClip {
         this.hat = null;
         this.is_grounded_counter = 0;
         this.is_sliding_counter = 0;
+        this.crouch_timeout = 0;
     }
 
     update_movement(elapsed) {
         if (!this.dead) {
-            const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
-            const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
+            const left_pressed = game.input.is_key_down("ArrowLeft");
+            const right_pressed = game.input.is_key_down("ArrowRight");
             if (left_pressed && !right_pressed) {
                 this.face = "left";
                 this.horizontal_speed = Math.max(this.horizontal_speed - game.config.player.acceleration * elapsed, Math.min(this.horizontal_speed, -game.config.player.speed));
@@ -259,8 +260,8 @@ class Player extends MovieClip {
                     this.is_grounded_counter = 0;
                 } else {
                     if (game.num_clicks >= 1) {
-                        const left_pressed = game.input.is_key_down("KeyA") | game.input.is_key_down("ArrowLeft");
-                        const right_pressed = game.input.is_key_down("KeyD") | game.input.is_key_down("ArrowRight");
+                        const left_pressed = game.input.is_key_down("ArrowLeft");
+                        const right_pressed = game.input.is_key_down("ArrowRight");
                         if (left_pressed || right_pressed) {
                             this.is_grounded_counter++;
                         } else {
@@ -304,8 +305,20 @@ class Player extends MovieClip {
         }
 
         if (game.num_clicks >= 1 && Math.abs(game.spawn_effect_radius) < 1e-5) {
-            const down_pressed = game.input.is_key_down("KeyS") || game.input.is_key_down("ArrowDown");
-            this.crouching = !!(this.is_grounded && down_pressed);
+            const down_pressed = game.input.is_key_down("ArrowDown");
+            if (down_pressed) {
+                if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+                    this.crouch_timeout += elapsed;
+                    if (this.crouch_timeout > 0.25) {
+                        this.crouching = !!(this.is_grounded && down_pressed);
+                    }
+                } else {
+                    this.crouching = !!(this.is_grounded && down_pressed);
+                }
+            } else {
+                this.crouch_timeout = 0;
+                this.crouching = false;
+            }
         }
 
         if (game.draw_hitboxes) {

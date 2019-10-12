@@ -49,6 +49,10 @@ window.game = {
     dialog_text_timeout: 0,
     dialog_callback: null,
     firework_timeout: 0,
+    joystick_zone: null,
+    joystick_manager: null,
+    joystick: null,
+    jump_button: null,
     stats: {
         score: 0,
         game_start: new Date(),
@@ -261,10 +265,99 @@ window.game = {
     }
 };
 
+game.update_touchscreen_controls = function() {
+    if (PIXI.interaction.InteractionManager.supportsTouchEvents) {
+        const game_window = document.getElementById("game_window");
+
+        const size = Math.min(game.render.physical_width, game.render.physical_height) / 4;
+
+        if (game.joystick_zone) {
+            game.joystick_zone.remove();
+        }
+        game.joystick_zone = document.createElement("div");
+        game.joystick_zone.style.position = "absolute";
+        game.joystick_zone.style.width = "70%";
+        game.joystick_zone.style.height = "100%";
+        game.joystick_zone.style.top = "0%";
+        game.joystick_zone.style.left = "0%";
+        game_window.appendChild(game.joystick_zone);
+
+        if (!game.jump_button) {
+            game.jump_button = document.createElement("div");
+            game_window.appendChild(game.jump_button);
+        }
+        game.jump_button.is_pressed = false;
+        game.jump_button.style.position = "absolute";
+        game.jump_button.style.background = "white";
+        game.jump_button.style.opacity = "0.25";
+        game.jump_button.style.width = size + "px";
+        game.jump_button.style.height = size + "px";
+        game.jump_button.style.width = size + "px";
+        game.jump_button.style.height = size + "px";
+        game.jump_button.style.bottom = size + "px";
+        game.jump_button.style.right = size + "px";
+        game.jump_button.style.borderRadius = "50%";
+        game.jump_button.style.marginBottom = -Math.round(size / 2) + "px";
+        game.jump_button.style.marginRight = -Math.round(size / 2) + "px";
+        game.jump_button.style.transition = "opacity 250ms ease 0s";
+        game.jump_button.style.touchAction = "none";
+        game.jump_button.onmousedown = game.jump_button.ontouchstart = function() {
+            game.jump_button.is_pressed = true;
+            game.jump_button.style.opacity = "0.5";
+            return false;
+        };
+        game.jump_button.onmouseup = game.jump_button.onmouseout = game.jump_button.ontouchend = function() {
+            game.jump_button.is_pressed = false;
+            game.jump_button.style.opacity = "0.25";
+            return false;
+        };
+
+        game.joystick = {
+            left: false,
+            right: false,
+            up: false,
+            down: false,
+        };
+
+        game.joystick_manager = nipplejs.create({
+            zone: game.joystick_zone,
+            size: Math.min(game.render.physical_width, game.render.physical_height) / 5,
+            mode: "static",
+            position: { bottom: size + "px", left: size + "px" },
+        });
+        game.joystick_manager.on("move", function(event, nipple) {
+            if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 18 || Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 18) {
+                game.joystick.left = game.joystick.right = false;
+            } else {
+                game.joystick.left = nipple.angle.radian > Math.PI / 2 && nipple.angle.radian <= Math.PI * 3 / 2;
+                game.joystick.right = !game.joystick.left;
+            }
+            if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 4) {
+                game.joystick.up = true;
+                game.joystick.down = false;
+            } else if (Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 4) {
+                game.joystick.up = false;
+                game.joystick.down = true;
+            } else {
+                game.joystick.up = game.joystick.down = false;
+            }
+        });
+        game.joystick_manager.on("end", function() {
+            game.joystick.right = game.joystick.left = game.joystick.up = game.joystick.down = false;
+        });
+
+        if (game.num_clicks === 0) {
+            game.joystick_zone.style.display = "none";
+            game.jump_button.style.display = "none";
+        }
+    }
+};
+
 game.render.init();
 
 game.resources.on_load = function() {
     document.getElementById("loading_bar").remove();
+    game.update_touchscreen_controls();
     initialize();
     game.render.application.ticker.add(main_loop);
 };
@@ -493,7 +586,13 @@ let construct_level = function(level_name) {
 
     game.start_button = null;
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
-        game.containers.ui.visible = level_name !== "main_menu_0";
+        if (level_name === "main_menu_0") {
+            game.containers.ui.visible = false;
+            if (game.joystick_zone) {
+                game.joystick_zone.style.display = "none";
+                game.jump_button.style.display = "none";
+            }
+        }
 
         game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
         game.ui_logo.anchor.set(0.5);
@@ -519,6 +618,10 @@ let construct_level = function(level_name) {
         game.start_button.on("pointerdown", function(evt) {
             if (level_name === "main_menu_0") {
                 game.containers.ui.visible = true;
+                if (game.joystick_zone) {
+                    game.joystick_zone.style.display = "block";
+                    game.jump_button.style.display = "block";
+                }
                 game.stats.level_start = game.stats.game_start = new Date();
 
                 const world_x = -game.containers.level.x + evt.data.global.x;
@@ -551,6 +654,8 @@ let construct_level = function(level_name) {
         });
     } else {
         game.num_clicks++;
+        game.joystick_zone.style.display = "block";
+        game.jump_button.style.display = "block";
     }
 
     game.containers.score.text = "0";

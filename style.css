@@ -3,6 +3,7 @@ html, body {
     padding: 0;
     font-family: Verdana, serif;
     background-color: #000;
+    overflow: hidden;
 }
 
 #game_window {
