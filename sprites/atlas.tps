@@ -316,6 +316,10 @@
             <key type="filename">sources/animations_32px_player_idle_1.png</key>
             <key type="filename">sources/animations_32px_player_idle_2.png</key>
             <key type="filename">sources/animations_32px_player_idle_3.png</key>
+            <key type="filename">sources/animations_32px_player_idle_look_up_0.png</key>
+            <key type="filename">sources/animations_32px_player_idle_look_up_1.png</key>
+            <key type="filename">sources/animations_32px_player_idle_look_up_2.png</key>
+            <key type="filename">sources/animations_32px_player_idle_look_up_3.png</key>
             <key type="filename">sources/animations_32px_player_jump_0.png</key>
             <key type="filename">sources/animations_32px_player_jump_1.png</key>
             <key type="filename">sources/animations_32px_player_run_0.png</key>
@@ -324,6 +328,12 @@
             <key type="filename">sources/animations_32px_player_run_3.png</key>
             <key type="filename">sources/animations_32px_player_run_4.png</key>
             <key type="filename">sources/animations_32px_player_run_5.png</key>
+            <key type="filename">sources/animations_32px_player_run_look_up_0.png</key>
+            <key type="filename">sources/animations_32px_player_run_look_up_1.png</key>
+            <key type="filename">sources/animations_32px_player_run_look_up_2.png</key>
+            <key type="filename">sources/animations_32px_player_run_look_up_3.png</key>
+            <key type="filename">sources/animations_32px_player_run_look_up_4.png</key>
+            <key type="filename">sources/animations_32px_player_run_look_up_5.png</key>
             <key type="filename">sources/enemy_mouse.png</key>
             <key type="filename">sources/enemy_spitting.png</key>
             <key type="filename">sources/inventory_slot.png</key>
