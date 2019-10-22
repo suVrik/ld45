@@ -23,8 +23,7 @@ class Altar extends PIXI.Container {
 
     update_altar(elapsed) {
         if (!game.player.dead) {
-            const force_next_level = game.input.is_key_down("ShiftLeft") && game.input.is_key_down("Digit9") && game.input.is_key_pressed("Digit0");
-            if (force_next_level || (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2)) {
+            if (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2) {
                 if (this.timeout == null) {
                     this.item.visible = true;
                     this.timeout = 0.75;
@@ -154,26 +153,37 @@ module.exports = BlockFalling;
 class Camera {
     constructor() {
         this.offset = 0;
+        this.player_x = 0;
+        this.player_y = 0;
     }
 
     update_camera(elapsed) {
         if (!game.player.dead) {
-            game.containers.level.x = Math.max(Math.min(game.render.render_width / 2 - game.player.x, 0), game.render.render_width - game.config.level.width);
-
             const target_offset = game.render.render_height / 3;
             if (game.player.crouching) {
                 this.offset = Math.min(this.offset + elapsed * 3 * target_offset, target_offset);
+            } else if (game.player.looking_upwards) {
+                this.offset = Math.max(this.offset - elapsed * 3 * target_offset, -target_offset);
             } else {
-                this.offset = Math.max(this.offset - elapsed * 4 * target_offset, 0);
+                if (this.offset > 0) {
+                    this.offset = Math.max(this.offset - elapsed * 4 * target_offset, 0);
+                } else if (this.offset < 0) {
+                    this.offset = Math.min(this.offset + elapsed * 4 * target_offset, 0);
+                }
             }
 
-            let top_edge = 0;
-            let bottom_edge = game.render.render_height - game.config.level.height;
-            top_edge += game.dialog_time;
-            bottom_edge -= game.dialog_time;
-
-            game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - game.player.y - this.offset, top_edge), bottom_edge);
+            this.player_x = game.player.x;
+            this.player_y = game.player.y;
         }
+
+        game.containers.level.x = Math.max(Math.min(game.render.render_width / 2 - this.player_x, 0), game.render.render_width - game.config.level.width);
+
+        let top_edge = 0;
+        let bottom_edge = game.render.render_height - game.config.level.height;
+        top_edge += game.dialog_time;
+        bottom_edge -= game.dialog_time;
+
+        game.containers.level.y = Math.max(Math.min(game.render.render_height / 2 - this.player_y - this.offset, top_edge), bottom_edge);
     }
 }
 
@@ -194,6 +204,7 @@ class Coin extends PIXI.AnimatedSprite {
         this.animationSpeed = 0.2;
         this.time = x + y;
         this.play();
+        this.gotoAndPlay(Math.round((this.x * 1.25 + this.y) / game.config.tile_size) % this.totalFrames);
     }
 
     update_coin(elapsed) {
@@ -1250,10 +1261,6 @@ class Exit {
 
     update_exit() {
         if (!game.player.dead) {
-            const force_next_level = game.input.is_key_down("ShiftLeft") && game.input.is_key_down("Digit9") && game.input.is_key_pressed("Digit0");
-            if (force_next_level) {
-                return this.next_level;
-            }
             if (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2) {
                 return this.next_level;
             }
@@ -1687,6 +1694,7 @@ game.update_touchscreen_controls = function() {
         const game_window = document.getElementById("game_window");
 
         const size = Math.min(game.render.physical_width, game.render.physical_height) / 4;
+        const padding = Math.round(size) * 0.75;
 
         if (game.joystick_zone) {
             game.joystick_zone.remove();
@@ -1709,10 +1717,8 @@ game.update_touchscreen_controls = function() {
         game.jump_button.style.opacity = "0.25";
         game.jump_button.style.width = size + "px";
         game.jump_button.style.height = size + "px";
-        game.jump_button.style.width = size + "px";
-        game.jump_button.style.height = size + "px";
-        game.jump_button.style.bottom = size + "px";
-        game.jump_button.style.right = size + "px";
+        game.jump_button.style.bottom = padding + "px";
+        game.jump_button.style.right = padding + "px";
         game.jump_button.style.borderRadius = "50%";
         game.jump_button.style.marginBottom = -Math.round(size / 2) + "px";
         game.jump_button.style.marginRight = -Math.round(size / 2) + "px";
@@ -1740,7 +1746,7 @@ game.update_touchscreen_controls = function() {
             zone: game.joystick_zone,
             size: Math.min(game.render.physical_width, game.render.physical_height) / 5,
             mode: "static",
-            position: { bottom: size + "px", left: size + "px" },
+            position: { bottom: padding + "px", left: padding + "px" },
         });
         game.joystick_manager.on("move", function(event, nipple) {
             if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 18 || Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 18) {
@@ -2633,8 +2639,10 @@ class Player extends MovieClip {
         super({
             idle: { frames: game.resources.sprites["animations_32px_player_idle"], speed: 0.15 },
             crouching_idle: { frames: [game.resources.sprites["animations_32px_player_crouch_walk_0"]], speed: 0.15 },
+            looking_upwards_idle: { frames: game.resources.sprites["animations_32px_player_idle_look_up"], speed: 0.15 },
             run: { frames: game.resources.sprites["animations_32px_player_run"], speed: 0.2 },
             crouching_run: { frames: game.resources.sprites["animations_32px_player_crouch_walk"], speed: 0.15 },
+            looking_upwards_run: { frames: game.resources.sprites["animations_32px_player_run_look_up"], speed: 0.15 },
             jump: { frames: game.resources.sprites["animations_32px_player_jump"], speed: 0.15 },
             death: { frames: [game.resources.sprites["animations_32px_player_death_0"]], speed: 0.15 },
             climb: { frames: [game.resources.sprites["animations_32px_player_climb_0"]], speed: 0.15 },
@@ -2654,6 +2662,7 @@ class Player extends MovieClip {
         this.horizontal_speed = 0;
         this.is_grounded = false;
         this.crouching = false;
+        this.looking_upwards = false;
         this.late_jump_duration = 0;
         this.is_sliding = false;
         this.jump_off_walls_duration = 0;
@@ -2667,6 +2676,7 @@ class Player extends MovieClip {
         this.is_grounded_counter = 0;
         this.is_sliding_counter = 0;
         this.crouch_timeout = 0;
+        this.look_upwards_timeout = 0;
     }
 
     update_movement(elapsed) {
@@ -2690,7 +2700,7 @@ class Player extends MovieClip {
             if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
                 const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
                 let slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
-                if (this.crouching) {
+                if (this.crouching || this.looking_upwards) {
                     slowdown_factor *= game.config.player.crouching_speed_factor;
                 }
                 Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
@@ -2794,12 +2804,16 @@ class Player extends MovieClip {
                 if (Math.abs(this.horizontal_speed) < 1e-5) {
                     if (this.crouching) {
                         this.gotoAndPlay("crouching_idle");
+                    } else if (this.looking_upwards) {
+                        this.gotoAndPlay("looking_upwards_idle");
                     } else {
                         this.gotoAndPlay("idle");
                     }
                 } else {
                     if (this.crouching) {
                         this.gotoAndPlay("crouching_run");
+                    } else if (this.looking_upwards) {
+                        this.gotoAndPlay("looking_upwards_run");
                     } else {
                         this.gotoAndPlay("run");
                     }
@@ -2934,14 +2948,29 @@ class Player extends MovieClip {
                 if (game.render.touchscreen) {
                     this.crouch_timeout += elapsed;
                     if (this.crouch_timeout > 0.25) {
-                        this.crouching = !!(this.is_grounded && down_pressed);
+                        this.crouching = !!this.is_grounded;
                     }
                 } else {
-                    this.crouching = !!(this.is_grounded && down_pressed);
+                    this.crouching = !!this.is_grounded;
                 }
             } else {
                 this.crouch_timeout = 0;
                 this.crouching = false;
+            }
+
+            const up_pressed = game.input.is_key_down("ArrowUp");
+            if (up_pressed) {
+                if (game.render.touchscreen) {
+                    this.look_upwards_timeout += elapsed;
+                    if (this.look_upwards_timeout > 0.25) {
+                        this.looking_upwards = !!this.is_grounded;
+                    }
+                } else {
+                    this.looking_upwards = !!this.is_grounded;
+                }
+            } else {
+                this.look_upwards_timeout = 0;
+                this.looking_upwards = false;
             }
         }
 

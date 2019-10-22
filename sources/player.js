@@ -9,8 +9,10 @@ class Player extends MovieClip {
         super({
             idle: { frames: game.resources.sprites["animations_32px_player_idle"], speed: 0.15 },
             crouching_idle: { frames: [game.resources.sprites["animations_32px_player_crouch_walk_0"]], speed: 0.15 },
+            looking_upwards_idle: { frames: game.resources.sprites["animations_32px_player_idle_look_up"], speed: 0.15 },
             run: { frames: game.resources.sprites["animations_32px_player_run"], speed: 0.2 },
             crouching_run: { frames: game.resources.sprites["animations_32px_player_crouch_walk"], speed: 0.15 },
+            looking_upwards_run: { frames: game.resources.sprites["animations_32px_player_run_look_up"], speed: 0.15 },
             jump: { frames: game.resources.sprites["animations_32px_player_jump"], speed: 0.15 },
             death: { frames: [game.resources.sprites["animations_32px_player_death_0"]], speed: 0.15 },
             climb: { frames: [game.resources.sprites["animations_32px_player_climb_0"]], speed: 0.15 },
@@ -30,6 +32,7 @@ class Player extends MovieClip {
         this.horizontal_speed = 0;
         this.is_grounded = false;
         this.crouching = false;
+        this.looking_upwards = false;
         this.late_jump_duration = 0;
         this.is_sliding = false;
         this.jump_off_walls_duration = 0;
@@ -43,6 +46,7 @@ class Player extends MovieClip {
         this.is_grounded_counter = 0;
         this.is_sliding_counter = 0;
         this.crouch_timeout = 0;
+        this.look_upwards_timeout = 0;
     }
 
     update_movement(elapsed) {
@@ -66,7 +70,7 @@ class Player extends MovieClip {
             if (Math.abs(this.horizontal_speed * elapsed) > 1e-8) {
                 const time = Math.max(this.post_jump_slowdown_duration, 0) / game.config.player.post_jump_slowdown_duration;
                 let slowdown_factor = game.config.player.post_jump_slowdown_factor + (1 - game.config.player.post_jump_slowdown_factor) * (1 - time);
-                if (this.crouching) {
+                if (this.crouching || this.looking_upwards) {
                     slowdown_factor *= game.config.player.crouching_speed_factor;
                 }
                 Physics.move(this, this.horizontal_speed * slowdown_factor * elapsed, 0);
@@ -170,12 +174,16 @@ class Player extends MovieClip {
                 if (Math.abs(this.horizontal_speed) < 1e-5) {
                     if (this.crouching) {
                         this.gotoAndPlay("crouching_idle");
+                    } else if (this.looking_upwards) {
+                        this.gotoAndPlay("looking_upwards_idle");
                     } else {
                         this.gotoAndPlay("idle");
                     }
                 } else {
                     if (this.crouching) {
                         this.gotoAndPlay("crouching_run");
+                    } else if (this.looking_upwards) {
+                        this.gotoAndPlay("looking_upwards_run");
                     } else {
                         this.gotoAndPlay("run");
                     }
@@ -310,14 +318,29 @@ class Player extends MovieClip {
                 if (game.render.touchscreen) {
                     this.crouch_timeout += elapsed;
                     if (this.crouch_timeout > 0.25) {
-                        this.crouching = !!(this.is_grounded && down_pressed);
+                        this.crouching = !!this.is_grounded;
                     }
                 } else {
-                    this.crouching = !!(this.is_grounded && down_pressed);
+                    this.crouching = !!this.is_grounded;
                 }
             } else {
                 this.crouch_timeout = 0;
                 this.crouching = false;
+            }
+
+            const up_pressed = game.input.is_key_down("ArrowUp");
+            if (up_pressed) {
+                if (game.render.touchscreen) {
+                    this.look_upwards_timeout += elapsed;
+                    if (this.look_upwards_timeout > 0.25) {
+                        this.looking_upwards = !!this.is_grounded;
+                    }
+                } else {
+                    this.looking_upwards = !!this.is_grounded;
+                }
+            } else {
+                this.look_upwards_timeout = 0;
+                this.looking_upwards = false;
             }
         }
 

@@ -12,6 +12,7 @@ class Coin extends PIXI.AnimatedSprite {
         this.animationSpeed = 0.2;
         this.time = x + y;
         this.play();
+        this.gotoAndPlay(Math.round((this.x * 1.25 + this.y) / game.config.tile_size) % this.totalFrames);
     }
 
     update_coin(elapsed) {

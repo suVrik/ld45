@@ -270,6 +270,7 @@ game.update_touchscreen_controls = function() {
         const game_window = document.getElementById("game_window");
 
         const size = Math.min(game.render.physical_width, game.render.physical_height) / 4;
+        const padding = Math.round(size) * 0.75;
 
         if (game.joystick_zone) {
             game.joystick_zone.remove();
@@ -292,10 +293,8 @@ game.update_touchscreen_controls = function() {
         game.jump_button.style.opacity = "0.25";
         game.jump_button.style.width = size + "px";
         game.jump_button.style.height = size + "px";
-        game.jump_button.style.width = size + "px";
-        game.jump_button.style.height = size + "px";
-        game.jump_button.style.bottom = size + "px";
-        game.jump_button.style.right = size + "px";
+        game.jump_button.style.bottom = padding + "px";
+        game.jump_button.style.right = padding + "px";
         game.jump_button.style.borderRadius = "50%";
         game.jump_button.style.marginBottom = -Math.round(size / 2) + "px";
         game.jump_button.style.marginRight = -Math.round(size / 2) + "px";
@@ -323,7 +322,7 @@ game.update_touchscreen_controls = function() {
             zone: game.joystick_zone,
             size: Math.min(game.render.physical_width, game.render.physical_height) / 5,
             mode: "static",
-            position: { bottom: size + "px", left: size + "px" },
+            position: { bottom: padding + "px", left: padding + "px" },
         });
         game.joystick_manager.on("move", function(event, nipple) {
             if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 18 || Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 18) {
