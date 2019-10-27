@@ -13,6 +13,7 @@ class FlyingProjectile extends PIXI.Sprite {
     }
 
     update_flying_projectile(elapsed) {
+        const previous_y = this.y;
         this.y += game.config.flying.projectile_speed * elapsed;
 
         if (this.scale.x < 1) {
@@ -29,8 +30,8 @@ class FlyingProjectile extends PIXI.Sprite {
 
             const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_flying_drop"]);
             effect.x = this.x;
-            effect.y = this.y;
-            effect.anchor.set(0.5, 0.5);
+            effect.y = Math.max(Math.floor(this.y / game.config.tile_size) * game.config.tile_size, previous_y);
+            effect.anchor.set(0.5, 1);
             effect.animationSpeed = 0.3;
             effect.loop = false;
             effect.play();

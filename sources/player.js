@@ -247,7 +247,6 @@ class Player extends MovieClip {
                 effect.destroy();
             };
             game.containers.effects.addChild(effect);
-
         } else {
             if (this.is_grounded) {
                 if (this.is_grounded_counter > 13) {

@@ -40,7 +40,7 @@ class Altar extends PIXI.Container {
                         game.containers.front_effects.addChild(effect);
                     }
 
-                    game.resources.sounds["Pickup_Coin9"].play();
+                    game.resources.sounds["victory"].play();
                 }
             }
             if (this.timeout && this.timeout > 0) {

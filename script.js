@@ -41,7 +41,7 @@ class Altar extends PIXI.Container {
                         game.containers.front_effects.addChild(effect);
                     }
 
-                    game.resources.sounds["Pickup_Coin9"].play();
+                    game.resources.sounds["victory"].play();
                 }
             }
             if (this.timeout && this.timeout > 0) {
@@ -550,6 +550,7 @@ class FlyingProjectile extends PIXI.Sprite {
     }
 
     update_flying_projectile(elapsed) {
+        const previous_y = this.y;
         this.y += game.config.flying.projectile_speed * elapsed;
 
         if (this.scale.x < 1) {
@@ -566,8 +567,8 @@ class FlyingProjectile extends PIXI.Sprite {
 
             const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_16px_effect_projectile_flying_drop"]);
             effect.x = this.x;
-            effect.y = this.y;
-            effect.anchor.set(0.5, 0.5);
+            effect.y = Math.max(Math.floor(this.y / game.config.tile_size) * game.config.tile_size, previous_y);
+            effect.anchor.set(0.5, 1);
             effect.animationSpeed = 0.3;
             effect.loop = false;
             effect.play();
@@ -1722,6 +1723,8 @@ window.game = {
         bounces: 0,
     },
     initial_y: 0,
+    construct_level: null,
+    extra_timeout: 0,
 };
 
 let init_newgrounds_session = function() {
@@ -1732,45 +1735,82 @@ let init_newgrounds_session = function() {
     game.newgrounds.io.getValidSession(function() {
         if (game.newgrounds.io.user) {
             console.log("User \"" + game.newgrounds.io.user + "\" is signed in.");
-
-            game.newgrounds.io.callComponent("Medal.getList", {}, function(result) {
-                if (result.success && result.medals) {
-                    game.newgrounds.medals = result.medals;
-                }
-            });
-
-            game.newgrounds.io.callComponent("ScoreBoard.getBoards", {}, function(result) {
-                if (result.success && result.scoreboards) {
-                    game.newgrounds.scoreboards = result.scoreboards;
-                }
-            });
         } else {
             console.log("User is not signed in.");
         }
+
+        game.newgrounds.io.callComponent("Medal.getList", {}, function(result) {
+            if (result.success && result.medals) {
+                game.newgrounds.medals = result.medals;
+
+                for (let i = 0; i < result.medals.length; i++) {
+                    const medal = result.medals[i];
+                    PIXI.Loader.shared.add("medal-" + medal.name, medal.icon);
+                    console.log("Loading medal \"" + medal.name + "\" from \"" + medal.icon + "\"");
+                }
+            }
+        });
+
+        game.newgrounds.io.callComponent("ScoreBoard.getBoards", {}, function(result) {
+            if (result.success && result.scoreboards) {
+                game.newgrounds.scoreboards = result.scoreboards;
+            }
+        });
     });
 };
 
 let unlock_medal = function(medal_name) {
-    if (game.newgrounds.io.user && game.newgrounds.medals) {
+    if (game.newgrounds.medals) {
         for (let i = 0; i < game.newgrounds.medals.length; i++) {
             const medal = game.newgrounds.medals[i];
             if (medal.name === medal_name) {
-                if (!medal.unlocked) {
-                    console.log("Unlocking medal \"" + medal_name + "\"...");
-                    game.newgrounds.io.callComponent('Medal.unlock', {id: medal.id}, function(result) {
-                        if (result.success) {
-                            console.log("Medal \"" + medal_name + "\" unlocked.");
-                        } else {
-                            console.log("Failed to unlock medal \"" + medal_name + "\". Details: \"" + result.error.message + "\".");
-                        }
-                    });
+                if (game.newgrounds.io.user) {
+                    if (!medal.unlocked) {
+                        console.log("Unlocking medal \"" + medal_name + "\"...");
+                        game.newgrounds.io.callComponent('Medal.unlock', {id: medal.id}, function(result) {
+                            if (result.success) {
+                                console.log("Medal \"" + medal_name + "\" unlocked.");
+                            } else {
+                                console.log("Failed to unlock medal \"" + medal_name + "\". Details: \"" + result.error.message + "\".");
+                            }
+                        });
+                    } else {
+                        console.log("Medal \"" + medal_name + "\" is already unlocked.");
+                    }
                 } else {
-                    console.log("Medal \"" + medal_name + "\" is already unlocked.");
+                    console.log("Failed to unlock medal \"" + medal_name + "\" because user is not logged in.");
                 }
+
+                game.extra_timeout = Math.max(game.extra_timeout, 0) + 25;
+                setTimeout(function() {
+                    const medal_width = 160;
+                    const medal_height = 25;
+                    const medal_item = {
+                        timeout: 3,
+                        container: new PIXI.Container(),
+                        background: new PIXI.Graphics(),
+                        text: new PIXI.BitmapText(medal_name + " unlocked!", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0xE6E3E3 }),
+                        icon: new PIXI.Sprite(game.resources.sprites.hasOwnProperty("icon_" + medal_name) ? game.resources.sprites["icon_" + medal_name] : game.resources.sprites["alpha_red"]),
+                    };
+                    medal_item.container.addChild(medal_item.background);
+                    medal_item.background.beginFill(0x0F0B0C);
+                    medal_item.background.drawRect(0, 0, medal_width, medal_height);
+                    medal_item.background.endFill();
+                    medal_item.icon.width = 25;
+                    medal_item.icon.height = 25;
+                    medal_item.container.addChild(medal_item.icon);
+                    medal_item.text.y = 8;
+                    medal_item.text.x = 30;
+                    medal_item.container.addChild(medal_item.text);
+                    medal_item.container.x = game.render.render_width;
+                    medal_item.container.y = game.render.render_height - (game.containers.medals_items.length + 1) * medal_height;
+                    game.containers.medals.addChild(medal_item.container);
+                    game.containers.medals_items.push(medal_item);
+                }, 100 + Math.max(game.extra_timeout, 0));
             }
         }
     } else {
-        console.log("Failed to unlock medal \"" + medal_name + "\" because user is not logged in.");
+        console.log("Failed to unlock medal \"" + medal_name + "\" because medals are not available.");
     }
 };
 
@@ -1896,6 +1936,7 @@ game.render.init();
 
 game.resources.on_load = function() {
     document.getElementById("loading_bar").remove();
+
     game.update_touchscreen_controls();
     initialize();
     game.render.application.ticker.add(main_loop);
@@ -1904,8 +1945,10 @@ game.resources.load();
 
 game.input.init();
 
-let construct_level = function(level_name) {
+game.construct_level = function(level_name) {
     const tileset = game.resources.sprites["tileset"];
+
+    game.current_level = level_name;
 
     game.level = game.resources.levels[level_name];
 
@@ -1964,14 +2007,24 @@ let construct_level = function(level_name) {
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
         ui: new PIXI.Container(),
+        medals: new PIXI.Container(),
+        medals_items: [],
         coin: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
         coin_shadow: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
         timer: new PIXI.Sprite(game.resources.sprites["ui_timer"]),
         timer_shadow: new PIXI.Sprite(game.resources.sprites["ui_timer"]),
+        skull: new PIXI.Sprite(game.resources.sprites["ui_deaths"]),
+        skull_shadow: new PIXI.Sprite(game.resources.sprites["ui_deaths"]),
+        spitting: new PIXI.Sprite(game.resources.sprites["ui_kills"]),
+        spitting_shadow: new PIXI.Sprite(game.resources.sprites["ui_kills"]),
         score: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         score_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
         time: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         time_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
+        deaths: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
+        deaths_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
+        kills: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
+        kills_shadow: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0x000000 }),
         items: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
         dialog_background: new PIXI.Graphics(),
         dialog_text: new PIXI.BitmapText("", { font: '10px Upheaval TT (BRK)', align: 'center' }),
@@ -1990,8 +2043,8 @@ let construct_level = function(level_name) {
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
-    game.containers.level.addChild(game.containers.effects);
     game.containers.level.addChild(game.containers.tiles_back);
+    game.containers.level.addChild(game.containers.effects);
     game.containers.level.addChild(game.containers.entities);
 
     game.containers.background_1 = new PIXI.Sprite(game.resources.sprites["background_1"]);
@@ -2018,6 +2071,7 @@ let construct_level = function(level_name) {
     game.containers.stage.addChild(game.containers.fireworks);
     game.containers.stage.addChild(game.containers.level);
     game.containers.stage.addChild(game.containers.ui);
+    game.containers.stage.addChild(game.containers.medals);
     game.containers.stage.addChild(game.containers.dialog_background);
     game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
@@ -2091,10 +2145,10 @@ let construct_level = function(level_name) {
             const tutorial = new Tutorial(entity.x, entity.y, entity.a, entity.b);
             game.containers.entities.addChild(tutorial);
         } else if (entity.type === "animation") {
-            const animation = new PIXI.AnimatedSprite(game.resources.sprites[entity.animation_name]);
+            const animation = new PIXI.AnimatedSprite(game.resources.sprites[entity["animation_name"]]);
             animation.x = entity.x;
             animation.y = entity.y;
-            animation.animationSpeed = entity.animation_speed;
+            animation.animationSpeed = entity["animation_speed"];
             animation.play();
             game.containers.entities.addChild(animation);
         }
@@ -2350,6 +2404,9 @@ let construct_level = function(level_name) {
         game.containers.level.addChild(game.containers.hitboxes);
     }
 
+    const TEXT_DISTANCE = 13;
+    const ICON_DISTANCE = 12;
+
     game.containers.score.text = "0";
     game.containers.score.x = 24;
     game.containers.score.y = 7;
@@ -2360,7 +2417,7 @@ let construct_level = function(level_name) {
 
     game.containers.time.text = "00 : 00";
     game.containers.time.x = 24;
-    game.containers.time.y = 15 + game.containers.score.height;
+    game.containers.time.y = game.containers.score.y + TEXT_DISTANCE;
 
     game.containers.coin.x = 7;
     game.containers.coin.y = 7;
@@ -2370,7 +2427,7 @@ let construct_level = function(level_name) {
     game.containers.coin_shadow.tint = 0x000000;
 
     game.containers.timer.x = 7;
-    game.containers.timer.y = 13 + game.containers.score.height;
+    game.containers.timer.y = game.containers.coin.y + ICON_DISTANCE;
 
     game.containers.timer_shadow.x = game.containers.timer.x;
     game.containers.timer_shadow.y = game.containers.timer.y + 1;
@@ -2410,6 +2467,47 @@ let construct_level = function(level_name) {
     game.containers.ui.addChild(game.containers.item3);
     game.containers.ui.addChild(game.containers.item4);
 
+    if (level_name === "main_menu_1") {
+        game.containers.deaths.text = game.stats.total_deaths + " TOTAL";
+        game.containers.deaths.x = 24;
+        game.containers.deaths.y = game.containers.time.y + TEXT_DISTANCE;
+
+        game.containers.deaths_shadow.text = game.containers.deaths.text;
+        game.containers.deaths_shadow.x = game.containers.deaths.x;
+        game.containers.deaths_shadow.y = game.containers.deaths.y + 1;
+
+        game.containers.kills.text = game.stats.total_kills + " TOTAL";
+        game.containers.kills.x = 24;
+        game.containers.kills.y = game.containers.deaths.y + TEXT_DISTANCE;
+
+        game.containers.kills_shadow.text = game.containers.kills.text;
+        game.containers.kills_shadow.x = game.containers.kills.x;
+        game.containers.kills_shadow.y = game.containers.kills.y + 1;
+
+        game.containers.skull.x = 7;
+        game.containers.skull.y = game.containers.timer.y + ICON_DISTANCE + 3;
+
+        game.containers.skull_shadow.x = game.containers.skull.x;
+        game.containers.skull_shadow.y = game.containers.skull.y + 1;
+        game.containers.skull_shadow.tint = 0x000000;
+
+        game.containers.spitting.x = 7;
+        game.containers.spitting.y = game.containers.skull.y + ICON_DISTANCE;
+
+        game.containers.spitting_shadow.x = game.containers.spitting.x;
+        game.containers.spitting_shadow.y = game.containers.spitting.y + 1;
+        game.containers.spitting_shadow.tint = 0x000000;
+
+        game.containers.ui.addChild(game.containers.skull_shadow);
+        game.containers.ui.addChild(game.containers.skull);
+        game.containers.ui.addChild(game.containers.spitting_shadow);
+        game.containers.ui.addChild(game.containers.spitting);
+        game.containers.ui.addChild(game.containers.deaths_shadow);
+        game.containers.ui.addChild(game.containers.deaths);
+        game.containers.ui.addChild(game.containers.kills_shadow);
+        game.containers.ui.addChild(game.containers.kills);
+    }
+
     for (let i = 0; i < game.containers.entities.children.length; i++) {
         if (game.containers.entities.children[i].constructor) {
             if (game.order.hasOwnProperty(game.containers.entities.children[i].constructor.name)) {
@@ -2427,7 +2525,7 @@ let construct_level = function(level_name) {
 let initialize = function() {
     init_newgrounds_session();
     emit_event("start_" + game.current_level);
-    construct_level(game.current_level);
+    game.construct_level(game.current_level);
 };
 
 let main_loop = function() {
@@ -2437,6 +2535,7 @@ let main_loop = function() {
     const total_elapsed = (current_time.getTime() - game.stats.level_start.getTime()) / 1000;
 
     game.firework_timeout -= elapsed;
+    game.extra_timeout -= elapsed * 1000;
 
     if (game.draw_hitboxes) {
         game.containers.hitboxes.clear();
@@ -2567,16 +2666,47 @@ let main_loop = function() {
         game.start_button.y += game.start_button_velocity.y * elapsed;
         if (game.start_button.y >= 209) {
             game.resources.sounds["wall_grab"].play();
+
             if (game.start_button_velocity.bounces < 3) {
                 game.start_button.y = 208;
                 game.start_button_velocity.x /= 2;
                 game.start_button_velocity.y = -game.start_button_velocity.y / 2;
                 game.start_button_velocity.bounces++;
             } else {
+                game.start_button.x = Math.round(game.start_button.x);
                 game.start_button.y = 209;
             }
+
+            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+            effect.x = game.start_button.x - game.start_button.width / 2;
+            effect.y = game.start_button.y + game.start_button.height / 2;
+            effect.anchor.set(0.5, 1);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                effect.destroy();
+            };
+            game.containers.effects.addChild(effect);
         }
         game.start_button_velocity.y += 500 * elapsed;
+    }
+
+    for (let i = 0; i < game.containers.medals_items.length; ) {
+        const medal = game.containers.medals_items[i];
+
+        medal.timeout -= elapsed;
+        if (medal.timeout <= 0) {
+            medal.container.destroy();
+            game.containers.medals_items.splice(i, 1);
+        } else {
+            if (medal.timeout > 1) {
+                medal.container.x = Math.max(medal.container.x - elapsed * 400, game.render.render_width - medal.background.width);
+            } else if (medal.timeout < 0.4) {
+                medal.container.x += elapsed * 400;
+            }
+            i++;
+        }
     }
 
     if (game.next_level == null && game.exit) {
@@ -2638,7 +2768,7 @@ let main_loop = function() {
                     emit_event("death_" + game.current_level);
                     game.stats.total_deaths++;
                 }
-                construct_level(game.current_level);
+                game.construct_level(game.current_level);
             }
         }
     } else {
@@ -3169,7 +3299,6 @@ class Player extends MovieClip {
                 effect.destroy();
             };
             game.containers.effects.addChild(effect);
-
         } else {
             if (this.is_grounded) {
                 if (this.is_grounded_counter > 13) {
@@ -3603,6 +3732,7 @@ const load_sounds = function() {
     load_sound("step", 8);
     load_sound("wall_grab", 3);
     load_sound("cloud", 1);
+    load_sound("victory", 5);
 
     Howler.volume(0.1);
 };
