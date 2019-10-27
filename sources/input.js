@@ -21,9 +21,9 @@ const update_input = function() {
         }
     }
     if (game.jump_button) {
-        input.keys["Space"] = game.jump_button.is_pressed || input.current_keys["Space"];
+        input.keys["Space"] = game.jump_button.is_pressed || input.current_keys["Space"] || input.current_keys["KeyZ"];
     } else {
-        input.keys["Space"] = input.current_keys["Space"];
+        input.keys["Space"] = input.current_keys["Space"] || input.current_keys["KeyZ"];
     }
     if (game.joystick) {
         input.keys["ArrowLeft"] = game.joystick.left || input.current_keys["ArrowLeft"] || input.current_keys["KeyA"];

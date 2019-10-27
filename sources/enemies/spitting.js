@@ -24,6 +24,7 @@ class Spitting extends MovieClip {
 
         this.friendly = friendly;
         this.script = script;
+        this.force_animation = null;
 
         this.bounds = {
             width: game.config.spitting.width,
@@ -145,6 +146,8 @@ class Spitting extends MovieClip {
 
                         game.resources.sounds["Explosion4"].play();
 
+                        game.stats.kills++;
+
                         this.destroy();
                         return;
                     } else {
@@ -176,15 +179,21 @@ class Spitting extends MovieClip {
             }
             this.prepare_timeout = 0;
         } else {
-            if (this.attack_cooldown <= 0 && this.prepare_timeout < game.config.spitting.prepare_timeout) {
-                if (this.animation !== "charge") {
-                    this.gotoAndPlay("charge");
+            if (this.force_animation) {
+                if (this.animation !== this.force_animation) {
+                    this.gotoAndPlay(this.force_animation);
                 }
             } else {
-                if (this.attack_cooldown < game.config.spitting.projectile_cooldown - 0.2) {
-                    this.gotoAndPlay("idle");
+                if (this.attack_cooldown <= 0 && this.prepare_timeout < game.config.spitting.prepare_timeout) {
+                    if (this.animation !== "charge") {
+                        this.gotoAndPlay("charge");
+                    }
                 } else {
-                    this.gotoAndPlay("attack");
+                    if (this.attack_cooldown < game.config.spitting.projectile_cooldown - 0.2) {
+                        this.gotoAndPlay("idle");
+                    } else {
+                        this.gotoAndPlay("attack");
+                    }
                 }
             }
         }

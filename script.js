@@ -281,11 +281,11 @@ module.exports = {
         width: 16,
         height: 16,
         speed: 60,
-        projectile_speed: 80,
+        projectile_speed: 65,
         projectile_size: 5,
         projectile_cooldown: 1.1,
-        attack_area_width: 35,
-        attack_area_height: 1000,
+        attack_area_width: 30,
+        attack_area_height: 200,
     },
     cloud: {
         width: 30,
@@ -316,7 +316,7 @@ module.exports = {
         speed: 50,
         bezier_height: 80,
         max_shooting_distance: 170,
-        projectile_speed: 230,
+        projectile_speed: 200,
         projectile_size: 3,
         projectile_cooldown: 1.2,
         bezier_angle: 50 / 180 * Math.PI,
@@ -483,6 +483,8 @@ class Flying extends MovieClip {
                     game.containers.effects.addChild(effect);
 
                     game.resources.sounds["Explosion4"].play();
+
+                    game.stats.kills++;
 
                     this.destroy();
                     return;
@@ -741,6 +743,8 @@ class Mouse extends MovieClip {
 
                         game.resources.sounds["Explosion4"].play();
 
+                        game.stats.kills++;
+
                         this.destroy();
                         return;
                     } else {
@@ -930,6 +934,7 @@ class Spitting extends MovieClip {
 
         this.friendly = friendly;
         this.script = script;
+        this.force_animation = null;
 
         this.bounds = {
             width: game.config.spitting.width,
@@ -1051,6 +1056,8 @@ class Spitting extends MovieClip {
 
                         game.resources.sounds["Explosion4"].play();
 
+                        game.stats.kills++;
+
                         this.destroy();
                         return;
                     } else {
@@ -1082,15 +1089,21 @@ class Spitting extends MovieClip {
             }
             this.prepare_timeout = 0;
         } else {
-            if (this.attack_cooldown <= 0 && this.prepare_timeout < game.config.spitting.prepare_timeout) {
-                if (this.animation !== "charge") {
-                    this.gotoAndPlay("charge");
+            if (this.force_animation) {
+                if (this.animation !== this.force_animation) {
+                    this.gotoAndPlay(this.force_animation);
                 }
             } else {
-                if (this.attack_cooldown < game.config.spitting.projectile_cooldown - 0.2) {
-                    this.gotoAndPlay("idle");
+                if (this.attack_cooldown <= 0 && this.prepare_timeout < game.config.spitting.prepare_timeout) {
+                    if (this.animation !== "charge") {
+                        this.gotoAndPlay("charge");
+                    }
                 } else {
-                    this.gotoAndPlay("attack");
+                    if (this.attack_cooldown < game.config.spitting.projectile_cooldown - 0.2) {
+                        this.gotoAndPlay("idle");
+                    } else {
+                        this.gotoAndPlay("attack");
+                    }
                 }
             }
         }
@@ -1357,9 +1370,9 @@ const update_input = function() {
         }
     }
     if (game.jump_button) {
-        input.keys["Space"] = game.jump_button.is_pressed || input.current_keys["Space"];
+        input.keys["Space"] = game.jump_button.is_pressed || input.current_keys["Space"] || input.current_keys["KeyZ"];
     } else {
-        input.keys["Space"] = input.current_keys["Space"];
+        input.keys["Space"] = input.current_keys["Space"] || input.current_keys["KeyZ"];
     }
     if (game.joystick) {
         input.keys["ArrowLeft"] = game.joystick.left || input.current_keys["ArrowLeft"] || input.current_keys["KeyA"];
@@ -1479,9 +1492,12 @@ window.game = {
     jump_button: null,
     stats: {
         score: 0,
+        kills: 0,
         game_start: new Date(),
         level_start: null,
         total_score: 0,
+        total_kills: 0,
+        total_deaths: 0,
         item1: true,
         item2: true,
         item3: true,
@@ -1504,6 +1520,7 @@ window.game = {
     scripts: {
         sc_game_menu_0: function(entity, elapsed) {
             if (!entity.activated && (game.num_clicks >= 1 || game.player.x > 300)) {
+                entity.force_animation = "idle";
                 entity.activated = true;
                 entity.state = 1;
             }
@@ -1516,6 +1533,7 @@ window.game = {
                         entity.state = 2;
                     }
                 } else if (entity.state === 2) {
+                    entity.force_animation = "charge";
                     game.dialog = true;
                     game.dialog_time = 0;
 
@@ -1523,7 +1541,7 @@ window.game = {
                     game.dialog_text_duration = 2;
                     game.dialog_text_timeout = 0;
                     game.dialog_callback = function() {
-                        game.dialog_text = "Looks like Start button is broken";
+                        game.dialog_text = "Looks like Start button exploded!!!";
                         game.dialog_text_duration = 3;
                         game.dialog_text_timeout = 0;
                         game.dialog_callback = function() {
@@ -1545,6 +1563,8 @@ window.game = {
                         entity.scale.x = 1;
                     }
                 } else if (entity.state === 4) {
+                    entity.force_animation = "idle";
+
                     entity.scale.x = 1;
                     if (entity.x < 510) {
                         entity.x += elapsed * game.config.spitting.speed;
@@ -1561,6 +1581,7 @@ window.game = {
         },
         sc_backstage_1: function(entity, elapsed) {
             if (!entity.state) {
+                entity.force_animation = "idle";
                 entity.state = 1;
             }
             if (entity.state === 1) {
@@ -1571,6 +1592,7 @@ window.game = {
                     entity.state = 2;
                 }
             } else if (entity.state === 2) {
+                entity.force_animation = "charge";
                 game.dialog = true;
                 game.dialog_time = 0;
 
@@ -1598,6 +1620,7 @@ window.game = {
                                     game.dialog_text_duration = 6;
                                     game.dialog_text_timeout = 0;
                                     game.dialog_callback = function() {
+                                        entity.force_animation = "idle";
                                         game.dialog = false;
                                         entity.state = 4;
                                     };
@@ -1686,7 +1709,100 @@ window.game = {
                 }
             }
         },
+    },
+    newgrounds: {
+        io: null,
+        medals: null,
+        scoreboards: null,
+    },
+    broken: false,
+    start_button_velocity: {
+        x: 0,
+        y: 0,
+        bounces: 0,
+    },
+    initial_y: 0,
+};
+
+let init_newgrounds_session = function() {
+    game.newgrounds.io = new Newgrounds.io.core("49731:Jh4dHyWR", "A9Tuytth3X5txdmmIixKeQ==");
+
+    console.log("Requesting authorization...");
+
+    game.newgrounds.io.getValidSession(function() {
+        if (game.newgrounds.io.user) {
+            console.log("User \"" + game.newgrounds.io.user + "\" is signed in.");
+
+            game.newgrounds.io.callComponent("Medal.getList", {}, function(result) {
+                if (result.success && result.medals) {
+                    game.newgrounds.medals = result.medals;
+                }
+            });
+
+            game.newgrounds.io.callComponent("ScoreBoard.getBoards", {}, function(result) {
+                if (result.success && result.scoreboards) {
+                    game.newgrounds.scoreboards = result.scoreboards;
+                }
+            });
+        } else {
+            console.log("User is not signed in.");
+        }
+    });
+};
+
+let unlock_medal = function(medal_name) {
+    if (game.newgrounds.io.user && game.newgrounds.medals) {
+        for (let i = 0; i < game.newgrounds.medals.length; i++) {
+            const medal = game.newgrounds.medals[i];
+            if (medal.name === medal_name) {
+                if (!medal.unlocked) {
+                    console.log("Unlocking medal \"" + medal_name + "\"...");
+                    game.newgrounds.io.callComponent('Medal.unlock', {id: medal.id}, function(result) {
+                        if (result.success) {
+                            console.log("Medal \"" + medal_name + "\" unlocked.");
+                        } else {
+                            console.log("Failed to unlock medal \"" + medal_name + "\". Details: \"" + result.error.message + "\".");
+                        }
+                    });
+                } else {
+                    console.log("Medal \"" + medal_name + "\" is already unlocked.");
+                }
+            }
+        }
+    } else {
+        console.log("Failed to unlock medal \"" + medal_name + "\" because user is not logged in.");
     }
+};
+
+let post_score = function(board_name, score_value) {
+    if (game.newgrounds.io.user && game.newgrounds.scoreboards) {
+        for (let i = 0; i < game.newgrounds.scoreboards.length; i++) {
+            const scoreboard = game.newgrounds.scoreboards[i];
+            if (scoreboard.name === board_name) {
+                console.log("Posting score \"" + score_value + "\" to \"" + board_name + "\"...");
+                game.newgrounds.io.callComponent('ScoreBoard.postScore', {id: scoreboard.id, value: score_value}, function(result) {
+                    if (result.success) {
+                        console.log("Successfully posed score \"" + score_value + "\" to  \"" + board_name + "\".");
+                    } else {
+                        console.log("Failed to post score \"" + score_value + "\" to  \"" + board_name + "\". Details: \"" + result.error.message + "\".");
+                    }
+                });
+            }
+        }
+    } else {
+        console.log("Failed to post score \"" + score_value + "\" to  \"" + board_name + "\" because user is not logged in.");
+    }
+};
+
+let emit_event = function(event_name) {
+    console.log("Emitting event \"" + event_name + "\"...");
+    game.newgrounds.io.callComponent('Event.logEvent', {event_name: event_name, host: window.location.hostname}, function(result) {
+        if (result.success) {
+            console.log("Successfully emitted event \"" + event_name + "\".");
+        } else {
+            console.log("Failed to emit event \"" + event_name + "\". Details: \"" + result.error.message + "\".");
+        }
+    });
 };
 
 game.update_touchscreen_controls = function() {
@@ -1877,12 +1993,6 @@ let construct_level = function(level_name) {
     game.containers.level.addChild(game.containers.effects);
     game.containers.level.addChild(game.containers.tiles_back);
     game.containers.level.addChild(game.containers.entities);
-    game.containers.level.addChild(game.containers.front_effects);
-    game.containers.level.addChild(game.containers.tiles_front);
-
-    if (game.draw_hitboxes) {
-        game.containers.level.addChild(game.containers.hitboxes);
-    }
 
     game.containers.background_1 = new PIXI.Sprite(game.resources.sprites["background_1"]);
     game.containers.background_1.y = game.render.render_height - game.containers.background_1.height;
@@ -2011,6 +2121,96 @@ let construct_level = function(level_name) {
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
         if (level_name === "main_menu_0") {
             game.containers.ui.visible = false;
+        } else {
+            game.broken = false;
+
+            const playtime = game.stats.level_start.getTime() - game.stats.game_start.getTime();
+            const minutes = playtime / 60000;
+            if (minutes < 3) {
+                unlock_medal("Speedrun");
+            }
+
+            if (minutes < 2) {
+                emit_event("total_time_under_2");
+            } else if (minutes < 2.5) {
+                emit_event("total_time_under_2_30");
+            } else if (minutes < 3) {
+                emit_event("total_time_under_3");
+            } else if (minutes < 3.5) {
+                emit_event("total_time_under_3_30");
+            } else if (minutes < 4) {
+                emit_event("total_time_under_4");
+            } else if (minutes < 5) {
+                emit_event("total_time_under_5");
+            } else if (minutes < 7) {
+                emit_event("total_time_under_7");
+            } else if (minutes < 10) {
+                emit_event("total_time_under_10");
+            } else if (minutes < 15) {
+                emit_event("total_time_under_15");
+            } else if (minutes < 20) {
+                emit_event("total_time_under_20");
+            } else if (minutes < 30) {
+                emit_event("total_time_under_30");
+            } else if (minutes < 60) {
+                emit_event("total_time_under_60");
+            } else if (minutes < 80) {
+                emit_event("total_time_under_80");
+            } else if (minutes < 120) {
+                emit_event("total_time_under_120");
+            } else {
+                emit_event("total_time_over_120");
+            }
+
+            const deaths = game.stats.total_deaths;
+            if (deaths < 1) {
+                emit_event("total_deaths_0");
+            } else if (deaths < 5) {
+                emit_event("total_deaths_under_5");
+            } else  if (deaths < 10) {
+                emit_event("total_deaths_under_10");
+            } else  if (deaths < 15) {
+                emit_event("total_deaths_under_15");
+            } else  if (deaths < 20) {
+                emit_event("total_deaths_under_20");
+            } else  if (deaths < 30) {
+                emit_event("total_deaths_under_30");
+            } else  if (deaths < 50) {
+                emit_event("total_deaths_under_50");
+            } else  if (deaths < 100) {
+                emit_event("total_deaths_under_100");
+            } else  if (deaths < 150) {
+                emit_event("total_deaths_under_150");
+            } else {
+                emit_event("total_deaths_over_150");
+            }
+
+            if (game.stats.total_score === 134) {
+                unlock_medal("Full Score");
+                post_score("100%", Math.floor(playtime));
+            }
+
+            if (game.stats.total_kills === 0) {
+                unlock_medal("Pacifist");
+            }
+
+            post_score("Any%", Math.floor(playtime));
+
+            if (localStorage) {
+                let plays = parseInt(localStorage.getItem("plays"));
+                if (plays && !isNaN(plays)) {
+                    ++plays;
+                    localStorage.setItem("plays", plays.toString());
+                    if (plays > 5) {
+                        emit_event("finish_over_5");
+                    } else {
+                        emit_event("finish_" + plays.toString());
+                    }
+                } else {
+                    localStorage.setItem("plays", "1");
+                    emit_event("finish_1");
+                }
+            }
         }
 
         if (game.joystick_zone) {
@@ -2021,7 +2221,7 @@ let construct_level = function(level_name) {
         game.ui_logo = new PIXI.Sprite(game.resources.sprites["ui_logo"]);
         game.ui_logo.anchor.set(0.5);
         const initial_x = -game.containers.level.x;
-        const initial_y = -game.containers.level.y;
+        const initial_y = game.initial_y = -game.containers.level.y;
         game.ui_logo.x = initial_x + game.render.render_width / 2;
         game.ui_logo.y = initial_y + game.render.render_height / 2 - 55;
         game.containers.level.addChild(game.ui_logo);
@@ -2034,7 +2234,9 @@ let construct_level = function(level_name) {
         game.start_button.buttonMode = true;
         game.containers.level.addChild(game.start_button);
         game.start_button.on("pointerover", function() {
-            game.start_button.texture = game.resources.sprites["button_start_hover"];
+            if (!game.broken) {
+                game.start_button.texture = game.resources.sprites["button_start_hover"];
+            }
         });
         game.start_button.on("pointerout", function() {
             game.start_button.texture = game.resources.sprites["button_start"];
@@ -2046,17 +2248,72 @@ let construct_level = function(level_name) {
             }
 
             if (level_name === "main_menu_0") {
-                game.containers.ui.visible = true;
-                game.stats.level_start = game.stats.game_start = new Date();
+                if (!game.broken) {
+                    game.broken = true;
 
-                const world_x = -game.containers.level.x + evt.data.global.x;
-                const world_y = -game.containers.level.y + evt.data.global.y;
-                do {
-                    game.start_button.x = initial_x + game.start_button.width / 2 + Math.random() * (game.render.render_width - game.start_button.width);
-                    game.start_button.y = initial_y + game.start_button.height / 2 + Math.random() * (game.render.render_height - game.start_button.height - 150);
-                } while (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y));
-                game.num_clicks++;
+                    emit_event("pressed_start_0");
+
+                    game.containers.ui.visible = true;
+                    game.stats.level_start = game.stats.game_start = new Date();
+
+                    game.start_button.texture = game.resources.sprites["button_start"];
+                    game.start_button.interactive = false;
+                    game.start_button.buttonMode = false;
+                    game.start_button_velocity.x = -75;
+                    game.start_button_velocity.y = -150;
+                    game.start_button_velocity.bounces = 0;
+
+                    const play_effect = function (x, y, delay) {
+                        x -= game.start_button.x;
+                        y -= game.start_button.y;
+                        const play = function () {
+                            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_smoke"]);
+                            effect.x = x + game.start_button.x;
+                            effect.y = y + game.start_button.y;
+                            effect.anchor.set(0.5, 0.5);
+                            effect.animationSpeed = 0.3;
+                            effect.loop = false;
+                            effect.play();
+                            effect.onComplete = function () {
+                                effect.destroy();
+                            };
+                            game.containers.front_effects.addChild(effect);
+
+                            if (game.firework_timeout <= 0) {
+                                game.resources.sounds["Explosion4"].play();
+                                game.firework_timeout = 0.15;
+                            }
+                        };
+
+                        if (delay === 0) {
+                            play();
+                        } else {
+                            setTimeout(play, delay * 1.25);
+                        }
+                    };
+
+                    const world_x = -game.containers.level.x + evt.data.global.x;
+                    const world_y = -game.containers.level.y + evt.data.global.y;
+
+                    play_effect(world_x, world_y, 0);
+                    play_effect(201.944, 143.112, 25);
+                    play_effect(213.519, 133.827, 25);
+                    play_effect(190.993, 142.631, 50);
+                    play_effect(283.64, 131.884, 50);
+                    play_effect(254.416, 130.571, 75);
+                    play_effect(272.686, 148.688, 75);
+                    play_effect(231.676, 128.453, 100);
+                    play_effect(197.116, 144.635, 100);
+                    play_effect(263.551, 132.718, 125);
+                    play_effect(284.264, 135.669, 125);
+
+                    game.num_clicks++;
+
+                    game.resources.sounds["Laser_Shoot8"].play();
+                }
             } else {
+                emit_event("pressed_start_1");
+
                 game.ui_logo.visible = game.start_button.visible = false;
 
                 const credits = new PIXI.Sprite(game.resources.sprites["ui_credits"]);
@@ -2074,8 +2331,9 @@ let construct_level = function(level_name) {
                 game.containers.fireworks_items.push({ x: game.render.render_width * 2 / 3, y: game.render.render_height * 2 / 3, velocity_y: -180, velocity_x: 90, lifetime: 1.3,
                     color: PIXI.utils.rgb2hex([ 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5 ]),
                     generations: 2 });
+
+                game.resources.sounds["Laser_Shoot8"].play();
             }
-            game.resources.sounds["Laser_Shoot8"].play();
         });
     } else {
         game.num_clicks++;
@@ -2083,6 +2341,13 @@ let construct_level = function(level_name) {
             game.joystick_zone.style.display = "block";
             game.jump_button.style.display = "block";
         }
+    }
+
+    game.containers.level.addChild(game.containers.front_effects);
+    game.containers.level.addChild(game.containers.tiles_front);
+
+    if (game.draw_hitboxes) {
+        game.containers.level.addChild(game.containers.hitboxes);
     }
 
     game.containers.score.text = "0";
@@ -2160,6 +2425,8 @@ let construct_level = function(level_name) {
 };
 
 let initialize = function() {
+    init_newgrounds_session();
+    emit_event("start_" + game.current_level);
     construct_level(game.current_level);
 };
 
@@ -2295,6 +2562,23 @@ let main_loop = function() {
             }
         }
     }
+    if (game.start_button && game.broken && game.start_button.y < 209) {
+        game.start_button.x += game.start_button_velocity.x * elapsed;
+        game.start_button.y += game.start_button_velocity.y * elapsed;
+        if (game.start_button.y >= 209) {
+            game.resources.sounds["wall_grab"].play();
+            if (game.start_button_velocity.bounces < 3) {
+                game.start_button.y = 208;
+                game.start_button_velocity.x /= 2;
+                game.start_button_velocity.y = -game.start_button_velocity.y / 2;
+                game.start_button_velocity.bounces++;
+            } else {
+                game.start_button.y = 209;
+            }
+        }
+        game.start_button_velocity.y += 500 * elapsed;
+    }
+
     if (game.next_level == null && game.exit) {
         const next_level = game.exit.update_exit();
         if (next_level) {
@@ -2341,10 +2625,18 @@ let main_loop = function() {
                 if (game.next_level) {
                     if (game.altar) {
                         game.stats["item" + game.altar.item_num] = false;
+                        const medal_names = [ "Undefined", "Goblet", "Potion", "Apple", "Key" ];
+                        unlock_medal(medal_names[game.altar.item_num]);
                     }
 
                     game.stats.total_score += game.stats.score;
+                    game.stats.total_kills += game.stats.kills;
                     game.current_level = game.next_level;
+
+                    emit_event("start_" + game.current_level);
+                } else {
+                    emit_event("death_" + game.current_level);
+                    game.stats.total_deaths++;
                 }
                 construct_level(game.current_level);
             }
@@ -3301,7 +3593,7 @@ const load_sounds = function() {
         });
     }
 
-    load_sound("music", 1, "mp3", true);
+    load_sound("music", 0, "mp3", true); // TODO: PUT BACK
     load_sound("block_unstable", 5);
     load_sound("death", 1);
     load_sound("Explosion4", 1);

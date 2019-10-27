@@ -152,6 +152,8 @@ class Mouse extends MovieClip {
 
                         game.resources.sounds["Explosion4"].play();
 
+                        game.stats.kills++;
+
                         this.destroy();
                         return;
                     } else {
