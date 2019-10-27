@@ -23,7 +23,7 @@ const load_sounds = function() {
         });
     }
 
-    load_sound("music", 0, "mp3", true); // TODO: PUT BACK
+    load_sound("music", 1, "mp3", true);
     load_sound("block_unstable", 5);
     load_sound("death", 1);
     load_sound("Explosion4", 1);
@@ -34,6 +34,8 @@ const load_sounds = function() {
     load_sound("wall_grab", 3);
     load_sound("cloud", 1);
     load_sound("victory", 5);
+    load_sound("stair_up", 3);
+    load_sound("medal_unlock", 3);
 
     Howler.volume(0.1);
 };

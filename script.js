@@ -705,7 +705,7 @@ class Mouse extends MovieClip {
                         } else {
                             if (this.is_attacking === 0 && player_x >= this.from - game.config.tile_size && player_x <= this.to + game.config.tile_size && player_y > this.y - game.config.mouse.attack_height) {
                                 this.attack_charge = old_attack_charge;
-                                if (this.attack_charge >= 0.15) {
+                                if (this.attack_charge >= 0.2) {
                                     if (player_x > this.x) {
                                         this.is_attacking = 1;
                                     } else {
@@ -1271,11 +1271,17 @@ class Exit {
         this.x = x;
         this.y = y;
         this.next_level = next_level;
+        this.played = false;
     }
 
     update_exit() {
         if (!game.player.dead) {
             if (game.player.x + game.player.bounds.width / 2 > this.x && game.player.x + game.player.bounds.width / 2 < this.x + game.config.tile_size * 2 && game.player.y + game.player.bounds.height / 2 > this.y && game.player.y + game.player.bounds.height / 2 < this.y + game.config.tile_size * 2) {
+                if (!this.played) {
+                    this.played = true;
+                    game.resources.sounds["stair_up"].play();
+                }
+
                 return this.next_level;
             }
         }
@@ -1386,6 +1392,8 @@ const update_input = function() {
         input.keys["ArrowUp"] = input.current_keys["ArrowUp"] || input.current_keys["KeyW"];
         input.keys["ArrowDown"] = input.current_keys["ArrowDown"] || input.current_keys["KeyS"];
     }
+    input.keys["Fullscreen"] = input.current_keys["KeyF"];
+    input.keys["Mute"] = input.current_keys["KeyM"];
 };
 
 const is_key_down = function(key) {
@@ -1696,16 +1704,11 @@ window.game = {
                     game.dialog = true;
                     game.dialog_time = 0;
 
-                    game.dialog_text = "Everything great starts with nothing";
+                    game.dialog_text = "Ah, here we go again.";
                     game.dialog_text_duration = 3;
                     game.dialog_text_timeout = 0;
                     game.dialog_callback = function() {
-                        game.dialog_text = "Now go and make something!";
-                        game.dialog_text_duration = 2.5;
-                        game.dialog_text_timeout = 0;
-                        game.dialog_callback = function() {
-                            game.dialog = false;
-                        };
+                        game.dialog = false;
                     };
                 }
             }
@@ -1725,6 +1728,7 @@ window.game = {
     initial_y: 0,
     construct_level: null,
     extra_timeout: 0,
+    muted: false,
 };
 
 let init_newgrounds_session = function() {
@@ -1742,12 +1746,6 @@ let init_newgrounds_session = function() {
         game.newgrounds.io.callComponent("Medal.getList", {}, function(result) {
             if (result.success && result.medals) {
                 game.newgrounds.medals = result.medals;
-
-                for (let i = 0; i < result.medals.length; i++) {
-                    const medal = result.medals[i];
-                    PIXI.Loader.shared.add("medal-" + medal.name, medal.icon);
-                    console.log("Loading medal \"" + medal.name + "\" from \"" + medal.icon + "\"");
-                }
             }
         });
 
@@ -1764,12 +1762,48 @@ let unlock_medal = function(medal_name) {
         for (let i = 0; i < game.newgrounds.medals.length; i++) {
             const medal = game.newgrounds.medals[i];
             if (medal.name === medal_name) {
+                function unlock_medal() {
+                    game.extra_timeout = Math.max(game.extra_timeout, 0) + 25;
+                    setTimeout(function() {
+                        const medal_width = 160;
+                        const medal_height = 25;
+
+                        const medal_item = {
+                            timeout: 3,
+                            container: new PIXI.Container(),
+                            background: new PIXI.Graphics(),
+                            text: new PIXI.BitmapText(medal_name + " unlocked!", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0xE6E3E3 }),
+                            icon: new PIXI.Sprite(game.resources.sprites["medal_" + medal_name]),
+                        };
+
+                        medal_item.background.beginFill(0x0F0B0C);
+                        medal_item.background.drawRect(0, 0, medal_width, medal_height);
+                        medal_item.background.endFill();
+                        medal_item.container.addChild(medal_item.background);
+
+                        medal_item.container.addChild(medal_item.icon);
+
+                        medal_item.text.y = 8;
+                        medal_item.text.x = 30;
+                        medal_item.container.addChild(medal_item.text);
+
+                        medal_item.container.x = game.render.render_width;
+                        medal_item.container.y = game.render.render_height - (game.containers.medals_items.length + 1) * medal_height;
+                        game.containers.medals.addChild(medal_item.container);
+
+                        game.containers.medals_items.push(medal_item);
+
+                        game.resources.sounds["medal_unlock"].play();
+                    }, 100 + Math.max(game.extra_timeout, 0));
+                }
+
                 if (game.newgrounds.io.user) {
                     if (!medal.unlocked) {
                         console.log("Unlocking medal \"" + medal_name + "\"...");
                         game.newgrounds.io.callComponent('Medal.unlock', {id: medal.id}, function(result) {
                             if (result.success) {
                                 console.log("Medal \"" + medal_name + "\" unlocked.");
+                                unlock_medal();
                             } else {
                                 console.log("Failed to unlock medal \"" + medal_name + "\". Details: \"" + result.error.message + "\".");
                             }
@@ -1779,34 +1813,8 @@ let unlock_medal = function(medal_name) {
                     }
                 } else {
                     console.log("Failed to unlock medal \"" + medal_name + "\" because user is not logged in.");
+                    unlock_medal();
                 }
-
-                game.extra_timeout = Math.max(game.extra_timeout, 0) + 25;
-                setTimeout(function() {
-                    const medal_width = 160;
-                    const medal_height = 25;
-                    const medal_item = {
-                        timeout: 3,
-                        container: new PIXI.Container(),
-                        background: new PIXI.Graphics(),
-                        text: new PIXI.BitmapText(medal_name + " unlocked!", { font: '10px Upheaval TT (BRK)', align: 'center', tint: 0xE6E3E3 }),
-                        icon: new PIXI.Sprite(game.resources.sprites.hasOwnProperty("icon_" + medal_name) ? game.resources.sprites["icon_" + medal_name] : game.resources.sprites["alpha_red"]),
-                    };
-                    medal_item.container.addChild(medal_item.background);
-                    medal_item.background.beginFill(0x0F0B0C);
-                    medal_item.background.drawRect(0, 0, medal_width, medal_height);
-                    medal_item.background.endFill();
-                    medal_item.icon.width = 25;
-                    medal_item.icon.height = 25;
-                    medal_item.container.addChild(medal_item.icon);
-                    medal_item.text.y = 8;
-                    medal_item.text.x = 30;
-                    medal_item.container.addChild(medal_item.text);
-                    medal_item.container.x = game.render.render_width;
-                    medal_item.container.y = game.render.render_height - (game.containers.medals_items.length + 1) * medal_height;
-                    game.containers.medals.addChild(medal_item.container);
-                    game.containers.medals_items.push(medal_item);
-                }, 100 + Math.max(game.extra_timeout, 0));
             }
         }
     } else {
@@ -1945,6 +1953,34 @@ game.resources.load();
 
 game.input.init();
 
+const is_fullscreen = function() {
+    return document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+};
+
+const toggle_fullscreen = function() {
+    if (!is_fullscreen()) {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+};
+
 game.construct_level = function(level_name) {
     const tileset = game.resources.sprites["tileset"];
 
@@ -1957,6 +1993,7 @@ game.construct_level = function(level_name) {
 
     game.stats.time = 0;
     game.stats.score = 0;
+    game.stats.kills = 0;
 
     game.stats.level_start = new Date();
 
@@ -2007,6 +2044,7 @@ game.construct_level = function(level_name) {
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
         ui: new PIXI.Container(),
+        ui2: new PIXI.Container(),
         medals: new PIXI.Container(),
         medals_items: [],
         coin: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
@@ -2040,6 +2078,8 @@ game.construct_level = function(level_name) {
         firework_effects: new PIXI.Container(),
         fireworks: new PIXI.Graphics(),
         fireworks_items: [],
+        mute: new PIXI.Sprite(game.resources.sprites["ui_sound_on"]),
+        fullscreen: new PIXI.Sprite(game.resources.sprites["ui_fullscreen_off"]),
     };
 
     game.containers.level.addChild(game.containers.tiles_very_back);
@@ -2075,6 +2115,7 @@ game.construct_level = function(level_name) {
     game.containers.stage.addChild(game.containers.dialog_background);
     game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
+    game.containers.stage.addChild(game.containers.ui2);
 
     draw_tiles_layer("tiles_very_back");
     draw_tiles_layer("tiles_back");
@@ -2250,20 +2291,24 @@ game.construct_level = function(level_name) {
 
             post_score("Any%", Math.floor(playtime));
 
-            if (localStorage) {
-                let plays = parseInt(localStorage.getItem("plays"));
-                if (plays && !isNaN(plays)) {
-                    ++plays;
-                    localStorage.setItem("plays", plays.toString());
-                    if (plays > 5) {
-                        emit_event("finish_over_5");
+            try {
+                if (Storage && localStorage) {
+                    let plays = parseInt(localStorage.getItem("plays"));
+                    if (plays && !isNaN(plays)) {
+                        ++plays;
+                        localStorage.setItem("plays", plays.toString());
+                        if (plays > 5) {
+                            emit_event("finish_over_5");
+                        } else {
+                            emit_event("finish_" + plays.toString());
+                        }
                     } else {
-                        emit_event("finish_" + plays.toString());
+                        localStorage.setItem("plays", "1");
+                        emit_event("finish_1");
                     }
-                } else {
-                    localStorage.setItem("plays", "1");
-                    emit_event("finish_1");
                 }
+            } catch(e) {
+                emit_event("finish_1");
             }
         }
 
@@ -2467,6 +2512,31 @@ game.construct_level = function(level_name) {
     game.containers.ui.addChild(game.containers.item3);
     game.containers.ui.addChild(game.containers.item4);
 
+    game.containers.mute.anchor.set(0.5, 0.5);
+    game.containers.mute.x = game.render.render_width - 38;
+    game.containers.mute.y = game.render.render_height - 16;
+    game.containers.mute.interactive = true;
+    game.containers.mute.buttonMode = true;
+    game.containers.mute.on("pointerdown", function(evt) {
+        game.muted = !game.muted;
+        if (game.muted) {
+            Howler.volume(0);
+        } else {
+            Howler.volume(0.1);
+        }
+    });
+    game.containers.ui2.addChild(game.containers.mute);
+
+    game.containers.fullscreen.anchor.set(0.5, 0.5);
+    game.containers.fullscreen.x = game.render.render_width - 16;
+    game.containers.fullscreen.y = game.render.render_height - 16;
+    game.containers.fullscreen.interactive = true;
+    game.containers.fullscreen.buttonMode = true;
+    game.containers.fullscreen.on("pointerdown", function(evt) {
+        toggle_fullscreen();
+    });
+    game.containers.ui2.addChild(game.containers.fullscreen);
+
     if (level_name === "main_menu_1") {
         game.containers.deaths.text = game.stats.total_deaths + " TOTAL";
         game.containers.deaths.x = 24;
@@ -2533,6 +2603,31 @@ let main_loop = function() {
 
     const current_time = new Date();
     const total_elapsed = (current_time.getTime() - game.stats.level_start.getTime()) / 1000;
+
+    if (game.input.is_key_pressed("Fullscreen")) {
+        toggle_fullscreen();
+    }
+
+    if (game.input.is_key_pressed("Mute")) {
+        game.muted = !game.muted;
+        if (game.muted) {
+            Howler.volume(0);
+        } else {
+            Howler.volume(0.1);
+        }
+    }
+
+    if (game.muted) {
+        game.containers.mute.texture = game.resources.sprites["ui_sound_muted"];
+    } else {
+        game.containers.mute.texture = game.resources.sprites["ui_sound_on"];
+    }
+
+    if (!is_fullscreen()) {
+        game.containers.fullscreen.texture = game.resources.sprites["ui_fullscreen_on"];
+    } else {
+        game.containers.fullscreen.texture = game.resources.sprites["ui_fullscreen_off"];
+    }
 
     game.firework_timeout -= elapsed;
     game.extra_timeout -= elapsed * 1000;
@@ -2827,7 +2922,11 @@ let main_loop = function() {
 };
 
 window.onfocus = function() {
-    Howler.volume(0.1);
+    if (game.muted) {
+        Howler.volume(0);
+    } else {
+        Howler.volume(0.1);
+    }
 };
 
 window.onblur = function() {
@@ -3722,7 +3821,7 @@ const load_sounds = function() {
         });
     }
 
-    load_sound("music", 0, "mp3", true); // TODO: PUT BACK
+    load_sound("music", 1, "mp3", true);
     load_sound("block_unstable", 5);
     load_sound("death", 1);
     load_sound("Explosion4", 1);
@@ -3733,6 +3832,8 @@ const load_sounds = function() {
     load_sound("wall_grab", 3);
     load_sound("cloud", 1);
     load_sound("victory", 5);
+    load_sound("stair_up", 3);
+    load_sound("medal_unlock", 3);
 
     Howler.volume(0.1);
 };

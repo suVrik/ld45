@@ -177,7 +177,7 @@
             <key>defaultPivotPoint</key>
             <point_f>0,0</point_f>
             <key>writePivotPoints</key>
-            <true/>
+            <false/>
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
@@ -449,6 +449,37 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">sources/medal_Apple.gif</key>
+            <key type="filename">sources/medal_Full Score.gif</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>6,6,13,13</rect>
+                <key>scale9Paddings</key>
+                <rect>6,6,13,13</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">sources/medal_Goblet.gif</key>
+            <key type="filename">sources/medal_Key.gif</key>
+            <key type="filename">sources/medal_Pacifist.gif</key>
+            <key type="filename">sources/medal_Potion.gif</key>
+            <key type="filename">sources/medal_Speedrun.gif</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>13,13,25,25</rect>
+                <key>scale9Paddings</key>
+                <rect>13,13,25,25</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">sources/projectile_flying.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -477,6 +508,8 @@
             </struct>
             <key type="filename">sources/ui_coins.png</key>
             <key type="filename">sources/ui_deaths.png</key>
+            <key type="filename">sources/ui_fullscreen_off.png</key>
+            <key type="filename">sources/ui_fullscreen_on.png</key>
             <key type="filename">sources/ui_kills.png</key>
             <key type="filename">sources/ui_sound_muted.png</key>
             <key type="filename">sources/ui_sound_on.png</key>

@@ -36,6 +36,8 @@ const update_input = function() {
         input.keys["ArrowUp"] = input.current_keys["ArrowUp"] || input.current_keys["KeyW"];
         input.keys["ArrowDown"] = input.current_keys["ArrowDown"] || input.current_keys["KeyS"];
     }
+    input.keys["Fullscreen"] = input.current_keys["KeyF"];
+    input.keys["Mute"] = input.current_keys["KeyM"];
 };
 
 const is_key_down = function(key) {
