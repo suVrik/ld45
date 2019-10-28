@@ -1236,7 +1236,7 @@ let main_loop = function() {
     }
 
     if (game.start_button) {
-        if (game.num_clicks === 0 && Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y)) {
+        if (!game.broken && game.start_button.visible && Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y)) {
             pointer = true;
 
             if (!game.broken) {
