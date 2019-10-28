@@ -1377,10 +1377,10 @@
     <enemy_flying id="13" x="432" y="32" friendly="False" script="">
       <node x="592" y="32" />
     </enemy_flying>
-    <altar id="14" x="512" y="224" item2="1" next_level="main_menu_1" />
+    <altar id="14" x="522" y="224" item2="1" next_level="main_menu_1" />
     <player id="15" x="64" y="432" />
     <enemy_mouse id="16" x="432" y="256" friendly="False" script="">
-      <node x="496" y="256" />
+      <node x="480" y="256" />
     </enemy_mouse>
     <hazard_vines id="17" x="144" y="448" width="48" height="16" />
     <hazard_vines id="18" x="352" y="448" width="48" height="16" />

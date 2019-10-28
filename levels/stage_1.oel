@@ -1423,8 +1423,8 @@
   </tiles_back>
   <entities>
     <player id="0" x="112" y="128" />
-    <enemy_flying id="1" x="72" y="256" friendly="False" script="">
-      <node x="72" y="400" />
+    <enemy_flying id="1" x="67" y="256" friendly="False" script="">
+      <node x="67" y="400" />
     </enemy_flying>
     <enemy_spiky id="4" x="272" y="384" script="">
       <node x="368" y="384" />

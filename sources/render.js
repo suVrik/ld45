@@ -37,15 +37,23 @@ const update_physical_size = function() {
     game_window.style.marginLeft = (-render.physical_width / 2) + "px";
     game_window.style.marginTop = (-render.physical_height / 2) + "px";
 
-    render.application.view.style.width = render.physical_width + "px";
-    render.application.view.style.height = render.physical_height + "px";
+    game.render_target_sprite.scale.x = render.physical_width / render.render_width;
+    game.render_target_sprite.scale.y = render.physical_height / render.render_height;
+
+    game.render.application.renderer.resize(render.physical_width, render.physical_height);
 };
 
 const init_window = function() {
     PIXI.settings.ROUND_PIXELS = true;
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
     render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
     render.stage = render.application.stage;
+
+    game.fake_stage = new PIXI.Container();
+    game.render_target = PIXI.RenderTexture.create(render.render_width, render.render_height);
+    game.render_target_sprite = PIXI.Sprite.from(game.render_target);
+    render.stage.addChild(game.render_target_sprite);
 
     const game_window = document.getElementById("game_window");
     game_window.appendChild(render.application.view);
