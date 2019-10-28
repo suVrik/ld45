@@ -259,7 +259,7 @@ window.game = {
                     game.dialog_time = 0;
 
                     game.dialog_text = "Ah, here we go again.";
-                    game.dialog_text_duration = 3;
+                    game.dialog_text_duration = 2;
                     game.dialog_text_timeout = 0;
                     game.dialog_callback = function() {
                         game.dialog = false;
@@ -602,7 +602,6 @@ game.construct_level = function(level_name) {
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
         ui: new PIXI.Container(),
-        ui2: new PIXI.Container(),
         medals: new PIXI.Container(),
         medals_items: [],
         coin: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
@@ -669,11 +668,10 @@ game.construct_level = function(level_name) {
     game.containers.stage.addChild(game.containers.fireworks);
     game.containers.stage.addChild(game.containers.level);
     game.containers.stage.addChild(game.containers.ui);
+    game.containers.stage.addChild(game.containers.medals);
     game.containers.stage.addChild(game.containers.dialog_background);
     game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
-    game.containers.stage.addChild(game.containers.ui2);
-    game.containers.stage.addChild(game.containers.medals);
 
     draw_tiles_layer("tiles_very_back");
     draw_tiles_layer("tiles_back");
@@ -973,14 +971,14 @@ game.construct_level = function(level_name) {
     game.containers.mute.y = game.render.render_height - 16;
     game.containers.mute.interactive = true;
     game.containers.mute.buttonMode = true;
-    game.containers.ui2.addChild(game.containers.mute);
+    game.containers.ui.addChild(game.containers.mute);
 
     game.containers.fullscreen.anchor.set(0.5, 0.5);
     game.containers.fullscreen.x = game.render.render_width - 16;
     game.containers.fullscreen.y = game.render.render_height - 16;
     game.containers.fullscreen.interactive = true;
     game.containers.fullscreen.buttonMode = true;
-    game.containers.ui2.addChild(game.containers.fullscreen);
+    game.containers.ui.addChild(game.containers.fullscreen);
 
     if (level_name === "main_menu_1") {
         game.containers.deaths.text = game.stats.total_deaths + " TOTAL";
