@@ -2077,6 +2077,7 @@ game.construct_level = function(level_name) {
         tiles_front: new PIXI.Container(),
         hitboxes: new PIXI.Graphics(),
         ui: new PIXI.Container(),
+        ui2: new PIXI.Container(),
         medals: new PIXI.Container(),
         medals_items: [],
         coin: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
@@ -2143,6 +2144,7 @@ game.construct_level = function(level_name) {
     game.containers.stage.addChild(game.containers.fireworks);
     game.containers.stage.addChild(game.containers.level);
     game.containers.stage.addChild(game.containers.ui);
+    game.containers.stage.addChild(game.containers.ui2);
     game.containers.stage.addChild(game.containers.medals);
     game.containers.stage.addChild(game.containers.dialog_background);
     game.containers.stage.addChild(game.containers.dialog_text);
@@ -2446,14 +2448,14 @@ game.construct_level = function(level_name) {
     game.containers.mute.y = game.render.render_height - 16;
     game.containers.mute.interactive = true;
     game.containers.mute.buttonMode = true;
-    game.containers.ui.addChild(game.containers.mute);
+    game.containers.ui2.addChild(game.containers.mute);
 
     game.containers.fullscreen.anchor.set(0.5, 0.5);
     game.containers.fullscreen.x = game.render.render_width - 16;
     game.containers.fullscreen.y = game.render.render_height - 16;
     game.containers.fullscreen.interactive = true;
     game.containers.fullscreen.buttonMode = true;
-    game.containers.ui.addChild(game.containers.fullscreen);
+    game.containers.ui2.addChild(game.containers.fullscreen);
 
     if (level_name === "main_menu_1") {
         game.containers.deaths.text = game.stats.total_deaths + " TOTAL";
@@ -2709,7 +2711,7 @@ let main_loop = function() {
     }
 
     if (game.start_button) {
-        if (Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y)) {
+        if (game.num_clicks === 0 && Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y)) {
             pointer = true;
 
             if (!game.broken) {
