@@ -1489,8 +1489,7 @@
     <tile x="44" y="33" tx="1" ty="7" />
     <tile x="45" y="0" tx="1" ty="7" />
     <tile x="45" y="1" tx="1" ty="8" />
-    <tile x="45" y="16" tx="5" ty="8" />
-    <tile x="45" y="17" tx="5" ty="9" />
+    <tile x="45" y="17" tx="5" ty="8" />
     <tile x="45" y="18" tx="5" ty="9" />
     <tile x="45" y="19" tx="5" ty="9" />
     <tile x="45" y="20" tx="5" ty="10" />
@@ -1541,7 +1540,7 @@
     </enemy_spitting>
     <player id="8" x="80" y="448" />
     <hazard_vines id="9" x="640" y="144" width="16" height="57" />
-    <hazard_vines id="10" x="720" y="263" width="16" height="64" />
+    <hazard_vines id="10" x="720" y="279" width="16" height="48" />
     <hazard_vines id="12" x="112" y="96" width="336" height="16" />
     <hazard_vines id="13" x="16" y="0" width="16" height="48" />
     <enemy_flying id="2" x="176" y="64" friendly="False" script="" />
@@ -1587,13 +1586,13 @@
     <enemy_cloud id="58" x="432" y="80" script="">
       <node x="288" y="80" />
     </enemy_cloud>
-    <enemy_spitting id="4" x="250" y="352" friendly="False" script="" />
+    <enemy_spitting id="4" x="247" y="352" friendly="False" script="" />
     <enemy_spiky id="6" x="304" y="448" script="">
       <node x="384" y="448" />
     </enemy_spiky>
-    <coin id="11" x="227" y="313" />
-    <coin id="49" x="243" y="297" />
-    <coin id="50" x="259" y="313" />
+    <coin id="11" x="224" y="313" />
+    <coin id="49" x="240" y="297" />
+    <coin id="50" x="256" y="313" />
     <coin id="51" x="304" y="400" />
     <coin id="52" x="336" y="416" />
     <coin id="53" x="368" y="400" />
@@ -1616,11 +1615,6 @@
     <hazard_vines id="67" x="432" y="304" width="16" height="16" />
     <hazard_vines id="68" x="432" y="320" width="16" height="16" />
     <hazard_vines id="72" x="592" y="32" width="16" height="16" />
-    <hazard_vines id="73" x="608" y="32" width="16" height="16" />
-    <hazard_vines id="74" x="624" y="32" width="16" height="16" />
-    <hazard_vines id="75" x="624" y="16" width="16" height="16" />
-    <hazard_vines id="76" x="608" y="16" width="16" height="16" />
-    <hazard_vines id="77" x="592" y="16" width="16" height="16" />
     <hazard_vines id="84" x="512" y="0" width="16" height="16" />
     <hazard_vines id="85" x="528" y="0" width="16" height="16" />
     <hazard_vines id="78" x="544" y="0" width="16" height="16" />
@@ -1634,11 +1628,16 @@
     <hazard_vines id="88" x="368" y="336" width="16" height="16" />
     <hazard_vines id="89" x="384" y="336" width="16" height="16" />
     <hazard_vines id="91" x="432" y="144" width="16" height="16" />
-    <hazard_vines id="90" x="592" y="0" width="16" height="16" />
-    <hazard_vines id="92" x="608" y="0" width="16" height="16" />
+    <hazard_vines id="90" x="592" y="0" width="32" height="32" />
     <hazard_vines id="93" x="624" y="0" width="16" height="16" />
     <animation id="69" x="85" y="80" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
     <animation id="70" x="496" y="64" animation_name="animations_32px_decor_windmill" animation_speed="0.15" />
+    <dead_zone id="71" x="144" y="288" width="144" height="96" name="begin" />
+    <dead_zone id="73" x="288" y="368" width="368" height="112" name="mid1" />
+    <dead_zone id="74" x="624" y="128" width="128" height="240" name="mid2" />
+    <dead_zone id="75" x="272" y="32" width="192" height="96" name="mid3" />
+    <dead_zone id="76" x="80" y="32" width="192" height="96" name="mid4" />
+    <dead_zone id="77" x="48" y="128" width="416" height="112" name="end" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords">
     <tile x="0" y="16" tx="4" ty="8" />

@@ -356,6 +356,15 @@ class Player extends MovieClip {
         if (!this.dead) {
             this.dead = true;
 
+            let zone_name = "other";
+            for (let i = 0; i < game.dead_zones.length; i++) {
+                const zone = game.dead_zones[i];
+                if (Physics.point(zone.x, zone.y, zone.width, zone.height, this.x + this.bounds.width / 2, this.y + this.bounds.height / 2)) {
+                    zone_name = zone.name;
+                }
+            }
+            game.emit_event("zone_" + game.current_level + "_" + zone_name);
+
             if (this.face === "left") {
                 this.horizontal_speed = 100;
                 this.vertical_speed = -300;

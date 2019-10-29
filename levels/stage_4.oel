@@ -1448,6 +1448,13 @@
     <hazard_vines id="97" x="608" y="0" width="96" height="48" />
     <animation id="78" x="528" y="96" animation_name="animations_32px_decor_flag" animation_speed="0.15" />
     <animation id="100" x="288" y="96" animation_name="animations_32px_decor_windmill" animation_speed="0.15" />
+    <dead_zone id="80" x="128" y="368" width="224" height="112" name="begin" />
+    <dead_zone id="81" x="352" y="368" width="256" height="112" name="mid1" />
+    <dead_zone id="82" x="608" y="48" width="128" height="432" name="mid2" />
+    <dead_zone id="83" x="416" y="0" width="192" height="144" name="mid3" />
+    <dead_zone id="84" x="208" y="0" width="208" height="144" name="mid4" />
+    <dead_zone id="85" x="48" y="0" width="160" height="144" name="mid5" />
+    <dead_zone id="86" x="16" y="144" width="544" height="192" name="end" />
   </entities>
   <tiles_front tileset="tileset" exportMode="XMLCoords" />
   <hitboxes exportMode="Rectangles">

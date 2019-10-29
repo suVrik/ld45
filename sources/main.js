@@ -287,6 +287,8 @@ window.game = {
     render_target: null,
     render_target_sprite: null,
     toggle_fullscreen: null,
+    dead_zones: [],
+    emit_event: null,
 };
 
 let init_newgrounds_session = function() {
@@ -400,7 +402,7 @@ let post_score = function(board_name, score_value) {
     }
 };
 
-let emit_event = function(event_name) {
+game.emit_event = function(event_name) {
     console.log("Emitting event \"" + event_name + "\"...");
     game.newgrounds.io.callComponent('Event.logEvent', {event_name: event_name, host: window.location.hostname}, function(result) {
         if (result.success) {
@@ -693,6 +695,7 @@ game.construct_level = function(level_name) {
     game.exit = null;
     game.altar = null;
     game.next_level = null;
+    game.dead_zones = [];
 
     for (let i = 0; i < game.level["entities"].length; i++) {
         const entity = game.level["entities"][i];
@@ -750,6 +753,8 @@ game.construct_level = function(level_name) {
             animation.animationSpeed = entity["animation_speed"];
             animation.play();
             game.containers.entities.addChild(animation);
+        } else if (entity.type === "dead_zone") {
+            game.dead_zones.push({ x: entity.x, y: entity.y, width: entity.width, height: entity.height, name: entity["name"] });
         }
     }
 
@@ -784,58 +789,58 @@ game.construct_level = function(level_name) {
             }
 
             if (minutes < 2) {
-                emit_event("total_time_under_2");
+                game.emit_event("total_time_under_2");
             } else if (minutes < 2.5) {
-                emit_event("total_time_under_2_30");
+                game.emit_event("total_time_under_2_30");
             } else if (minutes < 3) {
-                emit_event("total_time_under_3");
+                game.emit_event("total_time_under_3");
             } else if (minutes < 3.5) {
-                emit_event("total_time_under_3_30");
+                game.emit_event("total_time_under_3_30");
             } else if (minutes < 4) {
-                emit_event("total_time_under_4");
+                game.emit_event("total_time_under_4");
             } else if (minutes < 5) {
-                emit_event("total_time_under_5");
+                game.emit_event("total_time_under_5");
             } else if (minutes < 7) {
-                emit_event("total_time_under_7");
+                game.emit_event("total_time_under_7");
             } else if (minutes < 10) {
-                emit_event("total_time_under_10");
+                game.emit_event("total_time_under_10");
             } else if (minutes < 15) {
-                emit_event("total_time_under_15");
+                game.emit_event("total_time_under_15");
             } else if (minutes < 20) {
-                emit_event("total_time_under_20");
+                game.emit_event("total_time_under_20");
             } else if (minutes < 30) {
-                emit_event("total_time_under_30");
+                game.emit_event("total_time_under_30");
             } else if (minutes < 60) {
-                emit_event("total_time_under_60");
+                game.emit_event("total_time_under_60");
             } else if (minutes < 80) {
-                emit_event("total_time_under_80");
+                game.emit_event("total_time_under_80");
             } else if (minutes < 120) {
-                emit_event("total_time_under_120");
+                game.emit_event("total_time_under_120");
             } else {
-                emit_event("total_time_over_120");
+                game.emit_event("total_time_over_120");
             }
 
             const deaths = game.stats.total_deaths;
             if (deaths < 1) {
-                emit_event("total_deaths_0");
+                game.emit_event("total_deaths_0");
             } else if (deaths < 5) {
-                emit_event("total_deaths_under_5");
+                game.emit_event("total_deaths_under_5");
             } else  if (deaths < 10) {
-                emit_event("total_deaths_under_10");
+                game.emit_event("total_deaths_under_10");
             } else  if (deaths < 15) {
-                emit_event("total_deaths_under_15");
+                game.emit_event("total_deaths_under_15");
             } else  if (deaths < 20) {
-                emit_event("total_deaths_under_20");
+                game.emit_event("total_deaths_under_20");
             } else  if (deaths < 30) {
-                emit_event("total_deaths_under_30");
+                game.emit_event("total_deaths_under_30");
             } else  if (deaths < 50) {
-                emit_event("total_deaths_under_50");
+                game.emit_event("total_deaths_under_50");
             } else  if (deaths < 100) {
-                emit_event("total_deaths_under_100");
+                game.emit_event("total_deaths_under_100");
             } else  if (deaths < 150) {
-                emit_event("total_deaths_under_150");
+                game.emit_event("total_deaths_under_150");
             } else {
-                emit_event("total_deaths_over_150");
+                game.emit_event("total_deaths_over_150");
             }
 
             if (game.stats.total_score === 134) {
@@ -856,17 +861,17 @@ game.construct_level = function(level_name) {
                         ++plays;
                         localStorage.setItem("plays", plays.toString());
                         if (plays > 5) {
-                            emit_event("finish_over_5");
+                            game.emit_event("finish_over_5");
                         } else {
-                            emit_event("finish_" + plays.toString());
+                            game.emit_event("finish_" + plays.toString());
                         }
                     } else {
                         localStorage.setItem("plays", "1");
-                        emit_event("finish_1");
+                        game.emit_event("finish_1");
                     }
                 }
             } catch(e) {
-                emit_event("finish_1");
+                game.emit_event("finish_1");
             }
         }
 
@@ -1039,7 +1044,7 @@ game.construct_level = function(level_name) {
 
 let initialize = function() {
     init_newgrounds_session();
-    emit_event("start_" + game.current_level);
+    game.emit_event("start_" + game.current_level);
     game.construct_level(game.current_level);
 };
 
@@ -1255,7 +1260,7 @@ let main_loop = function() {
                     if (!game.broken) {
                         game.broken = true;
 
-                        emit_event("pressed_start_0");
+                        game.emit_event("pressed_start_0");
 
                         game.containers.ui.visible = true;
                         game.stats.level_start = game.stats.game_start = new Date();
@@ -1313,7 +1318,7 @@ let main_loop = function() {
                         game.resources.sounds["Laser_Shoot8"].play();
                     }
                 } else {
-                    emit_event("pressed_start_1");
+                    game.emit_event("pressed_start_1");
 
                     game.ui_logo.visible = game.start_button.visible = false;
 
@@ -1412,9 +1417,9 @@ let main_loop = function() {
                     game.stats.total_kills += game.stats.kills;
                     game.current_level = game.next_level;
 
-                    emit_event("start_" + game.current_level);
+                    game.emit_event("start_" + game.current_level);
                 } else {
-                    emit_event("death_" + game.current_level);
+                    game.emit_event("death_" + game.current_level);
                     game.stats.total_deaths++;
                 }
                 game.construct_level(game.current_level);

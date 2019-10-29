@@ -28,6 +28,24 @@ const init_input = function() {
     document.body.onmouseup = event => input.mouse[event.button] = false;
     document.body.onmousemove = event => {input.page_x = event.pageX; input.page_y = event.pageY;};
 
+    let game_window = document.getElementById("game_window");
+    window.addEventListener("pointerdown", event => {
+        input.mouse[0] = true;
+        input.page_x = event.pageX;
+        input.page_y = event.pageY;
+        input.x = (input.page_x - game_window.offsetLeft) / (game.render_target_sprite.scale.x || 1);
+        input.y = (input.page_y - game_window.offsetTop) / (game.render_target_sprite.scale.y || 1);
+        return false;
+    }, false);
+    window.addEventListener("pointerup", event => {
+        input.mouse[0] = false;
+        input.page_x = event.pageX;
+        input.page_y = event.pageY;
+        input.x = (input.page_x - game_window.offsetLeft) / (game.render_target_sprite.scale.x || 1);
+        input.y = (input.page_y - game_window.offsetTop) / (game.render_target_sprite.scale.y || 1);
+        return false;
+    }, false);
+
     delete input.init;
 };
 
