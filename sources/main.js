@@ -493,7 +493,7 @@ game.update_touchscreen_controls = function() {
             game.joystick.right = game.joystick.left = game.joystick.up = game.joystick.down = false;
         });
 
-        if (!game.start_button || game.start_button.visible === true) {
+        if (!game.broken) {
             game.joystick_zone.style.display = "none";
             game.jump_button.style.display = "none";
         }

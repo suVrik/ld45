@@ -705,7 +705,7 @@ class Mouse extends MovieClip {
                         } else {
                             if (this.is_attacking === 0 && player_x >= this.from - game.config.tile_size && player_x <= this.to + game.config.tile_size && player_y > this.y - game.config.mouse.attack_height) {
                                 this.attack_charge = old_attack_charge;
-                                if (this.attack_charge >= 0.25) {
+                                if (this.attack_charge >= 0.3) {
                                     if (player_x > this.x) {
                                         this.is_attacking = 1;
                                     } else {
@@ -1376,7 +1376,7 @@ const init_input = function() {
     document.body.onmousedown = event => {
         input.mouse[event.button] = true;
 
-        const fullscreen_hover = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, game.input.x, game.input.y);
+        const fullscreen_hover = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, input.x, input.y);
         if (fullscreen_hover) {
             game.toggle_fullscreen();
         }
@@ -1391,6 +1391,12 @@ const init_input = function() {
         input.page_y = event.pageY;
         input.x = (input.page_x - game_window.offsetLeft) / (game.render_target_sprite.scale.x || 1);
         input.y = (input.page_y - game_window.offsetTop) / (game.render_target_sprite.scale.y || 1);
+
+        const fullscreen_hover = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, input.x, input.y);
+        if (fullscreen_hover) {
+            game.toggle_fullscreen();
+        }
+
         return false;
     }, false);
     window.addEventListener("pointerup", event => {
@@ -1986,7 +1992,7 @@ game.update_touchscreen_controls = function() {
             game.joystick.right = game.joystick.left = game.joystick.up = game.joystick.down = false;
         });
 
-        if (!game.start_button || game.start_button.visible === true) {
+        if (!game.broken) {
             game.joystick_zone.style.display = "none";
             game.jump_button.style.display = "none";
         }

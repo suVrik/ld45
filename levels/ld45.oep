@@ -327,7 +327,7 @@
         <X>0</X>
         <Y>0</Y>
       </Origin>
-      <ImageDefinition DrawMode="Rectangle" ImagePath="" Tiled="false">
+      <ImageDefinition DrawMode="Image" ImagePath="..\sprites\sources\alpha_red.png" Tiled="true">
         <RectColor A="255" R="255" G="128" B="255" />
       </ImageDefinition>
       <ValueDefinitions>
