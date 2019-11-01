@@ -705,7 +705,7 @@ class Mouse extends MovieClip {
                         } else {
                             if (this.is_attacking === 0 && player_x >= this.from - game.config.tile_size && player_x <= this.to + game.config.tile_size && player_y > this.y - game.config.mouse.attack_height) {
                                 this.attack_charge = old_attack_charge;
-                                if (this.attack_charge >= 0.3) {
+                                if (this.attack_charge >= 0.6) {
                                     if (player_x > this.x) {
                                         this.is_attacking = 1;
                                     } else {
@@ -1788,36 +1788,42 @@ window.game = {
     toggle_fullscreen: null,
     dead_zones: [],
     emit_event: null,
+    performance: "webgl",
 };
 
 let init_newgrounds_session = function() {
-    game.newgrounds.io = new Newgrounds.io.core("49731:Jh4dHyWR", "A9Tuytth3X5txdmmIixKeQ==");
+    try {
+        game.newgrounds.io = new Newgrounds.io.core("49731:Jh4dHyWR", "A9Tuytth3X5txdmmIixKeQ==");
 
-    console.log("Requesting authorization...");
+        console.log("Requesting authorization...");
 
-    game.newgrounds.io.getValidSession(function() {
-        if (game.newgrounds.io.user) {
-            console.log("User \"" + game.newgrounds.io.user + "\" is signed in.");
-        } else {
-            console.log("User is not signed in.");
-        }
-
-        game.newgrounds.io.callComponent("Medal.getList", {}, function(result) {
-            if (result.success && result.medals) {
-                game.newgrounds.medals = result.medals;
+        game.newgrounds.io.getValidSession(function() {
+            if (game.newgrounds.io.user) {
+                console.log("User \"" + game.newgrounds.io.user + "\" is signed in.");
+            } else {
+                console.log("User is not signed in.");
             }
-        });
 
-        game.newgrounds.io.callComponent("ScoreBoard.getBoards", {}, function(result) {
-            if (result.success && result.scoreboards) {
-                game.newgrounds.scoreboards = result.scoreboards;
-            }
+            game.newgrounds.io.callComponent("Medal.getList", {}, function(result) {
+                if (result.success && result.medals) {
+                    game.newgrounds.medals = result.medals;
+                }
+            });
+
+            game.newgrounds.io.callComponent("ScoreBoard.getBoards", {}, function(result) {
+                if (result.success && result.scoreboards) {
+                    game.newgrounds.scoreboards = result.scoreboards;
+                }
+            });
         });
-    });
+    }
+    catch (e) {
+        console.log("Failed to initialize newgrounds API. Medals, scores and analytics are disabled!");
+    }
 };
 
 let unlock_medal = function(medal_name) {
-    if (game.newgrounds.medals) {
+    if (game.newgrounds.io && game.newgrounds.medals) {
         for (let i = 0; i < game.newgrounds.medals.length; i++) {
             const medal = game.newgrounds.medals[i];
             if (medal.name === medal_name) {
@@ -1882,7 +1888,7 @@ let unlock_medal = function(medal_name) {
 };
 
 let post_score = function(board_name, score_value) {
-    if (game.newgrounds.io.user && game.newgrounds.scoreboards) {
+    if (game.newgrounds.io && game.newgrounds.io.user && game.newgrounds.scoreboards) {
         for (let i = 0; i < game.newgrounds.scoreboards.length; i++) {
             const scoreboard = game.newgrounds.scoreboards[i];
             if (scoreboard.name === board_name) {
@@ -1903,13 +1909,17 @@ let post_score = function(board_name, score_value) {
 
 game.emit_event = function(event_name) {
     console.log("Emitting event \"" + event_name + "\"...");
-    game.newgrounds.io.callComponent('Event.logEvent', {event_name: event_name, host: window.location.hostname}, function(result) {
-        if (result.success) {
-            console.log("Successfully emitted event \"" + event_name + "\".");
-        } else {
-            console.log("Failed to emit event \"" + event_name + "\". Details: \"" + result.error.message + "\".");
-        }
-    });
+    if (game.newgrounds.io) {
+        game.newgrounds.io.callComponent('Event.logEvent', {event_name: event_name, host: window.location.hostname}, function(result) {
+            if (result.success) {
+                console.log("Successfully emitted event \"" + event_name + "\".");
+            } else {
+                console.log("Failed to emit event \"" + event_name + "\". Details: \"" + result.error.message + "\".");
+            }
+        });
+    } else {
+        console.log("Failed to emit event \"" + event_name + "\".");
+    }
 };
 
 game.update_touchscreen_controls = function() {
@@ -1972,20 +1982,25 @@ game.update_touchscreen_controls = function() {
             position: { bottom: padding + "px", left: padding + "px" },
         });
         game.joystick_manager.on("move", function(event, nipple) {
-            if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 18 || Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 18) {
+            if (nipple.force < 0.7) {
                 game.joystick.left = game.joystick.right = false;
-            } else {
-                game.joystick.left = nipple.angle.radian > Math.PI / 2 && nipple.angle.radian <= Math.PI * 3 / 2;
-                game.joystick.right = !game.joystick.left;
-            }
-            if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 4) {
-                game.joystick.up = true;
-                game.joystick.down = false;
-            } else if (Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 4) {
-                game.joystick.up = false;
-                game.joystick.down = true;
-            } else {
                 game.joystick.up = game.joystick.down = false;
+            } else {
+                if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 18 || Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 18) {
+                    game.joystick.left = game.joystick.right = false;
+                } else {
+                    game.joystick.left = nipple.angle.radian > Math.PI / 2 && nipple.angle.radian <= Math.PI * 3 / 2;
+                    game.joystick.right = !game.joystick.left;
+                }
+                if (Math.abs(nipple.angle.radian - Math.PI / 2) < Math.PI / 4) {
+                    game.joystick.up = true;
+                    game.joystick.down = false;
+                } else if (Math.abs(nipple.angle.radian - Math.PI * 3 / 2) < Math.PI / 4) {
+                    game.joystick.up = false;
+                    game.joystick.down = true;
+                } else {
+                    game.joystick.up = game.joystick.down = false;
+                }
             }
         });
         game.joystick_manager.on("end", function() {
@@ -2479,12 +2494,16 @@ game.construct_level = function(level_name) {
     game.containers.mute.buttonMode = true;
     game.containers.ui2.addChild(game.containers.mute);
 
-    game.containers.fullscreen.anchor.set(0.5, 0.5);
-    game.containers.fullscreen.x = game.render.render_width - 16;
-    game.containers.fullscreen.y = game.render.render_height - 16;
-    game.containers.fullscreen.interactive = true;
-    game.containers.fullscreen.buttonMode = true;
-    game.containers.ui2.addChild(game.containers.fullscreen);
+    if (game.performance === "webgl") {
+        game.containers.fullscreen.anchor.set(0.5, 0.5);
+        game.containers.fullscreen.x = game.render.render_width - 16;
+        game.containers.fullscreen.y = game.render.render_height - 16;
+        game.containers.fullscreen.interactive = true;
+        game.containers.fullscreen.buttonMode = true;
+        game.containers.ui2.addChild(game.containers.fullscreen);
+    } else {
+        game.containers.mute.x = game.render.render_width - 16;
+    }
 
     if (level_name === "main_menu_1") {
         game.containers.deaths.text = game.stats.total_deaths + " TOTAL";
@@ -2542,6 +2561,46 @@ game.construct_level = function(level_name) {
 };
 
 let initialize = function() {
+    function check_webgl(fail_if_major_performance_caveat) {
+        try {
+            if (!window.WebGLRenderingContext) {
+                return false;
+            }
+
+            const context_options = {
+                stencil: true,
+                failIfMajorPerformanceCaveat: fail_if_major_performance_caveat,
+            };
+
+            const canvas = document.createElement('canvas');
+            let gl = canvas.getContext('webgl', context_options) || canvas.getContext('experimental-webgl', context_options);
+
+            const success = !!(gl && gl.getContextAttributes().stencil);
+
+            if (gl) {
+                const loseContext = gl.getExtension('WEBGL_lose_context');
+                if (loseContext) {
+                    loseContext.loseContext();
+                }
+            }
+
+            gl = null;
+
+            return success;
+        }
+        catch (e) {
+            return false;
+        }
+    }
+
+    if (check_webgl(true)) {
+        game.performance = "webgl";
+    } else if (check_webgl(false)) {
+        game.performance = "webgl_performance_caveat";
+    } else {
+        game.performance = "canvas";
+    }
+
     init_newgrounds_session();
     game.emit_event("start_" + game.current_level);
     game.construct_level(game.current_level);
@@ -2556,7 +2615,7 @@ let main_loop = function() {
     const world_x = -game.containers.level.x + game.input.x;
     const world_y = -game.containers.level.y + game.input.y;
 
-    let pointer = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, game.input.x, game.input.y);
+    let pointer = game.performance === "webgl" && Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, game.input.x, game.input.y);
 
     const mute_hover = Physics.point(game.containers.mute.x - game.containers.mute.width / 2, game.containers.mute.y - game.containers.mute.height / 2, game.containers.mute.width, game.containers.mute.height, game.input.x, game.input.y);
     pointer |= mute_hover;
@@ -2862,6 +2921,15 @@ let main_loop = function() {
         }
     }
 
+    let max_radius;
+    if (PIXI.utils.isWebGLSupported()) {
+        max_radius = Math.sqrt(game.render.render_width * game.render.render_width + game.render.render_height * game.render.render_height);
+    } else {
+        max_radius = Math.max(game.render.render_width, game.render.render_height);
+    }
+
+    const max_side = Math.max(game.render.render_width, game.render.render_height) + max_radius * 2 + 10;
+
     if (game.next_level == null && game.exit) {
         const next_level = game.exit.update_exit();
         if (next_level) {
@@ -2871,7 +2939,12 @@ let main_loop = function() {
             const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
             const max_x = Math.max(player_x, game.render.render_width - player_x);
             const max_y = Math.max(player_y, game.render.render_height - player_y);
-            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+
+            if (PIXI.utils.isWebGLSupported()) {
+                game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+            } else {
+                game.spawn_effect_radius = max_radius;
+            }
         }
     } else if (game.next_level == null && game.altar) {
         const next_level = game.altar.update_altar(elapsed);
@@ -2882,27 +2955,38 @@ let main_loop = function() {
             const player_y = game.player.y + game.containers.level.y + game.player.bounds.height / 2;
             const max_x = Math.max(player_x, game.render.render_width - player_x);
             const max_y = Math.max(player_y, game.render.render_height - player_y);
-            game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+
+            if (PIXI.utils.isWebGLSupported()) {
+                game.spawn_effect_radius = Math.sqrt(max_x * max_x + max_y * max_y);
+            } else {
+                game.spawn_effect_radius = max_radius;
+            }
         }
     }
     game.camera.update_camera(elapsed);
     game.input.update();
 
-    const max_radius = Math.sqrt(game.render.render_width * game.render.render_width + game.render.render_height * game.render.render_height);
-    const max_side = Math.max(game.render.render_width, game.render.render_height) + max_radius * 2 + 10;
-
     game.containers.spawn_transition.clear();
 
     if (game.player.dead || game.next_level) {
-        game.containers.spawn_transition.beginFill(0x000000);
-        game.containers.spawn_transition.drawRect((game.render.render_width - max_side) / 2, (game.render.render_height - max_side) / 2, max_side, max_side);
-        game.containers.spawn_transition.endFill();
+        if (PIXI.utils.isWebGLSupported()) {
+            game.containers.spawn_transition.beginFill(0x000000);
+            game.containers.spawn_transition.drawRect((game.render.render_width - max_side) / 2, (game.render.render_height - max_side) / 2, max_side, max_side);
+            game.containers.spawn_transition.endFill();
+        }
 
         if (Math.abs(game.spawn_effect_radius) > 1e-5) {
-            game.containers.spawn_transition.beginHole();
-            game.containers.spawn_transition.drawCircle(game.player.x + game.containers.level.x + game.player.bounds.width / 2, game.player.y + game.containers.level.y + game.player.bounds.height / 2, game.spawn_effect_radius);
+            if (PIXI.utils.isWebGLSupported()) {
+                game.containers.spawn_transition.beginHole();
+                game.containers.spawn_transition.drawCircle(game.player.x + game.containers.level.x + game.player.bounds.width / 2, game.player.y + game.containers.level.y + game.player.bounds.height / 2, game.spawn_effect_radius);
+                game.containers.spawn_transition.endHole();
+            } else {
+                game.containers.spawn_transition.beginFill(0x000000);
+                game.containers.spawn_transition.drawCircle(game.player.x + game.containers.level.x + game.player.bounds.width / 2, game.player.y + game.containers.level.y + game.player.bounds.height / 2, max_radius - game.spawn_effect_radius);
+                game.containers.spawn_transition.endFill();
+            }
+
             game.spawn_effect_radius = Math.max(game.spawn_effect_radius - elapsed * max_radius, 0);
-            game.containers.spawn_transition.endHole();
 
             if (Math.abs(game.spawn_effect_radius) < 1e-5) {
                 if (game.next_level) {
@@ -2915,6 +2999,10 @@ let main_loop = function() {
                     game.stats.total_score += game.stats.score;
                     game.stats.total_kills += game.stats.kills;
                     game.current_level = game.next_level;
+
+                    if (game.current_level === "backstage_1") {
+                        game.emit_event(game.performance);
+                    }
 
                     game.emit_event("start_" + game.current_level);
                 } else {
@@ -3658,6 +3746,7 @@ const update_physical_size = function() {
 const init_window = function() {
     PIXI.settings.ROUND_PIXELS = true;
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.FAIL_IF_MAJOR_PERFORMANCE_CAVEAT = false;
 
     render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
     render.stage = render.application.stage;

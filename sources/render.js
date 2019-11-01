@@ -46,6 +46,7 @@ const update_physical_size = function() {
 const init_window = function() {
     PIXI.settings.ROUND_PIXELS = true;
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.FAIL_IF_MAJOR_PERFORMANCE_CAVEAT = false;
 
     render.application = new PIXI.Application({ width: render.render_width, height: render.render_height });
     render.stage = render.application.stage;
