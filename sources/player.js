@@ -363,7 +363,6 @@ class Player extends MovieClip {
                     zone_name = zone.name;
                 }
             }
-            game.emit_event("zone_" + game.current_level + "_" + zone_name);
 
             if (this.face === "left") {
                 this.horizontal_speed = 100;

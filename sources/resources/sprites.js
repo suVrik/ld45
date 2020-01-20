@@ -30,6 +30,7 @@ const load_sprites = function() {
     PIXI.Loader.shared
         .add("upheaval", "sprites/font.fnt")
         .add("sprites/atlas.json")
+        .add("sprites/branding@2x.png")
         .load(sprites_loaded);
 };
 

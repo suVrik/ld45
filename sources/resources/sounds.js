@@ -5,7 +5,7 @@ const load_sounds = function() {
         sounds.total_count++;
         sounds[name] = new Howl({
             src: [ `sounds/${name}.${extension}` ],
-            autoplay: loop,
+            autoplay: false,
             loop: loop,
             volume: volume,
             onload: function() {

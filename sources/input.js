@@ -20,9 +20,12 @@ const init_input = function() {
     document.body.onmousedown = event => {
         input.mouse[event.button] = true;
 
-        const fullscreen_hover = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, input.x, input.y);
-        if (fullscreen_hover) {
-            game.toggle_fullscreen();
+        if (game.containers && game.containers.fullscreen)
+        {
+            const fullscreen_hover = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, input.x, input.y);
+            if (fullscreen_hover) {
+                game.toggle_fullscreen();
+            }
         }
     };
     document.body.onmouseup = event => input.mouse[event.button] = false;
@@ -36,9 +39,11 @@ const init_input = function() {
         input.x = (input.page_x - game_window.offsetLeft) / (game.render_target_sprite.scale.x || 1);
         input.y = (input.page_y - game_window.offsetTop) / (game.render_target_sprite.scale.y || 1);
 
-        const fullscreen_hover = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, input.x, input.y);
-        if (fullscreen_hover) {
-            game.toggle_fullscreen();
+        if (game.containers && game.containers.fullscreen) {
+            const fullscreen_hover = Physics.point(game.containers.fullscreen.x - game.containers.fullscreen.width / 2, game.containers.fullscreen.y - game.containers.fullscreen.height / 2, game.containers.fullscreen.width, game.containers.fullscreen.height, input.x, input.y);
+            if (fullscreen_hover) {
+                game.toggle_fullscreen();
+            }
         }
 
         return false;

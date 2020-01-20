@@ -10,9 +10,11 @@ const update_physical_size = function() {
 
     if (game.render.touchscreen) {
         if (width / render.render_width > height / render.render_height) {
+            render.scale = height / render.render_height;
             render.physical_height = height;
             render.physical_width = render.render_width * render.physical_height / render.render_height;
         } else {
+            render.scale = width / render.render_width;
             render.physical_width = width;
             render.physical_height = render.render_height * render.physical_width / render.render_width;
         }
