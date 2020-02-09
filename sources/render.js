@@ -39,10 +39,14 @@ const update_physical_size = function() {
     game_window.style.marginLeft = (-render.physical_width / 2) + "px";
     game_window.style.marginTop = (-render.physical_height / 2) + "px";
 
-    game.render_target_sprite.scale.x = render.physical_width / render.render_width;
-    game.render_target_sprite.scale.y = render.physical_height / render.render_height;
+    if (game.render.application) {
+        game.render_target_sprite.scale.x = render.physical_width / render.render_width;
+        game.render_target_sprite.scale.y = render.physical_height / render.render_height;
 
-    game.render.application.renderer.resize(render.physical_width, render.physical_height);
+        game.render.application.renderer.resize(render.physical_width, render.physical_height);
+    }
+
+    window.onresize = update_physical_size;
 };
 
 const init_window = function() {
@@ -67,12 +71,12 @@ const init_window = function() {
     render.touchscreen = game.render.application.renderer.plugins.interaction.supportsTouchEvents;
 
     update_physical_size();
-    window.onresize = update_physical_size;
 
     delete render.init;
 };
 
 const render = {
+    update_physical_size: update_physical_size,
     init: init_window,
     render_width: 400,
     render_height: 240,

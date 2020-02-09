@@ -10,4 +10,13 @@ html, body {
     position: absolute;
     left: 50%;
     top: 50%;
+
+    background: #000 url("sprites/loading.gif") center center no-repeat;
+    background-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-top: -32px;
+    margin-left: -32px;
+    -ms-interpolation-mode: nearest-neighbor;
+    image-rendering: pixelated;
 }

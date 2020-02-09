@@ -1782,6 +1782,8 @@ window.game = {
     },
     swag: {
         api: null,
+        ready: false,
+        user_achievements: {},
     },
     broken: false,
     start_button_velocity: {
@@ -1806,130 +1808,104 @@ window.game = {
 let init_swag_session = function() {
     const game_window = document.getElementById("game_window");
 
-    window.game.api = SWAGAPI.getInstance({
-        wrapper: game_window,
-        api_key: "5c6c3c056917a692f96f9651",
-        theme: "shockwave",
-        debug: true,
-    });
+    try {
+        window.game.swag.api = SWAGAPI.getInstance({
+            wrapper: game_window,
+            api_key: "5e39c45851ce2e2f15136a7a",
+            theme: "shockwave",
+            debug: false,
+        });
 
-    window.game.api.on("SESSION_READY", function() {
-        console.log("SWAG session ready!");
-    });
+        window.game.swag.api.startSession().then(function() {
+            console.log("SWAG session is ready!");
 
-    // try {
-    //     game.newgrounds.io = new Newgrounds.io.core("49731:Jh4dHyWR", "A9Tuytth3X5txdmmIixKeQ==");
-    //
-    //     console.log("Requesting authorization...");
-    //
-    //     game.newgrounds.io.getValidSession(function() {
-    //         if (game.newgrounds.io.user) {
-    //             console.log("User \"" + game.newgrounds.io.user + "\" is signed in.");
-    //         } else {
-    //             console.log("User is not signed in.");
-    //         }
-    //
-    //         game.newgrounds.io.callComponent("Medal.getList", {}, function(result) {
-    //             if (result.success && result.medals) {
-    //                 game.newgrounds.medals = result.medals;
-    //             }
-    //         });
-    //
-    //         game.newgrounds.io.callComponent("ScoreBoard.getBoards", {}, function(result) {
-    //             if (result.success && result.scoreboards) {
-    //                 game.newgrounds.scoreboards = result.scoreboards;
-    //             }
-    //         });
-    //     });
-    // }
-    // catch (e) {
-    //     console.log("Failed to initialize newgrounds API. Medals, scores and analytics are disabled!");
-    // }
+            window.game.swag.ready = true;
+
+            window.game.swag.api.getUserAchievements().then(function(user_achievements) {
+                for (const achievement of user_achievements) {
+                    window.game.swag.user_achievements[achievement.name] = achievement.user_achieved;
+                }
+            });
+
+            console.log(window.game.swag.api.getCurrentEntity());
+        });
+    }
+    catch (e) {
+        console.error(e);
+    }
 };
 
-let unlock_medal = function(medal_name) {
-    // if (game.newgrounds.io && game.newgrounds.medals) {
-    //     for (let i = 0; i < game.newgrounds.medals.length; i++) {
-    //         const medal = game.newgrounds.medals[i];
-    //         if (medal.name === medal_name) {
-    //             function unlock_medal() {
-    //                 game.extra_timeout = Math.max(game.extra_timeout, 0) + 25;
-    //                 setTimeout(function() {
-    //                     const medal_width = 160;
-    //                     const medal_height = 25;
-    //
-    //                     const medal_item = {
-    //                         timeout: 3,
-    //                         container: new PIXI.Container(),
-    //                         background: new PIXI.Graphics(),
-    //                         text: new PIXI.BitmapText(medal_name + " unlocked!", { font: "10px Upheaval TT (BRK)", align: "center", tint: 0xE6E3E3 }),
-    //                         icon: new PIXI.Sprite(game.resources.sprites["medal_" + medal_name]),
-    //                     };
-    //
-    //                     medal_item.background.beginFill(0x0F0B0C);
-    //                     medal_item.background.drawRect(0, 0, medal_width, medal_height);
-    //                     medal_item.background.endFill();
-    //                     medal_item.container.addChild(medal_item.background);
-    //
-    //                     medal_item.container.addChild(medal_item.icon);
-    //
-    //                     medal_item.text.y = 8;
-    //                     medal_item.text.x = 30;
-    //                     medal_item.container.addChild(medal_item.text);
-    //
-    //                     medal_item.container.x = game.render.render_width;
-    //                     medal_item.container.y = game.render.render_height - (game.containers.medals_items.length + 1) * medal_height;
-    //                     game.containers.medals.addChild(medal_item.container);
-    //
-    //                     game.containers.medals_items.push(medal_item);
-    //
-    //                     game.resources.sounds["medal_unlock"].play();
-    //                 }, 100 + Math.max(game.extra_timeout, 0));
-    //             }
-    //
-    //             if (game.newgrounds.io.user) {
-    //                 if (!medal.unlocked) {
-    //                     console.log("Unlocking medal \"" + medal_name + "\"...");
-    //                     game.newgrounds.io.callComponent("Medal.unlock", {id: medal.id}, function(result) {
-    //                         if (result.success) {
-    //                             console.log("Medal \"" + medal_name + "\" unlocked.");
-    //                             unlock_medal();
-    //                         } else {
-    //                             console.log("Failed to unlock medal \"" + medal_name + "\". Details: \"" + result.error.message + "\".");
-    //                         }
-    //                     });
-    //                 } else {
-    //                     console.log("Medal \"" + medal_name + "\" is already unlocked.");
-    //                 }
-    //             } else {
-    //                 console.log("Failed to unlock medal \"" + medal_name + "\" because user is not logged in.");
-    //                 unlock_medal();
-    //             }
-    //         }
-    //     }
-    // } else {
-    //     console.log("Failed to unlock medal \"" + medal_name + "\" because medals are not available.");
-    // }
+let unlock_achievement = function(achievement_name) {
+    function show_achievement() {
+        game.extra_timeout = Math.max(game.extra_timeout, 0) + 25;
+        setTimeout(function() {
+            const achievement_width = 160;
+            const achievement_height = 25;
+
+            const achievement_item = {
+                timeout: 3,
+                container: new PIXI.Container(),
+                background: new PIXI.Graphics(),
+                text: new PIXI.BitmapText(achievement_name + " unlocked!", { font: "10px Upheaval TT (BRK)", align: "center", tint: 0xE6E3E3 }),
+                icon: new PIXI.Sprite(game.resources.sprites["medal_" + achievement_name]),
+            };
+
+            achievement_item.background.beginFill(0x0F0B0C);
+            achievement_item.background.drawRect(0, 0, achievement_width, achievement_height);
+            achievement_item.background.endFill();
+            achievement_item.container.addChild(achievement_item.background);
+
+            achievement_item.container.addChild(achievement_item.icon);
+
+            achievement_item.text.y = 8;
+            achievement_item.text.x = 30;
+            achievement_item.container.addChild(achievement_item.text);
+
+            achievement_item.container.x = game.render.render_width;
+            achievement_item.container.y = game.render.render_height - (game.containers.achievements_items.length + 1) * achievement_height;
+            game.containers.achievements.addChild(achievement_item.container);
+
+            game.containers.achievements_items.push(achievement_item);
+
+            game.resources.sounds["medal_unlock"].play();
+        }, 100 + Math.max(game.extra_timeout, 0));
+    }
+
+    if (window.game.swag.api && window.game.swag.ready) {
+        if (!window.game.swag.user_achievements[achievement_name]) {
+            console.log(`Unlocking achievement ${achievement_name}...`);
+
+            window.game.swag.api.postAchievement(achievement_name).then(function() {
+                console.log(`Achievement ${achievement_name} unlocked.`);
+                show_achievement();
+            });
+        } else {
+            console.log(`Achievement ${achievement_name} is already unlocked.`);
+        }
+    } else {
+        console.log(`Failed to unlock achievement ${achievement_name} because SWAG API is not initialized.`);
+        show_achievement();
+    }
 };
 
-let post_score = function(board_name, score_value) {
-    // if (game.newgrounds.io && game.newgrounds.io.user && game.newgrounds.scoreboards) {
-    //     for (let i = 0; i < game.newgrounds.scoreboards.length; i++) {
-    //         const scoreboard = game.newgrounds.scoreboards[i];
-    //         if (scoreboard.name === board_name) {
-    //             console.log("Posting score \"" + score_value + "\" to \"" + board_name + "\"...");
-    //             game.newgrounds.io.callComponent("ScoreBoard.postScore", {id: scoreboard.id, value: score_value}, function(result) {
-    //                 if (result.success) {
-    //                     console.log("Successfully posed score \"" + score_value + "\" to  \"" + board_name + "\".");
-    //                 } else {
-    //                     console.log("Failed to post score \"" + score_value + "\" to  \"" + board_name + "\". Details: \"" + result.error.message + "\".");
-    //                 }
-    //             });
-    //         }
-    //     }
-    // } else {
-    //     console.log("Failed to post score \"" + score_value + "\" to  \"" + board_name + "\" because user is not logged in.");
-    // }
+let post_score = function(board_name, score_value, show_dialog) {
+    if (window.game.swag.api && window.game.swag.ready) {
+        console.log(`Posting score ${score_value} to ${board_name}...`);
+        window.game.swag.api.postScore(board_name, score_value).then(function() {
+            if (show_dialog) {
+                window.game.swag.api.showDialog("scores", {
+                    title: board_name,
+                    level_key: board_name,
+                    period: "alltime",
+                    value_formatter: "",
+                });
+            }
+
+            console.log(`Successfully posed score ${score_value} to  ${board_name}.`);
+        });
+    } else {
+        console.log(`Failed to post score ${score_value} to  ${board_name} because user is not logged in.`);
+    }
 };
 
 game.update_touchscreen_controls = function() {
@@ -2024,36 +2000,33 @@ game.update_touchscreen_controls = function() {
     }
 };
 
-game.render.init();
+game.render.update_physical_size();
 
-window.ready_counter = 0;
-const increment_ready_counter = () => {
-    window.ready_counter++;
-    if (window.ready_counter === 2) {
-        game.branding = new PIXI.Sprite(PIXI.utils.TextureCache["sprites/branding@2x.png"]);
-        game.branding.interactive = true;
-        game.branding.buttonMode = true;
-        game.branding.on("pointerdown", () => {
-            window.open("http://www.addictinggames.com","_blank");
-        });
-        game.branding_mask = new PIXI.Graphics();
-        game.branding.mask = game.branding_mask;
-        game.render.stage.addChild(game.branding);
+const start_game = () => {
+    game.render.init();
+    game.input.init();
 
-        game.resources.sounds["music"].play();
+    game.branding = new PIXI.Sprite(PIXI.utils.TextureCache["sprites/branding@2x.png"]);
+    game.branding.interactive = true;
+    game.branding.buttonMode = true;
+    game.branding.on("pointerdown", () => {
+        window.open("http://www.addictinggames.com","_blank");
+    });
+    game.branding_mask = new PIXI.Graphics();
+    game.branding.mask = game.branding_mask;
+    game.render.stage.addChild(game.branding);
 
-        game.update_touchscreen_controls();
-        initialize();
-        game.render.application.ticker.add(main_loop);
-    }
+    game.resources.sounds["music"].play();
+
+    game.update_touchscreen_controls();
+    initialize();
+    game.render.application.ticker.add(main_loop);
 };
 
-game.resources.on_load = increment_ready_counter;
+game.resources.on_load = function() {
+    SWAGAPI.showBrandingAnimation("game_window", start_game);
+};
 game.resources.load();
-
-SWAGAPI.showBrandingAnimation("game_window", increment_ready_counter);
-
-game.input.init();
 
 const is_fullscreen = function() {
     return document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
@@ -2147,8 +2120,8 @@ game.construct_level = function(level_name) {
         hitboxes: new PIXI.Graphics(),
         ui: new PIXI.Container(),
         ui2: new PIXI.Container(),
-        medals: new PIXI.Container(),
-        medals_items: [],
+        achievements: new PIXI.Container(),
+        achievements_items: [],
         coin: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
         coin_shadow: new PIXI.Sprite(game.resources.sprites["ui_coins"]),
         timer: new PIXI.Sprite(game.resources.sprites["ui_timer"]),
@@ -2214,7 +2187,7 @@ game.construct_level = function(level_name) {
     game.containers.stage.addChild(game.containers.level);
     game.containers.stage.addChild(game.containers.ui);
     game.containers.stage.addChild(game.containers.ui2);
-    game.containers.stage.addChild(game.containers.medals);
+    game.containers.stage.addChild(game.containers.achievements);
     game.containers.stage.addChild(game.containers.dialog_background);
     game.containers.stage.addChild(game.containers.dialog_text);
     game.containers.stage.addChild(game.containers.spawn_transition);
@@ -2327,19 +2300,19 @@ game.construct_level = function(level_name) {
             const playtime = game.stats.level_start.getTime() - game.stats.game_start.getTime();
             const minutes = playtime / 60000;
             if (minutes < 3) {
-                unlock_medal("Speedrun");
+                unlock_achievement("Speedrun");
             }
 
             if (game.stats.total_score === 134) {
-                unlock_medal("Full Score");
-                post_score("100%", Math.floor(playtime));
+                unlock_achievement("Full Score");
+                post_score("100%", Math.floor(playtime), true);
             }
 
             if (game.stats.total_kills === 0) {
-                unlock_medal("Pacifist");
+                unlock_achievement("Pacifist");
             }
 
-            post_score("Any%", Math.floor(playtime));
+            post_score("Any%", Math.floor(playtime), game.stats.total_score !== 134);
         }
 
         if (game.joystick_zone) {
@@ -2853,18 +2826,18 @@ let main_loop = function() {
         }
     }
 
-    for (let i = 0; i < game.containers.medals_items.length; ) {
-        const medal = game.containers.medals_items[i];
+    for (let i = 0; i < game.containers.achievements_items.length; ) {
+        const achievement = game.containers.achievements_items[i];
 
-        medal.timeout -= elapsed;
-        if (medal.timeout <= 0) {
-            medal.container.destroy();
-            game.containers.medals_items.splice(i, 1);
+        achievement.timeout -= elapsed;
+        if (achievement.timeout <= 0) {
+            achievement.container.destroy();
+            game.containers.achievements_items.splice(i, 1);
         } else {
-            if (medal.timeout > 1) {
-                medal.container.x = Math.max(medal.container.x - elapsed * 400, game.render.render_width - medal.background.width);
-            } else if (medal.timeout < 0.4) {
-                medal.container.x += elapsed * 400;
+            if (achievement.timeout > 1) {
+                achievement.container.x = Math.max(achievement.container.x - elapsed * 400, game.render.render_width - achievement.background.width);
+            } else if (achievement.timeout < 0.4) {
+                achievement.container.x += elapsed * 400;
             }
             i++;
         }
@@ -2941,8 +2914,8 @@ let main_loop = function() {
                 if (game.next_level) {
                     if (game.altar) {
                         game.stats["item" + game.altar.item_num] = false;
-                        const medal_names = [ "Undefined", "Goblet", "Potion", "Apple", "Key" ];
-                        unlock_medal(medal_names[game.altar.item_num]);
+                        const achievement_names = [ "Undefined", "Goblet", "Potion", "Apple", "Key" ];
+                        unlock_achievement(achievement_names[game.altar.item_num]);
                     }
 
                     game.stats.total_score += game.stats.score;
@@ -3680,10 +3653,14 @@ const update_physical_size = function() {
     game_window.style.marginLeft = (-render.physical_width / 2) + "px";
     game_window.style.marginTop = (-render.physical_height / 2) + "px";
 
-    game.render_target_sprite.scale.x = render.physical_width / render.render_width;
-    game.render_target_sprite.scale.y = render.physical_height / render.render_height;
+    if (game.render.application) {
+        game.render_target_sprite.scale.x = render.physical_width / render.render_width;
+        game.render_target_sprite.scale.y = render.physical_height / render.render_height;
 
-    game.render.application.renderer.resize(render.physical_width, render.physical_height);
+        game.render.application.renderer.resize(render.physical_width, render.physical_height);
+    }
+
+    window.onresize = update_physical_size;
 };
 
 const init_window = function() {
@@ -3708,12 +3685,12 @@ const init_window = function() {
     render.touchscreen = game.render.application.renderer.plugins.interaction.supportsTouchEvents;
 
     update_physical_size();
-    window.onresize = update_physical_size;
 
     delete render.init;
 };
 
 const render = {
+    update_physical_size: update_physical_size,
     init: init_window,
     render_width: 400,
     render_height: 240,
