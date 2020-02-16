@@ -1552,6 +1552,7 @@ window.game = {
     exit: null,
     altar: null,
     start_button: null,
+    score_button: null,
     ui_logo: null,
     num_clicks: 0,
     dialog: false,
@@ -1826,8 +1827,6 @@ let init_swag_session = function() {
                     window.game.swag.user_achievements[achievement.name] = achievement.user_achieved;
                 }
             });
-
-            console.log(window.game.swag.api.getCurrentEntity());
         });
     }
     catch (e) {
@@ -2291,6 +2290,7 @@ game.construct_level = function(level_name) {
     game.dialog_time = 0;
 
     game.start_button = null;
+    game.score_button = null;
     if (level_name === "main_menu_0" || level_name === "main_menu_1") {
         if (level_name === "main_menu_0") {
             game.containers.ui.visible = false;
@@ -2330,11 +2330,19 @@ game.construct_level = function(level_name) {
 
         game.start_button = new PIXI.Sprite(game.resources.sprites["button_start"]);
         game.start_button.anchor.set(0.5);
-        game.start_button.x = initial_x + game.render.render_width / 2;
+        game.start_button.x = initial_x + game.render.render_width / 2 - 16;
         game.start_button.y = initial_y + game.render.render_height / 2 + 20;
         game.start_button.interactive = true;
         game.start_button.buttonMode = true;
         game.containers.level.addChild(game.start_button);
+
+        game.score_button = new PIXI.Sprite(game.resources.sprites["button_leaderboards"]);
+        game.score_button.anchor.set(14 / 27, 0.5);
+        game.score_button.x = initial_x + game.render.render_width / 2 + 46;
+        game.score_button.y = initial_y + game.render.render_height / 2 + 20;
+        game.score_button.interactive = true;
+        game.score_button.buttonMode = true;
+        game.containers.entities.addChildAt(game.score_button, 0);
     } else {
         game.branding.visible = false;
         game.num_clicks++;
@@ -2693,25 +2701,46 @@ let main_loop = function() {
             }
         }
     }
+
     if (game.start_button && game.broken && game.start_button.y < 209) {
+        game.score_button.x -= game.start_button_velocity.x * elapsed;
+        game.score_button.y += game.start_button_velocity.y * elapsed;
+
         game.start_button.x += game.start_button_velocity.x * elapsed;
         game.start_button.y += game.start_button_velocity.y * elapsed;
+
         if (game.start_button.y >= 209) {
             game.resources.sounds["wall_grab"].play();
 
             if (game.start_button_velocity.bounces < 3) {
                 game.start_button.y = 208;
+                game.score_button.y = 208;
                 game.start_button_velocity.x /= 2;
                 game.start_button_velocity.y = -game.start_button_velocity.y / 2;
                 game.start_button_velocity.bounces++;
             } else {
                 game.start_button.x = Math.round(game.start_button.x);
                 game.start_button.y = 209;
+
+                game.score_button.x = Math.round(game.score_button.x);
+                game.score_button.y = 209;
             }
 
-            const effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+            let effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
             effect.x = game.start_button.x - game.start_button.width / 2;
             effect.y = game.start_button.y + game.start_button.height / 2;
+            effect.anchor.set(0.5, 1);
+            effect.animationSpeed = 0.3;
+            effect.loop = false;
+            effect.play();
+            effect.onComplete = function () {
+                effect.destroy();
+            };
+            game.containers.effects.addChild(effect);
+
+            effect = new PIXI.AnimatedSprite(game.resources.sprites["animations_32px_effect_dust_ground"]);
+            effect.x = game.score_button.x + game.score_button.width / 2;
+            effect.y = game.score_button.y + game.score_button.height / 2;
             effect.anchor.set(0.5, 1);
             effect.animationSpeed = 0.3;
             effect.loop = false;
@@ -2728,11 +2757,7 @@ let main_loop = function() {
         if (!game.broken && game.start_button.visible && Physics.point(game.start_button.x - game.start_button.width / 2, game.start_button.y - game.start_button.height / 2, game.start_button.width, game.start_button.height, world_x, world_y)) {
             pointer = true;
 
-            if (!game.broken) {
-                game.start_button.texture = game.resources.sprites["button_start_hover"];
-            } else {
-                game.start_button.texture = game.resources.sprites["button_start"];
-            }
+            game.start_button.texture = game.resources.sprites["button_start_hover"];
 
             if (game.input.is_mouse_pressed(0)) {
                 if (game.joystick_zone) {
@@ -2800,7 +2825,7 @@ let main_loop = function() {
                         game.resources.sounds["Laser_Shoot8"].play();
                     }
                 } else {
-                    game.ui_logo.visible = game.start_button.visible = false;
+                    game.ui_logo.visible = game.start_button.visible = game.score_button.visible = false;
 
                     const credits = new PIXI.Sprite(game.resources.sprites["ui_credits"]);
                     credits.anchor.set(0.5);
@@ -2823,6 +2848,23 @@ let main_loop = function() {
             }
         } else {
             game.start_button.texture = game.resources.sprites["button_start"];
+        }
+
+        if (!game.broken && game.score_button.visible && Physics.point(game.score_button.x - game.score_button.width / 2, game.score_button.y - game.score_button.height / 2, game.score_button.width, game.score_button.height, world_x, world_y)) {
+            pointer = true;
+
+            game.score_button.texture = game.resources.sprites["button_leaderboards_highlight"];
+
+            if (game.input.is_mouse_pressed(0)) {
+                window.game.swag.api.showDialog("scores", {
+                    title: "Scoreboard",
+                    level_key: "Any%",
+                    period: "alltime",
+                    value_formatter: "",
+                });
+            }
+        } else {
+            game.score_button.texture = game.resources.sprites["button_leaderboards"];
         }
     }
 
